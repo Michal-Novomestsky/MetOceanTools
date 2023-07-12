@@ -1,5 +1,5 @@
 import os
-from DataCleaner import DataCleaner as dc
+from DataCleaner import DataCleaner
 from DataAnalyser import write_message
 from pathlib import Path
 import glob
@@ -18,7 +18,12 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
     rejectedFiles = []
     files = [file for file in readDir.iterdir()]
 
-    #Manual one-by-one checking
+    # Making folders
+    os.mkdir(os.path.join(writeDir, 'FTs'))
+    os.mkdir(os.path.join(writeDir, 'FTs', 'loglogs'))
+    os.mkdir(os.path.join(writeDir, 'hists'))
+
+    # Manual one-by-one checking
     if supervised:
         for file in files:
             #file = test + "\\NRAFBR_20042015_010000.txt"
@@ -27,7 +32,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
             if rejectedFile is not None:
                 rejectedFiles.append(rejectedFile)
 
-    #Enabling multiprocessing >:)
+    # Enabling multiprocessing >:)
     else:
         if cpuFraction > 100 or cpuFraction <= 0:
             raise ValueError("cpuFraction must be between 1-100%")
@@ -57,7 +62,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
     """
     Internal function which runs an iteration of a cleanup run. Iterated externally by cleanup_loop.
     """
-    data = dc.DataCleaner(file)
+    data = DataCleaner(file)
 
     fileName = file.stem
 
