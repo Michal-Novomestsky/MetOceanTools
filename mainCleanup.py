@@ -41,7 +41,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
         coresToUse = int(np.ceil((cpuFraction/100)*cpuCount))
         write_message(f"Using {cpuFraction}% of available cores -> {coresToUse}/{cpuCount}", filename='cleanup_log.txt', writemode='w')
 
-        #Creating a tuple of tuples of inputs to pass into each iteration
+        # Creating a tuple of tuples of inputs to pass into each iteration
         writeDirArr = [writeDir]*len(files)
         supervisedArr = [supervised]*len(files)
         args = [*zip(files, writeDirArr, supervisedArr)]
@@ -85,7 +85,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
     mru_y = 'MRU Y Axis Velocity'
     
     try:
-        #Interpolating points in comp and MRU to bring it up to the same resolution
+        # Interpolating points in comp and MRU to bring it up to the same resolution
         data.remove_nans(comp1, data.df, naive=True)
         data.remove_nans(comp2, data.df, naive=True)
         data.remove_nans(mru_pitch, data.df, naive=True)
@@ -96,11 +96,11 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
         data.remove_nans(mru_y, data.df, naive=True)
         write_message(f"{fileName}: Interpolated", filename='cleanup_log.txt')
 
-        #Motion correction
+        # Motion correction
         data.mru_correct()
         write_message(f"{fileName}: Motion Corrected", filename='cleanup_log.txt')
 
-        #Pruning
+        # Pruning
         data.remove_nans(w1, data.originalDf)
         data.prune_or(w1, (data.std_cutoff(w1, 8), data.gradient_cutoff(w1, 2)))
         data.prune_or(w1, (data.std_cutoff(w1, 8), data.gradient_cutoff(w1, 2)))
@@ -134,8 +134,8 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
         data.prune_and(t2, (data.std_cutoff(t2, 6), data.gradient_cutoff(t2, 2)))
         write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
         
-        #FFT plotting/checking
-        #The if nots are there as a simplistic means of lazychecking to prevent unecessary computation if we've already hit a faulty dataset
+        # FFT plotting/checking
+        # The if nots are there as a simplistic means of lazychecking to prevent unecessary computation if we've already hit a faulty dataset
         saveLoc = os.path.join(writeDir, "FTs", "loglogs")
         rejectLog = data.plot_ft_loglog(w1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
@@ -148,13 +148,13 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
             rejectLog = rejectLog or data.plot_ft_loglog(v1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
             rejectLog = rejectLog or data.plot_ft_loglog(v2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
-        #Not filtering with temperature FTs since their regression is poorly studied
+        # Not filtering with temperature FTs since their regression is poorly studied
         if not rejectLog:
             data.plot_ft_loglog(t1, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
             data.plot_ft_loglog(t2, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
 
-        #Hist plotting/checking
+        # Hist plotting/checking
         saveLoc = os.path.join(writeDir, "hists")
         if not rejectLog:
             rejectLog = rejectLog or data.plot_hist(w1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
@@ -173,7 +173,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
         if not rejectLog:
             rejectLog = rejectLog or data.plot_hist(t2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
 
-        #Plotting points which were removed
+        # Plotting points which were removed
         saveLoc = os.path.join(writeDir, "hists")
         if not rejectLog:
             data.plot_comparison(w1, fileName, supervised=supervised, saveLoc=saveLoc)
@@ -285,7 +285,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
         rejectLog = True
 
     if supervised:
-        #Writing cleaned up file or rejecting it
+        # Writing cleaned up file or rejecting it
         inputLoop = True
         while inputLoop:
             isAcceptable = input("We happy? [Y/N] ")
@@ -301,9 +301,9 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
             else:
                 write_message("Invalid input. Try again.", filename='cleanup_log.txt')
 
-    #If unsupervised, auto-write every time
+    # If unsupervised, auto-write every time
     else:
-        #Catching faulty datasets
+        # Catching faulty datasets
         if rejectLog:
             write_message(f"REJECTED: {fileName}", filename='cleanup_log.txt')
             return fileName
