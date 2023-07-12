@@ -53,11 +53,10 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
             rejectedFileCount += 1
     write_message(f"{rejectedFileCount} files rejected", filename='cleanup_log.txt')
 
-def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> str:
+def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
     """
     Internal function which runs an iteration of a cleanup run. Iterated externally by cleanup_loop.
     """
-    file = Path(file)
     data = dc.DataCleaner(file)
 
     fileName = file.stem
@@ -313,8 +312,8 @@ if __name__=='__main__':
     #dir = str(Path(dir).parents[0])
     #readDir = dir + "\\Apr2015_clean_MRU_and_compasses"
     #readDir = os.path.join(dir, "Cleanup Inputs", "Apr2015_cleanup_input")
-    readDir = os.path.join(dir, "Rawdata", "Jul2015")
-    writeDir = os.path.join(dir, "Fullsweeps", "Jul2015_fullsweep")
+    readDir = Path(os.path.join(dir, "Rawdata", "Jul2015"))
+    writeDir = Path(os.path.join(dir, "Fullsweeps", "Jul2015_fullsweep"))
 
     t0 = time.time()
     cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=100)
