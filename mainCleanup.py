@@ -16,7 +16,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
     """
     test = readDir
     rejectedFiles = []
-    files = readDir.iterdir()
+    files = [file for file in readDir.iterdir()]
 
     #Manual one-by-one checking
     if supervised:
