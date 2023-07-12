@@ -15,10 +15,8 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
     using cpuFraction% of all available cores.
     """
     test = readDir
-    readDir += "\\*.txt"
-    writeDir += "\\"
     rejectedFiles = []
-    files = glob.glob(readDir)
+    files = readDir.iterdir()
 
     #Manual one-by-one checking
     if supervised:
@@ -319,7 +317,7 @@ if __name__=='__main__':
     writeDir = os.path.join(dir, "Fullsweeps", "Jul2015_fullsweep")
 
     t0 = time.time()
-    cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=60)
+    cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=100)
     t1 = time.time()
     write_message(f"Took {t1-t0}s", filename='cleanup_log.txt')
 

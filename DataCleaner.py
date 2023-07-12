@@ -1,7 +1,9 @@
-from pathlib import Path
-from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
+import os
+
+from pathlib import Path
+from matplotlib import pyplot as plt
 from scipy.fft import fft, fftfreq
 from scipy.stats import linregress
 
@@ -72,7 +74,7 @@ class DataCleaner:
         if supervised:
             plt.show()
         else:
-            plt.savefig(saveLoc + "\\" + title + ".png")
+            plt.savefig(os.path.join(saveLoc, f"{title}.png"))
             plt.close()
 
     def plot_ft_dev_loglog(self, entry: str, fileName: str, supervised=False, saveLoc=None, plotTitle="_FT_DEVIATION_", plotType="-o", sampleSpacing=1) -> None:
@@ -106,7 +108,7 @@ class DataCleaner:
         if supervised:
             plt.show()
         else:
-            plt.savefig(saveLoc + "\\" + title + ".png")
+            plt.savefig(os.path.join(saveLoc, f"{title}.png"))
             plt.close()
 
     def plot_ft_loglog(self, entry: str, fileName: str, gradient, gradient_cutoff, pearson_cutoff, supervised=False, saveLoc=None, plotTitle="_FT_LOGLOG_", plotType="-o", sampleSpacing=1, turbSampleMins=None, windowWidth=None) -> None:
@@ -168,7 +170,7 @@ class DataCleaner:
                         plt.close()
                         return True
                     else:
-                        plt.savefig(saveLoc + "\\" + title + ".png")
+                        plt.savefig(os.path.join(saveLoc, f"{title}.png"))
                         plt.close()
                     
                     return False
@@ -211,7 +213,7 @@ class DataCleaner:
                         plt.close()
                         return True
                     else:
-                        plt.savefig(saveLoc + "\\" + title + ".png")
+                        plt.savefig(os.path.join(saveLoc, f"{title}.png"))
                         plt.close()
 
                     return False
@@ -247,7 +249,7 @@ class DataCleaner:
                 plt.close()
                 return True
             else:
-                plt.savefig(saveLoc + "\\" + title + ".png")
+                plt.savefig(os.path.join(saveLoc, f"{title}.png"))
                 plt.close()
 
             return False
@@ -303,7 +305,7 @@ class DataCleaner:
             if supervised:
                 plt.show()
             else:
-                plt.savefig(saveLoc + "\\" + title + ".png", dpi=500)
+                plt.savefig(os.path.join(saveLoc, f"{title}.png"), dpi=500)
                 plt.close()
 
             return False
