@@ -6,7 +6,6 @@ import multiprocessing as mp
 import numpy as np
 from matplotlib import pyplot as plt
 import time
-import sys
 
 def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75):
     """
@@ -23,7 +22,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
     #Manual one-by-one checking
     if supervised:
         for file in files:
-            file = test + "\\NRAFBR_20042015_010000.txt"
+            #file = test + "\\NRAFBR_20042015_010000.txt"
             print('Starting Supervised Run')
             rejectedFile = _cleanup_iteration(file, writeDir, supervised=True)
             if rejectedFile is not None:
@@ -55,14 +54,14 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
             rejectedFileCount += 1
     print(f"{rejectedFileCount} files rejected")
 
-def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str|None:
+def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> str|None:
     """
     Internal function which runs an iteration of a cleanup run. Iterated externally by cleanup_loop.
     """
+    file = Path(file)
     data = dc.DataCleaner(file)
 
-    fileName = file.split("\\")
-    fileName = fileName[len(fileName) - 1]
+    fileName = file.stem
 
     ###NOTE: EDIT THIS TO GRAB THE DATAPOINTS YOU NEED FOR A PARTICULAR CLEANUP RUN
     w1 = "Anemometer #1 W Velocity (ms-1)"
@@ -134,51 +133,54 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str|None:
         
         #FFT plotting/checking
         #The if nots are there as a simplistic means of lazychecking to prevent unecessary computation if we've already hit a faulty dataset
-        rejectLog = data.plot_ft_loglog(w1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=writeDir + "FTs\\loglogs", plotType="-", turbSampleMins=20, windowWidth=2)
+        saveLoc = os.path.join(writeDir, "FTs", "loglogs")
+        rejectLog = data.plot_ft_loglog(w1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_ft_loglog(w2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=writeDir + "FTs\\loglogs", plotType="-", turbSampleMins=20, windowWidth=2)
+            rejectLog = rejectLog or data.plot_ft_loglog(w2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_ft_loglog(u1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=writeDir + "FTs\\loglogs", plotType="-", turbSampleMins=20, windowWidth=2)
+            rejectLog = rejectLog or data.plot_ft_loglog(u1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_ft_loglog(u2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=writeDir + "FTs\\loglogs", plotType="-", turbSampleMins=20, windowWidth=2)
+            rejectLog = rejectLog or data.plot_ft_loglog(u2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_ft_loglog(v1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=writeDir + "FTs\\loglogs", plotType="-", turbSampleMins=20, windowWidth=2)
+            rejectLog = rejectLog or data.plot_ft_loglog(v1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_ft_loglog(v2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=writeDir + "FTs\\loglogs", plotType="-", turbSampleMins=20, windowWidth=2)
+            rejectLog = rejectLog or data.plot_ft_loglog(v2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         #Not filtering with temperature FTs since their regression is poorly studied
         if not rejectLog:
-            data.plot_ft_loglog(t1, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=writeDir + "FTs\\loglogs", plotType="-", turbSampleMins=20, windowWidth=2)
+            data.plot_ft_loglog(t1, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
-            data.plot_ft_loglog(t2, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=writeDir + "FTs\\loglogs", plotType="-", turbSampleMins=20, windowWidth=2)
+            data.plot_ft_loglog(t2, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
 
         #Hist plotting/checking
+        saveLoc = os.path.join(writeDir, "hists")
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_hist(w1, fileName, diffCutOff=8, supervised=supervised, saveLoc=writeDir + "hists", bins=1000)
+            rejectLog = rejectLog or data.plot_hist(w1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_hist(w2, fileName, diffCutOff=8, supervised=supervised, saveLoc=writeDir + "hists", bins=1000)
+            rejectLog = rejectLog or data.plot_hist(w2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_hist(u1, fileName, diffCutOff=8, supervised=supervised, saveLoc=writeDir + "hists", bins=1000)
+            rejectLog = rejectLog or data.plot_hist(u1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_hist(u2, fileName, diffCutOff=8, supervised=supervised, saveLoc=writeDir + "hists", bins=1000)
+            rejectLog = rejectLog or data.plot_hist(u2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_hist(v1, fileName, diffCutOff=8, supervised=supervised, saveLoc=writeDir + "hists", bins=1000)
+            rejectLog = rejectLog or data.plot_hist(v1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_hist(v2, fileName, diffCutOff=8, supervised=supervised, saveLoc=writeDir + "hists", bins=1000)
+            rejectLog = rejectLog or data.plot_hist(v2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_hist(t1, fileName, diffCutOff=8, supervised=supervised, saveLoc=writeDir + "hists", bins=300)
+            rejectLog = rejectLog or data.plot_hist(t1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
         if not rejectLog:
-            rejectLog = rejectLog or data.plot_hist(t2, fileName, diffCutOff=8, supervised=supervised, saveLoc=writeDir + "hists", bins=300)
+            rejectLog = rejectLog or data.plot_hist(t2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
 
         #Plotting points which were removed
+        saveLoc = os.path.join(writeDir, "hists")
         if not rejectLog:
-            data.plot_comparison(w1, fileName, supervised=supervised, saveLoc=writeDir + "plots")
-            data.plot_comparison(w2, fileName, supervised=supervised, saveLoc=writeDir + "plots")
-            data.plot_comparison(u1, fileName, supervised=supervised, saveLoc=writeDir + "plots")
-            data.plot_comparison(u2, fileName, supervised=supervised, saveLoc=writeDir + "plots")
-            data.plot_comparison(v1, fileName, supervised=supervised, saveLoc=writeDir + "plots")
-            data.plot_comparison(v2, fileName, supervised=supervised, saveLoc=writeDir + "plots")
-            data.plot_comparison(t1, fileName, supervised=supervised, saveLoc=writeDir + "plots")
-            data.plot_comparison(t2, fileName, supervised=supervised, saveLoc=writeDir + "plots")
+            data.plot_comparison(w1, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(w2, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(u1, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(u2, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(v1, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(v2, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(t1, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(t2, fileName, supervised=supervised, saveLoc=saveLoc)
             
         print(f"{fileName}: Plotting/Sanity Checking Complete")
 
@@ -303,7 +305,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str|None:
             print(f"REJECTED: {fileName}")
             return fileName
         else:
-            data.df.to_csv(path_or_buf=writeDir + fileName, sep="	")
+            data.df.to_csv(path_or_buf=os.path.join(writeDir, fileName), sep="	")
             print(f"Cleaned up {fileName}")
 
 if __name__=='__main__':
@@ -311,8 +313,8 @@ if __name__=='__main__':
     dir = os.getcwd()
     dir = str(Path(dir).parents[0])
     #readDir = dir + "\\Apr2015_clean_MRU_and_compasses"
-    readDir = dir + "\\Cleanup Inputs\\Apr2015_cleanup_input"
-    writeDir = dir + "\\Fullsweeps\\Apr2015_fullsweep"
+    readDir = os.path.join(dir + "Cleanup Inputs", "Apr2015_cleanup_input")
+    writeDir = dir + "Fullsweeps", "Apr2015_fullsweep"
 
     t0 = time.time()
     cleanup_loop(readDir, writeDir, supervised=True, cpuFraction=60)
