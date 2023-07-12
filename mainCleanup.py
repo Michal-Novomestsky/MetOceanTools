@@ -313,8 +313,9 @@ if __name__=='__main__':
     dir = os.getcwd()
     #dir = str(Path(dir).parents[0])
     #readDir = dir + "\\Apr2015_clean_MRU_and_compasses"
-    readDir = os.path.join(dir + "Cleanup Inputs", "Apr2015_cleanup_input")
-    writeDir = dir + "Fullsweeps", "Apr2015_fullsweep"
+    #readDir = os.path.join(dir, "Cleanup Inputs", "Apr2015_cleanup_input")
+    readDir = os.path.join(dir, "Rawdata", "Jul2015")
+    writeDir = os.path.join(dir, "Fullsweeps", "Apr2015_fullsweep")
 
     t0 = time.time()
     cleanup_loop(readDir, writeDir, supervised=True, cpuFraction=60)
