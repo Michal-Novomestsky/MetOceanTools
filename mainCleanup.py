@@ -54,7 +54,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
             rejectedFileCount += 1
     print(f"{rejectedFileCount} files rejected")
 
-def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> str|None:
+def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> str:
     """
     Internal function which runs an iteration of a cleanup run. Iterated externally by cleanup_loop.
     """
