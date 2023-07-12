@@ -1,5 +1,6 @@
 import os
-import DataCleaner as dc
+from DataCleaner import DataCleaner as dc
+from DataAnalyser import write_message
 from pathlib import Path
 import glob
 import multiprocessing as mp
@@ -23,7 +24,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
     if supervised:
         for file in files:
             #file = test + "\\NRAFBR_20042015_010000.txt"
-            print('Starting Supervised Run')
+            write_message('Starting Supervised Run', filename='cleanup_log.txt', writemode='w')
             rejectedFile = _cleanup_iteration(file, writeDir, supervised=True)
             if rejectedFile is not None:
                 rejectedFiles.append(rejectedFile)
@@ -35,7 +36,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
 
         cpuCount = mp.cpu_count()
         coresToUse = int(np.ceil((cpuFraction/100)*cpuCount))
-        print(f"Using {cpuFraction}% of available cores -> {coresToUse}/{cpuCount}")
+        write_message(f"Using {cpuFraction}% of available cores -> {coresToUse}/{cpuCount}", filename='cleanup_log.txt', writemode='w')
 
         #Creating a tuple of tuples of inputs to pass into each iteration
         writeDirArr = [writeDir]*len(files)
@@ -45,14 +46,14 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
         with mp.Pool(coresToUse) as p:
             rejectedFiles = p.starmap(_cleanup_iteration, iterable=args)
 
-    print("Cleanup run done!")
-    print(f"Rejected files:")
+    write_message("Cleanup run done!", filename='cleanup_log.txt')
+    write_message(f"Rejected files:", filename='cleanup_log.txt')
     rejectedFileCount = 0
     for file in rejectedFiles:
         if file is not None:
-            print(file)
+            write_message(file, filename='cleanup_log.txt')
             rejectedFileCount += 1
-    print(f"{rejectedFileCount} files rejected")
+    write_message(f"{rejectedFileCount} files rejected", filename='cleanup_log.txt')
 
 def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> str:
     """
@@ -91,11 +92,11 @@ def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> st
         data.remove_nans(mru_p, data.df, naive=True)
         data.remove_nans(mru_r, data.df, naive=True)
         data.remove_nans(mru_y, data.df, naive=True)
-        print(f"{fileName}: Interpolated")
+        write_message(f"{fileName}: Interpolated", filename='cleanup_log.txt')
 
         #Motion correction
         data.mru_correct()
-        print(f"{fileName}: Motion Corrected")
+        write_message(f"{fileName}: Motion Corrected", filename='cleanup_log.txt')
 
         #Pruning
         data.remove_nans(w1, data.originalDf)
@@ -129,7 +130,7 @@ def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> st
         data.remove_nans(t2, data.originalDf)
         data.prune_and(t2, (data.std_cutoff(t2, 6), data.gradient_cutoff(t2, 1.5)))
         data.prune_and(t2, (data.std_cutoff(t2, 6), data.gradient_cutoff(t2, 2)))
-        print(f"{fileName}: Pruned")
+        write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
         
         #FFT plotting/checking
         #The if nots are there as a simplistic means of lazychecking to prevent unecessary computation if we've already hit a faulty dataset
@@ -182,7 +183,7 @@ def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> st
             data.plot_comparison(t1, fileName, supervised=supervised, saveLoc=saveLoc)
             data.plot_comparison(t2, fileName, supervised=supervised, saveLoc=saveLoc)
             
-        print(f"{fileName}: Plotting/Sanity Checking Complete")
+        write_message(f"{fileName}: Plotting/Sanity Checking Complete", filename='cleanup_log.txt')
 
         '''
         w1 = "Anemometer #1 W Velocity (ms-1)"
@@ -278,7 +279,7 @@ def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> st
         data.remove_nans(mru_y, data.df, naive=True)
         '''
     except RecursionError:
-        print(f"Rejected {fileName}: Recursion error")
+        write_message(f"Rejected {fileName}: Recursion error", filename='cleanup_log.txt')
         rejectLog = True
 
     if supervised:
@@ -288,25 +289,25 @@ def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> st
             isAcceptable = input("We happy? [Y/N] ")
             if isAcceptable.lower() == 'y':
                 data.df.to_csv(path_or_buf=writeDir + fileName, sep="	")
-                print("Yeah. We happy")
+                write_message("Yeah. We happy", filename='cleanup_log.txt')
                 inputLoop = False
 
             elif isAcceptable.lower() == "n":
-                print(f"Rejected {fileName}")
+                write_message(f"Rejected {fileName}", filename='cleanup_log.txt')
                 return fileName
             
             else:
-                print("Invalid input. Try again.")
+                write_message("Invalid input. Try again.", filename='cleanup_log.txt')
 
     #If unsupervised, auto-write every time
     else:
         #Catching faulty datasets
         if rejectLog:
-            print(f"REJECTED: {fileName}")
+            write_message(f"REJECTED: {fileName}", filename='cleanup_log.txt')
             return fileName
         else:
             data.df.to_csv(path_or_buf=os.path.join(writeDir, fileName), sep="	")
-            print(f"Cleaned up {fileName}")
+            write_message(f"Cleaned up {fileName}", filename='cleanup_log.txt')
 
 if __name__=='__main__':
     ###NOTE: I/O DIRECTORIES. CHANGE AS REQUIRED
@@ -315,12 +316,12 @@ if __name__=='__main__':
     #readDir = dir + "\\Apr2015_clean_MRU_and_compasses"
     #readDir = os.path.join(dir, "Cleanup Inputs", "Apr2015_cleanup_input")
     readDir = os.path.join(dir, "Rawdata", "Jul2015")
-    writeDir = os.path.join(dir, "Fullsweeps", "Apr2015_fullsweep")
+    writeDir = os.path.join(dir, "Fullsweeps", "Jul2015_fullsweep")
 
     t0 = time.time()
-    cleanup_loop(readDir, writeDir, supervised=True, cpuFraction=60)
+    cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=60)
     t1 = time.time()
-    print(f"Took {t1-t0}s")
+    write_message(f"Took {t1-t0}s", filename='cleanup_log.txt')
 
     # ioList = ['Sep2015','Nov2015']
 
@@ -330,6 +331,6 @@ if __name__=='__main__':
     #         t0 = time.time()
     #         cleanup_loop(dir + "\\Cleanup Inputs\\" + io + "_cleanup_input", dir + "\\Fullsweeps\\" + io + "_fullsweep", supervised=False, cpuFraction=60)
     #     except ValueError:
-    #         print('CRASHED')
+    #         write_message('CRASHED', filename='cleanup_log.txt')
     #     t1 = time.time()
-    #     print(f"Took {t1-t0}s")
+    #     write_message(f"Took {t1-t0}s", filename='cleanup_log.txt')
