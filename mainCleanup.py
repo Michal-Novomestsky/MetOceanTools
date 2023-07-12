@@ -311,7 +311,7 @@ def _cleanup_iteration(file: os.PathLike, writeDir: Path, supervised=True) -> st
 if __name__=='__main__':
     ###NOTE: I/O DIRECTORIES. CHANGE AS REQUIRED
     dir = os.getcwd()
-    dir = str(Path(dir).parents[0])
+    #dir = str(Path(dir).parents[0])
     #readDir = dir + "\\Apr2015_clean_MRU_and_compasses"
     readDir = os.path.join(dir + "Cleanup Inputs", "Apr2015_cleanup_input")
     writeDir = dir + "Fullsweeps", "Apr2015_fullsweep"
