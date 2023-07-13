@@ -115,7 +115,7 @@ class DataCleaner:
         """
         Presents a plot of the FFT spectral density with both x and y axes in log10. Turbulent switches on u' = u - u_bar with u_bar evaulated over 
         turbSampleMins minutes averaged over the total time and gradient provides the slope for a line in the tail of the FT curve. Does not plot and returns
-        True if the magnitude of the Pearson correlation coefficient of a line of best fit is < pearson_cutoff and m is gradient_cutoff different from gradient.
+        True if the magnitude of the Pearson correlation coefficient of a line of best fit is < pearson_cutoff and abs(gradient - m) > gradient_cutoff.
         Refer to plot_ft_dev for other parameter details.
         """
 
@@ -145,6 +145,10 @@ class DataCleaner:
                     # Getting average of all time windows
                     ft_y = self._window_width_aux(N, timeSeries, windowWidth, entry, tLower, tUpper)
                     title = fileName[:len(fileName) - 4] + plotTitle + f"_{tLower}-{tUpper}MIN_" + f"_WINDOW_{windowWidth}MIN_" + entry
+
+                    # If the fft array is empty, we simply reject the case
+                    if ft_y is None:
+                        return True
 
                     logical = ft_y > min(ft_y) # Removing erroneous minimum value which is << the second smallest
                     if j == 0: # Catch to stop ft_x from shortening each time round (it gets defined outside the for loop)
@@ -265,9 +269,12 @@ class DataCleaner:
                 y_bar = y.mean()
                 y_turb = y - y_bar
 
-                ft_yTemp = fft(y_turb.values)
-                ft_yTemp = 2/N * np.abs(ft_yTemp[:N//2])**2 # Multiplying by 2 to deal with the fact that we chopped out -ive freqs
-                ft_y_arr.loc[i] =  ft_yTemp
+                try:
+                    ft_yTemp = fft(y_turb.values)
+                    ft_yTemp = 2/N * np.abs(ft_yTemp[:N//2])**2 # Multiplying by 2 to deal with the fact that we chopped out -ive freqs
+                    ft_y_arr.loc[i] =  ft_yTemp
+                except ValueError: # If it's an empty array and errors out, we reject it
+                    return None
 
             # Averaging over all time snapshots
             return ft_y_arr.mean(axis = 0)
