@@ -449,6 +449,7 @@ class DataCleaner:
                     + w1_temp*np.cos(np.deg2rad(self.df[mru_pitch]))*np.cos(np.deg2rad(self.df[mru_roll]))
 
         # Sign flipping to correct for bug
+        # TODO NOT DONE FOR ANEM 2
         self.df[u1] = -self.df[u1]
         self.df[v1] = -self.df[v1]
 

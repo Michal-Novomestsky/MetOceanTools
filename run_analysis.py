@@ -264,6 +264,7 @@ def _analysis_iteration(file: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf:
             remsSlice = remsSlice.mean(numeric_only=True)
 
             #TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
+            # TODO NOT DONE FOR ANEM 2 IN CLEANUP
             #slice[t2] = slice[t2] - 5
             #slice[u2] = -slice[u2]
             #slice[v2] = -slice[v2]
