@@ -209,7 +209,7 @@ def _analysis_iteration(file: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf:
 
             #u_AirWat = u_Air - u_Wat
             U_vec = U2_vec
-            #U_vec.East = U_vec.East - remsSlice.cur_e_comp
+            #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
             #U_vec.North = U_vec.North - remsSlice.cur_n_comp
             u = np.sqrt(U_vec.North**2 + U_vec.East**2)
 
@@ -274,7 +274,7 @@ def _analysis_iteration(file: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf:
             jd = float(jd.days)
             tair = remsSlice.ta
             rh = remsSlice.rh
-            p = remsSlice.press
+            p = remsSlice.press # TODO need to correct for height
             tsea = remsSlice.tsea
             sw_dn = remsSlice.solrad
             spechum = remsSlice.spech
@@ -283,7 +283,7 @@ def _analysis_iteration(file: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf:
 
             w2_turb = get_turbulent(slice[w2])
             T2_turb = get_turbulent(slice[t2])
-            #T2_turb = T2_turb/(1 + 0.378*e/p)
+            #T2_turb = T2_turb/(1 + 0.378*e/p) 
             w_turb_list[i] = np.mean(w2_turb*T2_turb)
 
             #Getting magnitude of turbulent horizontal velocity vector
