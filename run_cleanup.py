@@ -1,12 +1,13 @@
 import os
+import multiprocessing as mp
+import numpy as np
+import time
+import argparse
+
 from DataCleaner import DataCleaner
 from DataAnalyser import write_message
 from pathlib import Path
-import glob
-import multiprocessing as mp
-import numpy as np
-from matplotlib import pyplot as plt
-import time
+
 
 def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75):
     """
@@ -312,27 +313,31 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
             write_message(f"Cleaned up {fileName}", filename='cleanup_log.txt')
 
 if __name__=='__main__':
-    ###NOTE: I/O DIRECTORIES. CHANGE AS REQUIRED
-    dir = os.getcwd()
-    #dir = str(Path(dir).parents[0])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--read_dir', nargs='+', type=str, help='Path to the rawdata. Can be a list.')
+    parser.add_argument('--write_dir', nargs='+', type=str, help='Path to output. Can be a list.')
+    args = parser.parse_args()
+
     #readDir = dir + "\\Apr2015_clean_MRU_and_compasses"
     #readDir = os.path.join(dir, "Cleanup Inputs", "Apr2015_cleanup_input")
-    readDir = Path(os.path.join(dir, "Rawdata", "Jul2015"))
-    writeDir = Path(os.path.join(dir, "Fullsweeps", "Jul2015_fullsweep"))
 
-    t0 = time.time()
-    cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=100)
-    t1 = time.time()
+    t0 = time.perf_counter()
+    for i, _ in enumerate(args.read_dir):
+        readDir = Path(args.read_dir[i])
+        writeDir = Path(args.write_dir[i])
+        cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=100)
+    t1 = time.perf_counter()
+    
     write_message(f"Took {t1-t0}s", filename='cleanup_log.txt')
 
     # ioList = ['Sep2015','Nov2015']
 
     # for io in ioList:
-    #     t0 = time.time()
+    #     t0 = time.perf_counter()
     #     try:
-    #         t0 = time.time()
+    #         t0 = time.perf_counter()
     #         cleanup_loop(dir + "\\Cleanup Inputs\\" + io + "_cleanup_input", dir + "\\Fullsweeps\\" + io + "_fullsweep", supervised=False, cpuFraction=60)
     #     except ValueError:
     #         write_message('CRASHED', filename='cleanup_log.txt')
-    #     t1 = time.time()
+    #     t1 = time.perf_counter()
     #     write_message(f"Took {t1-t0}s", filename='cleanup_log.txt')
