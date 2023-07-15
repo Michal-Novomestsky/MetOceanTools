@@ -62,16 +62,16 @@ def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supe
                 collector_t += output[11]
                 collector_rho += output[12]
 
-    #Enabling multiprocessing
+    # Enabling multiprocessing
     else:
         if cpuFraction > 1 or cpuFraction <= 0:
             raise ValueError("cpuFraction must be between (0,1]")
 
         cpuCount = mp.cpu_count()
         coresToUse = int(np.ceil(cpuFraction*cpuCount))
-        print(f"Using {100*cpuFraction}% of available cores -> {coresToUse}/{cpuCount}")
+        write_message(f"Using {100*cpuFraction}% of available cores -> {coresToUse}/{cpuCount}", filename='analysis_log.txt', writemode='w')
 
-        #Creating a tuple of tuples of inputs to pass into each iteration
+        # Creating a tuple of tuples of inputs to pass into each iteration
         remsArr = [remsDf]*len(files)
         eraArr = [eraDf]*len(files)
         eraOnlyArr = [era_only]*len(files)
@@ -96,7 +96,7 @@ def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supe
                     collector_t += outputElem[11]
                     collector_rho += outputElem[12]
 
-    print("Analysis run done!")
+    write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox": collector_tauApprox, "tauCoare": collector_tauCoare,
                             "Cd": collector_Cd, "U10": collector_U10, "HApprox": collector_HApprox, "HCoare": collector_HCoare, 
                             "wTurb": collector_w_turb, "u": collector_u, "v": collector_v, "w": collector_w, "ta": collector_t,
@@ -234,7 +234,7 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
                 tau_coare[i] = coare_res[0][1]
                 H_coare[i] = coare_res[0][2]
             except IndexError:
-                print(f"ERROR IN {fileName[len(fileName) - 1]} - SKIPPED FOR NOW")
+                write_message(f"ERROR IN {fileName[len(fileName) - 1]} - SKIPPED FOR NOW", filename='analysis_log.txt')
 
             #Updating time
             time_list[i] = time
@@ -242,9 +242,9 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
 
             #Investigating the streak
             if tau_approx[i]/tau_coare[i] >= 2/0.5 and tau_approx[i] >= 1.5:
-               print(f"tau spike in {fileName[len(fileName) - 1]}")
+               write_message(f"tau spike in {fileName[len(fileName) - 1]}", filename='analysis_log.txt')
         
-        print(f"Analysed {fileName[len(fileName) - 1]} with ERA5")
+        write_message(f"Analysed {fileName[len(fileName) - 1]} with ERA5", filename='analysis_log.txt')
 
         return (tau_approx.to_list(), tau_coare.to_list(), C_d.to_list(), U_10_mag.to_list(), H_approx.to_list(), H_coare.to_list(), 
                 w_turb_list.to_list(), time_list.to_list(), u_mean.to_list(), v_mean.to_list(), w_mean.to_list(), t_mean.to_list(),
@@ -320,7 +320,7 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
                 tau_coare[i] = coare_res[0][1]
                 H_coare[i] = coare_res[0][2]
             except:
-                print(f"ERROR IN {fileName[len(fileName) - 1]} - SKIPPED FOR NOW")
+                write_message(f"ERROR IN {fileName[len(fileName) - 1]} - SKIPPED FOR NOW", filename='analysis_log.txt')
 
             #Updating time
             time_list[i] = time
@@ -328,11 +328,11 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
     
             #Investigating the streak
             #if tau_approx[i]/tau_coare[i] >= 1/0.25 and tau_approx[i] >= 1.25:
-            #    print(f"tau spike in {fileName[len(fileName) - 1]}")
+            #    write_message(f"tau spike in {fileName[len(fileName) - 1]}", filename='analysis_log.txt')
             #if H_approx[i] > 251 and H_approx[i] < 252 and H_coare[i] > 76 and H_coare[i] < 77:
-            #    print(f"H spike in {fileName[len(fileName) - 1]}")
+            #    write_message(f"H spike in {fileName[len(fileName) - 1]}", filename='analysis_log.txt')
 
-        print(f"Analysed {fileName[len(fileName) - 1]} with REMS")
+        write_message(f"Analysed {fileName[len(fileName) - 1]} with REMS", filename='analysis_log.txt')
 
         return (tau_approx.to_list(), tau_coare.to_list(), C_d.to_list(), U_10_mag.to_list(), H_approx.to_list(), H_coare.to_list(), 
                 w_turb_list.to_list(), time_list.to_list(), u_mean.to_list(), v_mean.to_list(), w_mean.to_list(), t_mean.to_list(),
@@ -340,7 +340,7 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
 
     #If there's no match with REMS and ERA5 isn't being used
     elif no_era:
-        print(f"No date matches between {fileName[len(fileName) - 1]} and REMS. ERA5 turned off.")
+        write_message(f"No date matches between {fileName[len(fileName) - 1]} and REMS. ERA5 turned off.", filename='analysis_log.txt')
         return None
 
     else:
