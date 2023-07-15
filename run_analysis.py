@@ -28,7 +28,7 @@ def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supe
     """
     files = [file for file in readDir.iterdir()]
 
-    #TODO: Maybe make more efficient with smth like array. For now list is ok since we're passing in floats
+    # TODO: Maybe make more efficient with smth like array. For now list is ok since we're passing in floats
     collector_time = []
     collector_tauApprox = []
     collector_tauCoare = []
@@ -43,7 +43,7 @@ def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supe
     collector_t = []
     collector_rho = []
 
-    #One-by-one
+    # One-by-one
     if supervised:
         for file in files:
             output = _analysis_iteration(file, remsDf, eraDf, era_only, no_era)
@@ -112,39 +112,39 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
     month = date[2:4]
     hour = fileName[16:18]
     
-    #Defining constants
-    ZU = 14.8 #Height of anemometer #1 (the higher one) #TODO: Need to make global
-    ZT = 28 #Approx. height of flare bridge AMSL
-    ZQ = 28 #Approx. height of flare bridge AMSL
-    LAT = -19.5856 #19.5856S (Babanin et al.)
-    LON = 116.1367 #116.1367E
-    SS = 35 #https://salinity.oceansciences.org/overview.htm
-    TS_DEPTH = remsDf.depth[0] #Note that depth has to be extracted before we select the corresponding day as sometimes REMS may not exist on that day
+    # Defining constants
+    ZU = 14.8 # Height of anemometer #1 (the higher one) #TODO: Need to make global
+    ZT = 28 # Approx. height of flare bridge AMSL
+    ZQ = 28 # Approx. height of flare bridge AMSL
+    LAT = -19.5856 # 19.5856S (Babanin et al.)
+    LON = 116.1367 # 116.1367E
+    SS = 35 # https://salinity.oceansciences.org/overview.htm
+    TS_DEPTH = remsDf.depth[0] # Note that depth has to be extracted before we select the corresponding day as sometimes REMS may not exist on that day
 
-    #Default parameters
+    # Default parameters
     LW_DN = 370
     ZI = 600
     RAINRATE = 0
 
-    #Getting the corresponding day in the REMS data
+    # Getting the corresponding day in the REMS data
     remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month))]
     remsDf = remsDf.reset_index()
     eraDf = eraDf.loc[(eraDf.timemet.map(lambda x: x.day) == int(day)) & (eraDf.timemet.map(lambda x: x.hour) == int(hour)) & (eraDf.timemet.map(lambda x: x.month) == int(month))]
     eraDf = eraDf.reset_index()
 
-    #Getting time_interval minute long slices and using them to get turbulent avg data over that same time frame
+    # Getting time_interval minute long slices and using them to get turbulent avg data over that same time frame
     time_interval = 10
     data = DataAnalyser(file)
     slices = get_time_slices(data.df, time_interval)
 
-    #NOTE: FILL IN AS REQUIRED
+    # NOTE: FILL IN AS REQUIRED
     time_list = pd.Series(np.zeros(len(slices)))
     tau_approx = pd.Series(np.zeros(len(slices)))
     tau_coare = pd.Series(np.zeros(len(slices)))
     H_approx = pd.Series(np.zeros(len(slices)))
     H_coare = pd.Series(np.zeros(len(slices)))
     C_d = pd.Series(np.zeros(len(slices)))
-    U_10_mag = pd.Series(np.zeros(len(slices))) #NOTE: "_mag" is to prevent it being const from all caps
+    U_10_mag = pd.Series(np.zeros(len(slices))) # NOTE: "_mag" is to prevent it being const from all caps
     w_turb_list = pd.Series(np.zeros(len(slices)))
     u_mean = pd.Series(np.zeros(len(slices)))
     v_mean = pd.Series(np.zeros(len(slices)))
@@ -158,24 +158,24 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
     t2 = "Anemometer #1 Temperature (degC)"
     comp2 = "Compass #1 (deg)"
 
-    #Using ERA5
+    # Using ERA5
     if (era_only or len(remsDf) == 0) and not no_era:
         time = eraDf.timemet[0]
         for i, slice in enumerate(slices):
-            #Getting the REMS data for the particular time interval and using the average
+            # Getting the REMS data for the particular time interval and using the average
             eraSliceTemp = eraDf.loc[(time <= eraDf.timemet) & (eraDf.timemet <= time + datetime.timedelta(minutes=time_interval))]
             eraSliceTemp = eraSliceTemp.mean(numeric_only=True)
             if pd.notna(eraSliceTemp.loc['index']):
-                eraSlice = eraSliceTemp #Guarding against ERA5's hour resolution from resulting in NaNs when incrementing up by less than 1hr at a time
+                eraSlice = eraSliceTemp # Guarding against ERA5's hour resolution from resulting in NaNs when incrementing up by less than 1hr at a time
             else:
                 pass
 
-            #TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
+            # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
             #slice[t2] = slice[t2] - 5
             #slice[u2] = -slice[u2]
             #slice[v2] = -slice[v2]
 
-            #Getting constants
+            # Getting constants
             jd = time - datetime.datetime(2015, 1, 1)
             jd = float(jd.days)
             tair = eraSlice.ta
@@ -193,16 +193,16 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             #T2_turb = T2_turb/(1 + 0.378*e/p)
             w_turb_list[i] = np.mean(w2_turb*T2_turb)
 
-            #Getting magnitude of turbulent horizontal velocity vector
+            # Getting magnitude of turbulent horizontal velocity vector
             U2_turb = get_turbulent(np.sqrt(slice[u2]**2 + slice[v2]**2))
 
-            #Getting current-corrected windspeed
+            # Getting current-corrected windspeed
             U2_mag = np.sqrt(slice[u2]**2 + slice[v2]**2)
-            #Easterly -> +ive x axis, Northerly -> +ive y. Note that anem v+ is west so east is -v
+            # Easterly -> +ive x axis, Northerly -> +ive y. Note that anem v+ is west so east is -v
             U2_vec = pd.DataFrame({'East': slice[v2], 'North': slice[u2]})
             U2_vec = U2_vec.mean() #Taking 10min avg
 
-            #u_AirWat = u_Air - u_Wat
+            # u_AirWat = u_Air - u_Wat
             U_vec = U2_vec
             #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
             #U_vec.North = U_vec.North - remsSlice.cur_n_comp
@@ -226,7 +226,7 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             rho_mean[i] = np.mean(rho)
             
 
-            #TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
+            # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
             try:
                 blockPrint()
                 coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,zrf_u = ZU,zrf_t = ZU,zrf_q = ZU)
@@ -236,11 +236,11 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             except IndexError:
                 write_message(f"ERROR IN {fileName[len(fileName) - 1]} - SKIPPED FOR NOW", filename='analysis_log.txt')
 
-            #Updating time
+            # Updating time
             time_list[i] = time
             time += datetime.timedelta(minutes=time_interval)
 
-            #Investigating the streak
+            # Investigating the streak
             if tau_approx[i]/tau_coare[i] >= 2/0.5 and tau_approx[i] >= 1.5:
                write_message(f"tau spike in {fileName[len(fileName) - 1]}", filename='analysis_log.txt')
         
@@ -250,21 +250,21 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
                 w_turb_list.to_list(), time_list.to_list(), u_mean.to_list(), v_mean.to_list(), w_mean.to_list(), t_mean.to_list(),
                 rho_mean.to_list())
 
-    #Using REMS
+    # Using REMS
     elif len(remsDf) != 0:
         time = remsDf.timemet[0]
         for i, slice in enumerate(slices):
-            #Getting the REMS data for the particular time interval and using the average
+            # Getting the REMS data for the particular time interval and using the average
             remsSlice = remsDf.loc[(time <= remsDf.timemet) & (remsDf.timemet <= time + datetime.timedelta(minutes=time_interval))]
             remsSlice = remsSlice.mean(numeric_only=True)
 
-            #TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
+            # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
             # TODO NOT DONE FOR ANEM 2 IN CLEANUP
             #slice[t2] = slice[t2] - 5
             #slice[u2] = -slice[u2]
             #slice[v2] = -slice[v2]
 
-            #Getting constants
+            # Getting constants
             jd = time - datetime.datetime(2015, 1, 1)
             jd = float(jd.days)
             tair = remsSlice.ta
@@ -281,16 +281,16 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             #T2_turb = T2_turb/(1 + 0.378*e/p) 
             w_turb_list[i] = np.mean(w2_turb*T2_turb)
 
-            #Getting magnitude of turbulent horizontal velocity vector
+            # Getting magnitude of turbulent horizontal velocity vector
             U2_turb = get_turbulent(np.sqrt(slice[u2]**2 + slice[v2]**2))
 
-            #Getting current-corrected windspeed
+            # Getting current-corrected windspeed
             U2_mag = np.sqrt(slice[u2]**2 + slice[v2]**2)
-            #Easterly -> +ive x axis, Northerly -> +ive y.
+            # Easterly -> +ive x axis, Northerly -> +ive y.
             U2_vec = pd.DataFrame({'East': slice[v2], 'North': slice[u2]})
-            U2_vec = U2_vec.mean() #Taking 10min avg
+            U2_vec = U2_vec.mean() # Taking 10min avg
 
-            #u_AirWat = u_Air - u_Wat
+            # u_AirWat = u_Air - u_Wat
             U_vec = U2_vec
             #U_vec.East = U_vec.East - remsSlice.cur_e_comp
             #U_vec.North = U_vec.North - remsSlice.cur_n_comp
@@ -303,7 +303,7 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             #H_approx[i] = rho*humidity.cpd*np.mean(w2_turb*T2_turb)
             H_approx[i] = rho*humidity.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
 
-            #TODO: Assume U_10 ~= U_14.8 for now
+            # TODO: Assume U_10 ~= U_14.8 for now
             C_d[i] = np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2)
             #C_d[i] = -np.cov([U2_turb.mean(), w2_turb.mean()])/np.mean(U2_mag)
             U_10_mag[i] = np.mean(U2_mag)
@@ -312,7 +312,7 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             w_mean[i] = np.mean(slice[w2])
             t_mean[i] = np.mean(slice[t2])
 
-            #TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
+            # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
             try:
                 blockPrint()
                 coare_res = coare.coare36vnWarm_et(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,zrf_u = ZU,zrf_t = ZU,zrf_q = ZU)
@@ -322,11 +322,11 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             except:
                 write_message(f"ERROR IN {fileName[len(fileName) - 1]} - SKIPPED FOR NOW", filename='analysis_log.txt')
 
-            #Updating time
+            # Updating time
             time_list[i] = time
             time += datetime.timedelta(minutes=time_interval)
     
-            #Investigating the streak
+            # Investigating the streak
             #if tau_approx[i]/tau_coare[i] >= 1/0.25 and tau_approx[i] >= 1.25:
             #    write_message(f"tau spike in {fileName[len(fileName) - 1]}", filename='analysis_log.txt')
             #if H_approx[i] > 251 and H_approx[i] < 252 and H_coare[i] > 76 and H_coare[i] < 77:
@@ -338,7 +338,7 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
                 w_turb_list.to_list(), time_list.to_list(), u_mean.to_list(), v_mean.to_list(), w_mean.to_list(), t_mean.to_list(),
                 rho_mean.to_list())
 
-    #If there's no match with REMS and ERA5 isn't being used
+    # If there's no match with REMS and ERA5 isn't being used
     elif no_era:
         write_message(f"No date matches between {fileName[len(fileName) - 1]} and REMS. ERA5 turned off.", filename='analysis_log.txt')
         return None
@@ -358,7 +358,7 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list[pd.DataFrame]
     amount_of_slices = df.Minute[len(df) - 1]//interval_min
     slices = []
     for i in range(amount_of_slices):
-        #Only applying a nonstrict inequality when it is at the end to stop overlap of endpoints. May cause length issues??
+        # Only applying a nonstrict inequality when it is at the end to stop overlap of endpoints. May cause length issues??
         if i != amount_of_slices - 1:
             slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute < (i + 1)*interval_min)].copy(deep=True).reset_index())
         else:
@@ -473,7 +473,7 @@ if __name__=='__main__':
     parser.add_argument('--no_era', type=bool, help='If True, will never use ERA5 - only REMS (skips unavailable times).', default=False)
     args = parser.parse_args()
 
-    #Using a modified version of np.load to read data with allow_pickle turned off in the .npz file
+    # Using a modified version of np.load to read data with allow_pickle turned off in the .npz file
     np_load_modified = lambda *a,**k: np.load(*a, allow_pickle=True, **k)
 
     # Grabbing REMS stuff
@@ -505,7 +505,7 @@ if __name__=='__main__':
     remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
                             "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
-    #Grabbing ERA5 data
+    # Grabbing ERA5 data
     with np_load_modified(os.path.join(os.cwd(), 'ERA5', 'ERA5_2015.npz')) as eraFile:
         timemet = eraFile['timemet.npy']
         u_10 = eraFile['u_10.npy'] # 10 metre U wind component (m/s)
@@ -604,7 +604,7 @@ if __name__=='__main__':
     plt.show()
     '''
     
-    #TODO: PATCH FIX
+    # TODO: PATCH FIX
     eraDf.solrad = eraDf.solrad/3600
     eraDf.thermrad = eraDf.thermrad/3600
 
@@ -621,7 +621,7 @@ if __name__=='__main__':
     plt.legend(['REMS', 'ERA5'])
     plt.show()
 
-    #NOTE: Missing plots: water current speeds
+    # NOTE: Missing plots: water current speeds
 
     plt.plot(remsDf.timemet, remsDf.rh)
     plt.plot(eraDf.timemet, eraDf.rh)
