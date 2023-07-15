@@ -9,7 +9,7 @@ from DataAnalyser import write_message
 from pathlib import Path
 
 
-def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75):
+def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1) -> None:
     """
     Steps through each data file located in readDir and outputs a cleaned-up version in writeDir. Otherwise keeps track of all rejected files.
     supervised sets whether user verification is needed to accept changes or whether it is completed automatically. Unsupervised enables multiprocessing
@@ -26,21 +26,21 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=True, cpuFraction=75)
 
     # Manual one-by-one checking
     if supervised:
+        write_message('Starting Supervised Run', filename='cleanup_log.txt', writemode='w')
         for file in files:
             #file = test + "\\NRAFBR_20042015_010000.txt"
-            write_message('Starting Supervised Run', filename='cleanup_log.txt', writemode='w')
             rejectedFile = _cleanup_iteration(file, writeDir, supervised=True)
             if rejectedFile is not None:
                 rejectedFiles.append(rejectedFile)
 
     # Enabling multiprocessing >:)
     else:
-        if cpuFraction > 100 or cpuFraction <= 0:
-            raise ValueError("cpuFraction must be between 1-100%")
+        if cpuFraction > 1 or cpuFraction <= 0:
+            raise ValueError("cpuFraction must be within (0,1]")
 
         cpuCount = mp.cpu_count()
-        coresToUse = int(np.ceil((cpuFraction/100)*cpuCount))
-        write_message(f"Using {cpuFraction}% of available cores -> {coresToUse}/{cpuCount}", filename='cleanup_log.txt', writemode='w')
+        coresToUse = int(np.ceil(cpuFraction*cpuCount))
+        write_message(f"Using {100*cpuFraction}% of available cores -> {coresToUse}/{cpuCount}", filename='cleanup_log.txt', writemode='w')
 
         # Creating a tuple of tuples of inputs to pass into each iteration
         writeDirArr = [writeDir]*len(files)

@@ -1,5 +1,4 @@
 import os
-import DataAnalyser as da
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -9,9 +8,12 @@ import matplotlib.pyplot as plt
 import glob
 import multiprocessing as mp
 import sys
+import argparse
+import time
 
 from scipy import integrate
-from COARE.COARE3_6 import coare36vnWarm_et as coare
+from DataAnalyser import *
+from COARE.COARE3_6.coare36vnWarm_et import coare36vnWarm_et as coare
 
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
@@ -19,14 +21,12 @@ def blockPrint():
 def enablePrint():
     sys.stdout = sys.__stdout__
 
-def analysis_loop(readDir: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supervised=True, cpuFraction=75, era_only=False, no_era=False) -> pd.DataFrame:
+def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supervised=True, cpuFraction=1, era_only=False, no_era=False) -> pd.DataFrame:
     """
-    Steps through each data file located in readDir and outputs the created plots in writeDir.
+    Steps through each data file located in readDir.
     Unsupervised enables multiprocessing using cpuFraction% of all available cores.
     """
-    fileDir = readDir + "\\*.txt"
-    writeDir += "\\"
-    files = glob.glob(fileDir)
+    files = [file for file in readDir.iterdir()]
 
     #TODO: Maybe make more efficient with smth like array. For now list is ok since we're passing in floats
     collector_time = []
@@ -45,8 +45,8 @@ def analysis_loop(readDir: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf: pd
 
     #One-by-one
     if supervised:
-        for _, file in enumerate(files):
-            output = _analysis_iteration(file, writeDir, remsDf, eraDf, era_only, no_era)
+        for file in files:
+            output = _analysis_iteration(file, remsDf, eraDf, era_only, no_era)
             if output is not None:
                 collector_tauApprox += output[0]
                 collector_tauCoare += output[1]
@@ -64,20 +64,19 @@ def analysis_loop(readDir: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf: pd
 
     #Enabling multiprocessing
     else:
-        if cpuFraction > 100 or cpuFraction <= 0:
-            raise ValueError("cpuFraction must be between 1-100%")
+        if cpuFraction > 1 or cpuFraction <= 0:
+            raise ValueError("cpuFraction must be between (0,1]")
 
         cpuCount = mp.cpu_count()
-        coresToUse = int(np.ceil((cpuFraction/100)*cpuCount))
-        print(f"Using {cpuFraction}% of available cores -> {coresToUse}/{cpuCount}")
+        coresToUse = int(np.ceil(cpuFraction*cpuCount))
+        print(f"Using {100*cpuFraction}% of available cores -> {coresToUse}/{cpuCount}")
 
         #Creating a tuple of tuples of inputs to pass into each iteration
-        writeDirArr = [writeDir]*len(files)
         remsArr = [remsDf]*len(files)
         eraArr = [eraDf]*len(files)
         eraOnlyArr = [era_only]*len(files)
         noEraArr = [no_era]*len(files)
-        args = [*zip(files, writeDirArr, remsArr, eraArr, eraOnlyArr, noEraArr)]
+        args = [*zip(files, remsArr, eraArr, eraOnlyArr, noEraArr)]
 
         with mp.Pool(coresToUse) as p:
             output = p.starmap(_analysis_iteration, iterable=args)
@@ -103,15 +102,15 @@ def analysis_loop(readDir: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf: pd
                             "wTurb": collector_w_turb, "u": collector_u, "v": collector_v, "w": collector_w, "ta": collector_t,
                             "rho": collector_rho})
 
-def _analysis_iteration(file: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, era_only=False, no_era=False) -> None:
+def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
     Internal function which runs an iteration of an analysis run. Iterated externally by analysis_loop.
     """
-    fileName = file.split("\\")
-    date = fileName[len(fileName) - 1][7:15]
+    fileName = file.stem
+    date = fileName[7:15]
     day = date[0:2]
     month = date[2:4]
-    hour = fileName[len(fileName) - 1][16:18]
+    hour = fileName[16:18]
     
     #Defining constants
     ZU = 14.8 #Height of anemometer #1 (the higher one) #TODO: Need to make global
@@ -135,7 +134,7 @@ def _analysis_iteration(file: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf:
 
     #Getting time_interval minute long slices and using them to get turbulent avg data over that same time frame
     time_interval = 10
-    data = da.DataAnalyser(file)
+    data = DataAnalyser(file)
     slices = get_time_slices(data.df, time_interval)
 
     #NOTE: FILL IN AS REQUIRED
@@ -230,7 +229,7 @@ def _analysis_iteration(file: Path, writeDir: Path, remsDf: pd.DataFrame, eraDf:
             #TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
             try:
                 blockPrint()
-                coare_res = coare.coare36vnWarm_et(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,zrf_u = ZU,zrf_t = ZU,zrf_q = ZU)
+                coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,zrf_u = ZU,zrf_t = ZU,zrf_q = ZU)
                 enablePrint()
                 tau_coare[i] = coare_res[0][1]
                 H_coare[i] = coare_res[0][2]
@@ -374,50 +373,151 @@ def get_turbulent(s: pd.Series) -> pd.Series:
     s_bar = s.mean()
     return s - s_bar
 
+def postprocess() -> None:
+    plt.plot(outDf.time, outDf.rho, "-o")
+    plt.xlabel('time')
+    plt.ylabel('Air Density (kg/m^3)')
+    plt.show()
+    
+    plt.plot(outDf.time, outDf.HCoare, "-o")
+    #plt.plot(outDf2.time, outDf2.HCoare, "-o")
+    #plt.legend(['REMS', 'ERA5'])
+    plt.xlabel('time')
+    plt.ylabel('Sensible Heat Flux')
+    plt.show()
+
+    plt.plot(outDf.time, outDf.u)
+    plt.plot(eraDf.timemet, eraDf.v_10)
+    plt.legend(['Our data: u component (14.8m)', 'ERA5: v component (10m)'])
+    plt.xlabel('time')
+    plt.ylabel('Northerly component of wind speed (m/s)')
+    plt.show()
+
+    plt.plot(outDf.time, outDf.v)
+    plt.plot(eraDf.timemet, eraDf.u_10)
+    plt.legend(['Our data: v component (14.8m)', 'ERA5: u component (10m)'])
+    plt.xlabel('time')
+    plt.ylabel('Easterly component of wind speed (m/s)')
+    plt.show()
+
+    plt.plot(outDf.time, outDf.ta)
+    plt.plot(eraDf.timemet, eraDf.ta)
+    plt.xlabel('time')
+    plt.ylabel('Sea Surface Temperature (degC)')
+    plt.legend(['Anem 2', 'ERA5'])
+    plt.show()
+
+    plt.plot([min([min(outDf.tauCoare), min(outDf.tauApprox)]), max([max(outDf.tauCoare), max(outDf.tauApprox)])], [min([min(outDf.tauCoare), min(outDf.tauApprox)]), max([max(outDf.tauCoare), max(outDf.tauApprox)])], color="r")
+    plt.scatter(outDf.tauCoare, outDf.tauApprox, c=outDf.U10)
+    plt.colorbar(label='U_10 (m/s)')
+    #plt.scatter(outDf.tauCoare, outDf.tauApprox, c=collector_w_turb)
+    #plt.colorbar(label="w' (m/s)")
+    plt.xlabel("COARE")
+    plt.ylabel("rho*u_star^2")
+    plt.title("Shear Stress")
+    plt.show()
+    
+    for i in range(len(outDf.Cd)):
+        outDf.Cd[i] = 1000*outDf.Cd[i]
+
+    plt.scatter(outDf.U10, outDf.Cd)
+    plt.xlim([0, 25])
+    plt.ylim([-2,5])
+    plt.xlabel('U_10 (m/s)')
+    plt.ylabel('C_d*1000')
+    plt.show()
+
+    plt.plot([min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])], [min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])], color="r")
+    plt.scatter(outDf.HCoare, outDf.HApprox, c=outDf.U10)
+    plt.colorbar(label='U_10 (m/s)')
+    #plt.scatter(outDf.HCoare, outDf.HApprox, c=collector_w_turb)
+    #plt.colorbar(label="mean(w'T')")
+    plt.xlabel("COARE")
+    plt.ylabel("rho*C_P*cov(w',T')")
+    plt.title("Sensible Heat Flux")
+    plt.show()
+
+    plt.plot(outDf.time, outDf.tauApprox, "-o")
+    plt.plot(outDf.time, outDf.tauCoare, "-o")
+    plt.legend(['EC', 'COARE'])
+    plt.xlabel('Time')
+    plt.ylabel('Shear Stress')
+    plt.show()
+
+    plt.plot(outDf.time, outDf.HApprox, "-o")
+    plt.plot(outDf.time, outDf.HCoare, "-o")
+    plt.legend(['EC', 'COARE'])
+    plt.xlabel('Time')
+    plt.ylabel('Sensible Heat Flux')
+    plt.show()
+
+    fig, ax = plt.subplots()
+    lns1 = ax.plot(outDf.time, outDf.HApprox, "-o", label='EC')
+    lns2 = ax.plot(outDf.time, outDf.HCoare, "-o", label='COARE')
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Sensible Heat Flux')
+    ax2 = ax.twinx()
+    lns3 = ax2.plot(outDf.time, outDf.U10, "-o", color='r', label='U_10')
+    ax2.set_ylim([0,20])
+    ax2.set_ylabel('U_10 (m/s)')
+    lns = lns1+lns2+lns3
+    labs = [l.get_label() for l in lns]
+    ax.legend(lns, labs, loc=0)
+    plt.show()
+
 if __name__=='__main__':
-    ###NOTE: I/O DIRECTORIES. CHANGE AS REQUIRED
-    readDir = dir + "\\Fullsweeps\\Jan2015_fullsweep"
-    #readDir = dir + "\\Apr2015_clean_MRU_and_compasses"
-    writeDir = dir + "\\COARE_vs_approx"
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--read_dir', nargs='+', type=str, help='Path to the rawdata. Can be a list.')
+    parser.add_argument('--write_dir', nargs='+', type=str, help='Path to output. Can be a list.')
+    parser.add_argument('--era_only', type=bool, help='If True, always use ERA5 and never use REMS for relevant parameters. If False, will use REMS when available and ERA5 otherwise.')
+    parser.add_argument('--no_era', type=bool, help='If True, will never use ERA5 - only REMS (skips unavailable times).', default=False)
+    args = parser.parse_args()
 
     #Using a modified version of np.load to read data with allow_pickle turned off in the .npz file
     np_load_modified = lambda *a,**k: np.load(*a, allow_pickle=True, **k)
 
-    #Grabbing REMS stuff
-    #NOTE: Using Quang since it has data for Apr (04/2015), but should this be for Olwyn?
-    metDir = dir + "\\REMS\\meteo_quang.npz"
-    with np_load_modified(metDir) as metFile:
-        timemet = metFile['timemet.npy'] #YYYYMMDD and milliseconds past midnight
-        press = metFile['press.npy'] #Barometric Pressure (hPa=mbar)
-        rh = metFile['rh.npy'] #Relative Humidity (%)
-        spech = metFile['spech.npy'] #Specific humidity (rh: ratio, p: Pa; T: Kelvin)
-        ta = metFile['ta.npy'] #Air Temperature (C)
-        solrad = metFile['solrad.npy'] #Downward Solar radiation (Wm^-2)
-    metDir = dir + "\\REMS\\meteo_quang_currents.npz"
-    with np_load_modified(metDir) as metFile:
-        timemet = metFile['timemet.npy'] #YYYYMMDD and milliseconds past midnight
-        cur_n_comp = metFile['cur_n_comp.npy'] #Northward component of current velocity (m/s)
-        cur_e_comp = metFile['cur_e_comp.npy'] #Eastward component of current velocity (m/s)
-        tsea = metFile['tsea.npy'] #Water temperature (degC)
-        depth = metFile['depth.npy'] #Approx. distance from surface (m), Babanin et al.
+    # Grabbing REMS stuff
+    timemet = []
+    press = []
+    rh = []
+    spech = []
+    ta = []
+    solrad = []
+    cur_n_comp = []
+    cur_e_comp = []
+    tsea = []
+    depth = []
+    for cyclone in ['quang']:
+        with np_load_modified(os.path.join(os.getcwd(), 'REMS', f'meteo_{cyclone}.npz')) as metFile:
+            timemet += metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
+            press += metFile['press.npy'] # Barometric Pressure (hPa=mbar)
+            rh += metFile['rh.npy'] # Relative Humidity (%)
+            spech += metFile['spech.npy'] # Specific humidity (rh: ratio, p: Pa; T: Kelvin)
+            ta += metFile['ta.npy'] # Air Temperature (C)
+            solrad += metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
+        with np_load_modified(os.path.join(os.getcwd(), 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
+            #timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
+            cur_n_comp += metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
+            cur_e_comp += metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
+            tsea += metFile['tsea.npy'] # Water temperature (degC)
+            depth += metFile['depth.npy'] # Approx. distance from surface (m), Babanin et al.
 
     remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
                             "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
     #Grabbing ERA5 data
-    eraDir = dir + "\\ERA5\\ERA5_2015.npz"
-    with np_load_modified(eraDir) as eraFile:
+    with np_load_modified(os.path.join(os.cwd(), 'ERA5', 'ERA5_2015.npz')) as eraFile:
         timemet = eraFile['timemet.npy']
-        u_10 = eraFile['u_10.npy'] #10 metre U wind component (m/s)
-        v_10 = eraFile['v_10.npy'] #10 metre V wind component (m/s)
-        ta = eraFile['two_m_temp.npy'] - 273.15 #2 metre air temperature (degC)
-        rh = eraFile['rh.npy'] #Relative Humidity (%)
-        spech = eraFile['spechum.npy'] #Specific Humidity (%)
-        waveDir = eraFile['mean_wave_dir.npy'] #Mean wave direction in true deg (0deg North)
-        tsea = eraFile['surface_temp.npy'] - 273.15 #Sea temperature near surface (degC)
-        press = eraFile['surface_pres.npy']/100 #Surface pressure (mBar)
-        solrad = eraFile['surface_solrad.npy'] #Surface solar radiation downwards (J/m^2)
-        thermrad = eraFile['surface_thermrad.npy'] #Surface thermal radiation downwards (J/m^2)
+        u_10 = eraFile['u_10.npy'] # 10 metre U wind component (m/s)
+        v_10 = eraFile['v_10.npy'] # 10 metre V wind component (m/s)
+        ta = eraFile['two_m_temp.npy'] - 273.15 # 2 metre air temperature (degC)
+        rh = eraFile['rh.npy'] # Relative Humidity (%)
+        spech = eraFile['spechum.npy'] # Specific Humidity (%)
+        waveDir = eraFile['mean_wave_dir.npy'] # Mean wave direction in true deg (0deg North)
+        tsea = eraFile['surface_temp.npy'] - 273.15 # Sea temperature near surface (degC)
+        press = eraFile['surface_pres.npy']/100 # Surface pressure (mBar)
+        solrad = eraFile['surface_solrad.npy'] # Surface solar radiation downwards (J/m^2)
+        thermrad = eraFile['surface_thermrad.npy'] # Surface thermal radiation downwards (J/m^2)
 
     eraDf = pd.DataFrame({"timemet": timemet, "u_10": u_10, "v_10": v_10, "tsea": tsea, "waveDir": waveDir, 
                             "ta": ta, "rh": rh, "spech": spech, "press": press, "solrad": solrad, "thermrad": thermrad})
@@ -539,98 +639,16 @@ if __name__=='__main__':
     plt.show()
     '''
 
-    #outDf = analysis_loop(readDir, writeDir, remsDf, eraDf, supervised=False, cpuFraction=75, era_only=False, no_era=True)
-    outDf = analysis_loop(readDir, writeDir, remsDf, eraDf, supervised=False, cpuFraction=75, era_only=True, no_era=False)
-    #outDf2 = analysis_loop(readDir, writeDir, remsDf, eraDf, supervised=False, cpuFraction=75, era_only=True, no_era=False)
+    #outDf = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=True, no_era=False)
+    #outDf2 = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=True, no_era=False)
     #outDf2 = outDf2.loc[outDf2.HCoare != 0]
 
-    plt.plot(outDf.time, outDf.rho, "-o")
-    plt.xlabel('time')
-    plt.ylabel('Air Density (kg/m^3)')
-    plt.show()
+    t0 = time.perf_counter()
+    for i, _ in enumerate(args.read_dir):
+        readDir = Path(args.read_dir[i])
+        writeDir = Path(args.write_dir[i])
+        outDf = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=args.era_only, no_era=args.era_only)
+        postprocess()
+    t1 = time.perf_counter()
     
-    plt.plot(outDf.time, outDf.HCoare, "-o")
-    #plt.plot(outDf2.time, outDf2.HCoare, "-o")
-    #plt.legend(['REMS', 'ERA5'])
-    plt.xlabel('time')
-    plt.ylabel('Sensible Heat Flux')
-    plt.show()
-
-    plt.plot(outDf.time, outDf.u)
-    plt.plot(eraDf.timemet, eraDf.v_10)
-    plt.legend(['Our data: u component (14.8m)', 'ERA5: v component (10m)'])
-    plt.xlabel('time')
-    plt.ylabel('Northerly component of wind speed (m/s)')
-    plt.show()
-
-    plt.plot(outDf.time, outDf.v)
-    plt.plot(eraDf.timemet, eraDf.u_10)
-    plt.legend(['Our data: v component (14.8m)', 'ERA5: u component (10m)'])
-    plt.xlabel('time')
-    plt.ylabel('Easterly component of wind speed (m/s)')
-    plt.show()
-
-    plt.plot(outDf.time, outDf.ta)
-    plt.plot(eraDf.timemet, eraDf.ta)
-    plt.xlabel('time')
-    plt.ylabel('Sea Surface Temperature (degC)')
-    plt.legend(['Anem 2', 'ERA5'])
-    plt.show()
-
-    plt.plot([min([min(outDf.tauCoare), min(outDf.tauApprox)]), max([max(outDf.tauCoare), max(outDf.tauApprox)])], [min([min(outDf.tauCoare), min(outDf.tauApprox)]), max([max(outDf.tauCoare), max(outDf.tauApprox)])], color="r")
-    plt.scatter(outDf.tauCoare, outDf.tauApprox, c=outDf.U10)
-    plt.colorbar(label='U_10 (m/s)')
-    #plt.scatter(outDf.tauCoare, outDf.tauApprox, c=collector_w_turb)
-    #plt.colorbar(label="w' (m/s)")
-    plt.xlabel("COARE")
-    plt.ylabel("rho*u_star^2")
-    plt.title("Shear Stress")
-    plt.show()
-    
-    for i in range(len(outDf.Cd)):
-        outDf.Cd[i] = 1000*outDf.Cd[i]
-
-    plt.scatter(outDf.U10, outDf.Cd)
-    plt.xlim([0, 25])
-    plt.ylim([-2,5])
-    plt.xlabel('U_10 (m/s)')
-    plt.ylabel('C_d*1000')
-    plt.show()
-
-    plt.plot([min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])], [min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])], color="r")
-    plt.scatter(outDf.HCoare, outDf.HApprox, c=outDf.U10)
-    plt.colorbar(label='U_10 (m/s)')
-    #plt.scatter(outDf.HCoare, outDf.HApprox, c=collector_w_turb)
-    #plt.colorbar(label="mean(w'T')")
-    plt.xlabel("COARE")
-    plt.ylabel("rho*C_P*cov(w',T')")
-    plt.title("Sensible Heat Flux")
-    plt.show()
-
-    plt.plot(outDf.time, outDf.tauApprox, "-o")
-    plt.plot(outDf.time, outDf.tauCoare, "-o")
-    plt.legend(['EC', 'COARE'])
-    plt.xlabel('Time')
-    plt.ylabel('Shear Stress')
-    plt.show()
-
-    plt.plot(outDf.time, outDf.HApprox, "-o")
-    plt.plot(outDf.time, outDf.HCoare, "-o")
-    plt.legend(['EC', 'COARE'])
-    plt.xlabel('Time')
-    plt.ylabel('Sensible Heat Flux')
-    plt.show()
-
-    fig, ax = plt.subplots()
-    lns1 = ax.plot(outDf.time, outDf.HApprox, "-o", label='EC')
-    lns2 = ax.plot(outDf.time, outDf.HCoare, "-o", label='COARE')
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Sensible Heat Flux')
-    ax2 = ax.twinx()
-    lns3 = ax2.plot(outDf.time, outDf.U10, "-o", color='r', label='U_10')
-    ax2.set_ylim([0,20])
-    ax2.set_ylabel('U_10 (m/s)')
-    lns = lns1+lns2+lns3
-    labs = [l.get_label() for l in lns]
-    ax.legend(lns, labs, loc=0)
-    plt.show()
+    write_message(f"Took {t1-t0}s", filename='analysis_log.txt')
