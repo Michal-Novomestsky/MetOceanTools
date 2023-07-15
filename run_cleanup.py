@@ -325,7 +325,7 @@ if __name__=='__main__':
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
-        cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=100)
+        cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=1)
     t1 = time.perf_counter()
     
     write_message(f"Took {t1-t0}s", filename='cleanup_log.txt')
@@ -336,7 +336,7 @@ if __name__=='__main__':
     #     t0 = time.perf_counter()
     #     try:
     #         t0 = time.perf_counter()
-    #         cleanup_loop(dir + "\\Cleanup Inputs\\" + io + "_cleanup_input", dir + "\\Fullsweeps\\" + io + "_fullsweep", supervised=False, cpuFraction=60)
+    #         cleanup_loop(dir + "\\Cleanup Inputs\\" + io + "_cleanup_input", dir + "\\Fullsweeps\\" + io + "_fullsweep", supervised=False, cpuFraction=0.6)
     #     except ValueError:
     #         write_message('CRASHED', filename='cleanup_log.txt')
     #     t1 = time.perf_counter()
