@@ -2,7 +2,6 @@ import os
 import DataAnalyser as da
 from pathlib import Path
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import datetime
 import humidity
@@ -10,12 +9,9 @@ import matplotlib.pyplot as plt
 import glob
 import multiprocessing as mp
 import sys
-from scipy import integrate
 
-dir = os.getcwd()
-dir = str(Path(dir).parents[0])
-sys.path.insert(1, dir + '\\MetTools\\COARE-algorithm-master\\COARE-algorithm-master\\Python\\COARE3.6')
-import coare36vnWarm_et as coare
+from scipy import integrate
+from COARE.COARE3_6 import coare36vnWarm_et as coare
 
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
