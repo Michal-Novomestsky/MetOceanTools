@@ -15,6 +15,20 @@ from scipy import integrate
 from DataAnalyser import *
 from COARE.COARE3_6.coare36vnWarm_et import coare36vnWarm_et as coare
 
+# Defining constants
+KELVIN_TO_CELSIUS = 273.15
+ZU = 14.8 # Height of anemometer #1 (the higher one)
+ZT = 28 # Approx. height of flare bridge AMSL
+ZQ = 28 # Approx. height of flare bridge AMSL
+LAT = -19.5856 # 19.5856S (Babanin et al.)
+LON = 116.1367 # 116.1367E
+SS = 35 # https://salinity.oceansciences.org/overview.htm
+
+# Default parameters
+LW_DN = 370
+ZI = 600
+RAINRATE = 0
+
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
 
@@ -113,18 +127,7 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
     hour = fileName[16:18]
     
     # Defining constants
-    ZU = 14.8 # Height of anemometer #1 (the higher one) #TODO: Need to make global
-    ZT = 28 # Approx. height of flare bridge AMSL
-    ZQ = 28 # Approx. height of flare bridge AMSL
-    LAT = -19.5856 # 19.5856S (Babanin et al.)
-    LON = 116.1367 # 116.1367E
-    SS = 35 # https://salinity.oceansciences.org/overview.htm
     TS_DEPTH = remsDf.depth[0] # Note that depth has to be extracted before we select the corresponding day as sometimes REMS may not exist on that day
-
-    # Default parameters
-    LW_DN = 370
-    ZI = 600
-    RAINRATE = 0
 
     # Getting the corresponding day in the REMS data
     remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month))]
@@ -510,11 +513,11 @@ if __name__=='__main__':
         timemet = eraFile['timemet.npy']
         u_10 = eraFile['u_10.npy'] # 10 metre U wind component (m/s)
         v_10 = eraFile['v_10.npy'] # 10 metre V wind component (m/s)
-        ta = eraFile['two_m_temp.npy'] - 273.15 # 2 metre air temperature (degC)
+        ta = eraFile['two_m_temp.npy'] - KELVIN_TO_CELSIUS # 2 metre air temperature (degC)
         rh = eraFile['rh.npy'] # Relative Humidity (%)
         spech = eraFile['spechum.npy'] # Specific Humidity (%)
         waveDir = eraFile['mean_wave_dir.npy'] # Mean wave direction in true deg (0deg North)
-        tsea = eraFile['surface_temp.npy'] - 273.15 # Sea temperature near surface (degC)
+        tsea = eraFile['surface_temp.npy'] - KELVIN_TO_CELSIUS # Sea temperature near surface (degC)
         press = eraFile['surface_pres.npy']/100 # Surface pressure (mBar)
         solrad = eraFile['surface_solrad.npy'] # Surface solar radiation downwards (J/m^2)
         thermrad = eraFile['surface_thermrad.npy'] # Surface thermal radiation downwards (J/m^2)
