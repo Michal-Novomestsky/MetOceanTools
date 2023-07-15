@@ -139,7 +139,6 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
         # The if nots are there as a simplistic means of lazychecking to prevent unecessary computation if we've already hit a faulty dataset
         saveLoc = os.path.join(writeDir, "FTs", "loglogs")
         rejectLog = data.plot_ft_loglog(w1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
-        rejectLog = True # TODO REMOVE
         if not rejectLog:
             rejectLog = rejectLog or data.plot_ft_loglog(w2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
         if not rejectLog:
