@@ -132,7 +132,11 @@ class DataCleaner:
             if windowWidth is not None:
                 N = len(self.df.loc[(0 <= self.df.Minute) & (self.df.Minute <= windowWidth)])
                 #TODO: Broken x axis
-                ft_x = fftfreq(N, d=self.df.GlobalSecs[1])[:N//2] #The function is symmetric so we are only interested in +ive frequency values
+                # If GlobalSecs is empty, reject the case
+                try:
+                    ft_x = fftfreq(N, d=self.df.GlobalSecs[1])[:N//2] #The function is symmetric so we are only interested in +ive frequency values
+                except KeyError:
+                    return True
                 #ft_x = ft_x/(2*np.pi)
 
                 # Loop through as many times as required to get all snapshots
