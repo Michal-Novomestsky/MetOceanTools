@@ -322,10 +322,10 @@ if __name__=='__main__':
     #readDir = os.path.join(dir, "Cleanup Inputs", "Apr2015_cleanup_input")
 
     t0 = time.perf_counter()
+    write_message("Starting Cleanup Run", filename='cleanup_log.txt', writemode='w')
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
-        write_message("Starting Cleanup Run", filename='cleanup_log.txt', writemode='w')
         cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=1)
     t1 = time.perf_counter()
     

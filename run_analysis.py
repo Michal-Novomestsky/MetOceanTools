@@ -83,7 +83,7 @@ def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supe
 
         cpuCount = mp.cpu_count()
         coresToUse = int(np.ceil(cpuFraction*cpuCount))
-        write_message(f"Using {100*cpuFraction}% of available cores -> {coresToUse}/{cpuCount}", filename='analysis_log.txt', writemode='w')
+        write_message(f"Using {100*cpuFraction}% of available cores -> {coresToUse}/{cpuCount}", filename='analysis_log.txt')
 
         # Creating a tuple of tuples of inputs to pass into each iteration
         remsArr = [remsDf]*len(files)
@@ -647,6 +647,7 @@ if __name__=='__main__':
     #outDf2 = outDf2.loc[outDf2.HCoare != 0]
 
     t0 = time.perf_counter()
+    write_message(f"Starting Analysis Run", filename='analysis_log.txt', writemode='w')
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
