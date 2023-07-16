@@ -317,6 +317,8 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--read_dir', nargs='+', type=str, help='Path to the rawdata. Can be a list.')
     parser.add_argument('--write_dir', nargs='+', type=str, help='Path to output. Can be a list.')
+    parser.add_argument('--cpu_fraction', type=float, help='% Of CPUs to use. Can be within (0,1].', default=1)
+    parser.add_argument('--run_supervised', action='store_true', help='Run one-by-one cleanup', default=False)
     args = parser.parse_args()
 
     #readDir = dir + "\\Apr2015_clean_MRU_and_compasses"
@@ -327,7 +329,7 @@ if __name__=='__main__':
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
-        cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=1)
+        cleanup_loop(readDir, writeDir, supervised=args.run_supervised, cpuFraction=args.cpu_fraction)
     t1 = time.perf_counter()
     
     write_message(f"Took {t1-t0}s", filename='cleanup_log.txt')

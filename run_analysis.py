@@ -473,6 +473,8 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--read_dir', nargs='+', type=str, help='Path to the rawdata. Can be a list.')
     parser.add_argument('--write_dir', nargs='+', type=str, help='Path to output. Can be a list.')
+    parser.add_argument('--cpu_fraction', type=float, help='% Of CPUs to use. Can be within (0,1].', default=1)
+    parser.add_argument('--run_supervised', action='store_true', help='Run one-by-one analysis', default=False)
     parser.add_argument('--era_only', action='store_true', help='If True, always use ERA5 and never use REMS for relevant parameters. If False, will use REMS when available and ERA5 otherwise.', default=False)
     parser.add_argument('--no_era', action='store_true', help='If True, will never use ERA5 - only REMS (skips unavailable times).', default=False)
     args = parser.parse_args()
@@ -642,7 +644,7 @@ if __name__=='__main__':
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
-        outDf = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=args.era_only, no_era=args.no_era)
+        outDf = analysis_loop(readDir, remsDf, eraDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
         postprocess()
     t1 = time.perf_counter()
     
