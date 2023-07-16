@@ -40,7 +40,8 @@ def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supe
     Steps through each data file located in readDir.
     Unsupervised enables multiprocessing using cpuFraction% of all available cores.
     """
-    files = [file for file in readDir.iterdir()]
+    file_selector = lambda file: "NRAFBR" in file.stem
+    files = [file for file in readDir.iterdir() if file_selector(file)]
 
     # TODO: Maybe make more efficient with smth like array. For now list is ok since we're passing in floats
     collector_time = []

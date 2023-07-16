@@ -17,7 +17,8 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1)
     """
     test = readDir
     rejectedFiles = []
-    files = [file for file in readDir.iterdir()]
+    file_selector = lambda file: "csv" in file.suffix or "txt" in file.suffix
+    files = [file for file in readDir.iterdir() if file_selector(file)]
 
     # Making folders
     os.mkdir(os.path.join(writeDir, 'FTs'))
