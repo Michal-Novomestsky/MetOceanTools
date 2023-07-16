@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import datetime
-import humidity
+import MeterologicalParameters.humidity as hum
 import matplotlib.pyplot as plt
 import glob
 import multiprocessing as mp
@@ -12,7 +12,7 @@ import argparse
 import time
 
 from scipy import integrate
-from DataAnalyser import *
+from Modules.DataAnalyser import *
 from COARE.COARE3_6.coare36vnWarm_et import coare36vnWarm_et as coare
 
 # Defining constants
@@ -189,8 +189,8 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             sw_dn = eraSlice.solrad
             lw_dn = eraSlice.thermrad
             spechum = eraSlice.spech
-            #e = humidity.hum2ea_modified(p, spechum)
-            rho = humidity.rhov_modified(tair, p, sh=spechum)
+            #e = hum.hum2ea_modified(p, spechum)
+            rho = hum.rhov_modified(tair, p, sh=spechum)
 
             w2_turb = get_turbulent(slice[w2])
             T2_turb = get_turbulent(slice[t2])
@@ -216,8 +216,8 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             u_star_2 = np.mean(U2_turb*w2_turb) - np.mean(U2_turb)*np.mean(w2_turb)
             
             tau_approx[i] = -rho*u_star_2
-            #H_approx[i] = rho*humidity.cpd*np.mean(w2_turb*T2_turb)
-            H_approx[i] = rho*humidity.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
+            #H_approx[i] = rho*hum.cpd*np.mean(w2_turb*T2_turb)
+            H_approx[i] = rho*hum.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
 
             #TODO: Assume U_10 ~= U_14.8 for now
             C_d[i] = np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2)
@@ -277,8 +277,8 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             tsea = remsSlice.tsea
             sw_dn = remsSlice.solrad
             spechum = remsSlice.spech
-            #e = humidity.hum2ea_modified(p, spechum)
-            rho = humidity.rhov_modified(tair, p, sh=spechum)
+            #e = hum.hum2ea_modified(p, spechum)
+            rho = hum.rhov_modified(tair, p, sh=spechum)
 
             w2_turb = get_turbulent(slice[w2])
             T2_turb = get_turbulent(slice[t2])
@@ -304,8 +304,8 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             u_star_2 = np.mean(U2_turb*w2_turb) - np.mean(U2_turb)*np.mean(w2_turb)
             
             tau_approx[i] = -rho*u_star_2
-            #H_approx[i] = rho*humidity.cpd*np.mean(w2_turb*T2_turb)
-            H_approx[i] = rho*humidity.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
+            #H_approx[i] = rho*hum.cpd*np.mean(w2_turb*T2_turb)
+            H_approx[i] = rho*hum.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
 
             # TODO: Assume U_10 ~= U_14.8 for now
             C_d[i] = np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2)
@@ -473,6 +473,8 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--read_dir', nargs='+', type=str, help='Path to the rawdata. Can be a list.')
     parser.add_argument('--write_dir', nargs='+', type=str, help='Path to output. Can be a list.')
+    parser.add_argument('--cpu_fraction', type=float, help='% Of CPUs to use. Can be within (0,1].', default=1)
+    parser.add_argument('--run_supervised', action='store_true', help='Run one-by-one analysis', default=False)
     parser.add_argument('--era_only', action='store_true', help='If True, always use ERA5 and never use REMS for relevant parameters. If False, will use REMS when available and ERA5 otherwise.', default=False)
     parser.add_argument('--no_era', action='store_true', help='If True, will never use ERA5 - only REMS (skips unavailable times).', default=False)
     args = parser.parse_args()
@@ -642,7 +644,7 @@ if __name__=='__main__':
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
-        outDf = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=args.era_only, no_era=args.no_era)
+        outDf = analysis_loop(readDir, remsDf, eraDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
         postprocess()
     t1 = time.perf_counter()
     

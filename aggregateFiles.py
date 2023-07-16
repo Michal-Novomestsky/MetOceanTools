@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import glob
-import DataCleaner as dc
+from Modules.DataCleaner import DataCleaner
 import pandas as pd
 
 def read_loop(readDir: str) -> list:
@@ -19,7 +19,7 @@ def read_loop(readDir: str) -> list:
 def combine_bad_files(badFiles: list, writeDir: str) -> None:
     while len(badFiles) != 0:
         file = badFiles.pop(0)
-        df = dc.DataCleaner(file).df
+        df = DataCleaner(file).df
         fileName = file.split('\\')[-1]
         fileDate = file.split('_')[1]
         fileHour = fileName[-10:-8]
@@ -27,7 +27,7 @@ def combine_bad_files(badFiles: list, writeDir: str) -> None:
         usedFiles = []
         for i, file in enumerate(badFiles):
             if (file.split('_')[1] == fileDate) & (file.split('\\')[-1][-10:-8] == fileHour):
-                df2 = dc.DataCleaner(file).df
+                df2 = DataCleaner(file).df
                 frames = [df, df2]
                 df = pd.concat(frames).reset_index()
                 df = df.drop('index', axis=1)
