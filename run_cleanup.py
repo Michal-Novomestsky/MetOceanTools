@@ -26,7 +26,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1)
 
     # Manual one-by-one checking
     if supervised:
-        write_message('Starting Supervised Run', filename='cleanup_log.txt', writemode='w')
+        write_message('Starting Supervised Run', filename='cleanup_log.txt')
         for file in files:
             #file = test + "\\NRAFBR_20042015_010000.txt"
             rejectedFile = _cleanup_iteration(file, writeDir, supervised=True)
@@ -40,7 +40,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1)
 
         cpuCount = mp.cpu_count()
         coresToUse = int(np.ceil(cpuFraction*cpuCount))
-        write_message(f"Using {100*cpuFraction}% of available cores -> {coresToUse}/{cpuCount}", filename='cleanup_log.txt', writemode='w')
+        write_message(f"Using {100*cpuFraction}% of available cores -> {coresToUse}/{cpuCount}", filename='cleanup_log.txt')
 
         # Creating a tuple of tuples of inputs to pass into each iteration
         writeDirArr = [writeDir]*len(files)
@@ -325,6 +325,7 @@ if __name__=='__main__':
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
+        write_message("Starting Cleanup Run", filename='cleanup_log.txt', writemode='w')
         cleanup_loop(readDir, writeDir, supervised=False, cpuFraction=1)
     t1 = time.perf_counter()
     
