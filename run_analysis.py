@@ -480,30 +480,20 @@ if __name__=='__main__':
     np_load_modified = lambda *a,**k: np.load(*a, allow_pickle=True, **k)
 
     # Grabbing REMS stuff
-    timemet = []
-    press = []
-    rh = []
-    spech = []
-    ta = []
-    solrad = []
-    cur_n_comp = []
-    cur_e_comp = []
-    tsea = []
-    depth = []
     for cyclone in ['quang']:
         with np_load_modified(os.path.join(os.getcwd(), 'REMS', f'meteo_{cyclone}.npz')) as metFile:
-            timemet += metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
-            press += metFile['press.npy'] # Barometric Pressure (hPa=mbar)
-            rh += metFile['rh.npy'] # Relative Humidity (%)
-            spech += metFile['spech.npy'] # Specific humidity (rh: ratio, p: Pa; T: Kelvin)
-            ta += metFile['ta.npy'] # Air Temperature (C)
-            solrad += metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
+            timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
+            press = metFile['press.npy'] # Barometric Pressure (hPa=mbar)
+            rh = metFile['rh.npy'] # Relative Humidity (%)
+            spech = metFile['spech.npy'] # Specific humidity (rh: ratio, p: Pa; T: Kelvin)
+            ta = metFile['ta.npy'] # Air Temperature (C)
+            solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
         with np_load_modified(os.path.join(os.getcwd(), 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
             #timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
-            cur_n_comp += metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
-            cur_e_comp += metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
-            tsea += metFile['tsea.npy'] # Water temperature (degC)
-            depth += metFile['depth.npy'] # Approx. distance from surface (m), Babanin et al.
+            cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
+            cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
+            tsea = metFile['tsea.npy'] # Water temperature (degC)
+            depth = metFile['depth.npy'] # Approx. distance from surface (m), Babanin et al.
 
     remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
                             "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
