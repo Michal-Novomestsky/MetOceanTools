@@ -499,7 +499,7 @@ if __name__=='__main__':
                             "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
     # Grabbing ERA5 data
-    with np_load_modified(os.path.join(os.cwd(), 'ERA5', 'ERA5_2015.npz')) as eraFile:
+    with np_load_modified(os.path.join(os.getcwd(), 'ERA5', 'ERA5_2015.npz')) as eraFile:
         timemet = eraFile['timemet.npy']
         u_10 = eraFile['u_10.npy'] # 10 metre U wind component (m/s)
         v_10 = eraFile['v_10.npy'] # 10 metre V wind component (m/s)
