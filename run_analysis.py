@@ -473,8 +473,8 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--read_dir', nargs='+', type=str, help='Path to the rawdata. Can be a list.')
     parser.add_argument('--write_dir', nargs='+', type=str, help='Path to output. Can be a list.')
-    parser.add_argument('--era_only', type=bool, help='If True, always use ERA5 and never use REMS for relevant parameters. If False, will use REMS when available and ERA5 otherwise.')
-    parser.add_argument('--no_era', type=bool, help='If True, will never use ERA5 - only REMS (skips unavailable times).', default=False)
+    parser.add_argument('--era_only', action='store_true', help='If True, always use ERA5 and never use REMS for relevant parameters. If False, will use REMS when available and ERA5 otherwise.', default=False)
+    parser.add_argument('--no_era', action='store_true', help='If True, will never use ERA5 - only REMS (skips unavailable times).', default=False)
     args = parser.parse_args()
 
     # Using a modified version of np.load to read data with allow_pickle turned off in the .npz file
