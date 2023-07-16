@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import datetime
-import humidity
+import MeterologicalParameters.humidity as hum
 import matplotlib.pyplot as plt
 import glob
 import multiprocessing as mp
@@ -12,7 +12,7 @@ import argparse
 import time
 
 from scipy import integrate
-from DataAnalyser import *
+from Modules.DataAnalyser import *
 from COARE.COARE3_6.coare36vnWarm_et import coare36vnWarm_et as coare
 
 # Defining constants
@@ -189,8 +189,8 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             sw_dn = eraSlice.solrad
             lw_dn = eraSlice.thermrad
             spechum = eraSlice.spech
-            #e = humidity.hum2ea_modified(p, spechum)
-            rho = humidity.rhov_modified(tair, p, sh=spechum)
+            #e = hum.hum2ea_modified(p, spechum)
+            rho = hum.rhov_modified(tair, p, sh=spechum)
 
             w2_turb = get_turbulent(slice[w2])
             T2_turb = get_turbulent(slice[t2])
@@ -216,8 +216,8 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             u_star_2 = np.mean(U2_turb*w2_turb) - np.mean(U2_turb)*np.mean(w2_turb)
             
             tau_approx[i] = -rho*u_star_2
-            #H_approx[i] = rho*humidity.cpd*np.mean(w2_turb*T2_turb)
-            H_approx[i] = rho*humidity.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
+            #H_approx[i] = rho*hum.cpd*np.mean(w2_turb*T2_turb)
+            H_approx[i] = rho*hum.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
 
             #TODO: Assume U_10 ~= U_14.8 for now
             C_d[i] = np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2)
@@ -277,8 +277,8 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             tsea = remsSlice.tsea
             sw_dn = remsSlice.solrad
             spechum = remsSlice.spech
-            #e = humidity.hum2ea_modified(p, spechum)
-            rho = humidity.rhov_modified(tair, p, sh=spechum)
+            #e = hum.hum2ea_modified(p, spechum)
+            rho = hum.rhov_modified(tair, p, sh=spechum)
 
             w2_turb = get_turbulent(slice[w2])
             T2_turb = get_turbulent(slice[t2])
@@ -304,8 +304,8 @@ def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, e
             u_star_2 = np.mean(U2_turb*w2_turb) - np.mean(U2_turb)*np.mean(w2_turb)
             
             tau_approx[i] = -rho*u_star_2
-            #H_approx[i] = rho*humidity.cpd*np.mean(w2_turb*T2_turb)
-            H_approx[i] = rho*humidity.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
+            #H_approx[i] = rho*hum.cpd*np.mean(w2_turb*T2_turb)
+            H_approx[i] = rho*hum.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
 
             # TODO: Assume U_10 ~= U_14.8 for now
             C_d[i] = np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2)

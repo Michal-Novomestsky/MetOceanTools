@@ -4,8 +4,8 @@ import numpy as np
 import time
 import argparse
 
-from DataCleaner import DataCleaner
-from DataAnalyser import write_message
+from Modules.DataCleaner import DataCleaner
+from Modules.DataAnalyser import write_message
 from pathlib import Path
 
 
