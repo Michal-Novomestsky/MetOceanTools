@@ -641,7 +641,7 @@ if __name__=='__main__':
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
-        outDf = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=args.era_only, no_era=args.era_only)
+        outDf = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=args.era_only, no_era=args.no_era)
         postprocess()
     t1 = time.perf_counter()
     
