@@ -648,4 +648,4 @@ if __name__=='__main__':
         postprocess()
     t1 = time.perf_counter()
     
-    write_message(f"Took {t1-t0}s", filename='analysis_log.txt')
+    write_message(f"Took {(t1-t0)/60}min", filename='analysis_log.txt')
