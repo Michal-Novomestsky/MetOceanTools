@@ -322,14 +322,12 @@ if __name__=='__main__':
     parser.add_argument('--run_supervised', action='store_true', help='Run one-by-one cleanup', default=False)
     args = parser.parse_args()
 
-    #readDir = dir + "\\Apr2015_clean_MRU_and_compasses"
-    #readDir = os.path.join(dir, "Cleanup Inputs", "Apr2015_cleanup_input")
-
     t0 = time.perf_counter()
     write_message("Starting Cleanup Run", filename='cleanup_log.txt', writemode='w')
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
+
         cleanup_loop(readDir, writeDir, supervised=args.run_supervised, cpuFraction=args.cpu_fraction)
         run_aggregate_files(writeDir)
     t1 = time.perf_counter()

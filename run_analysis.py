@@ -377,39 +377,187 @@ def get_turbulent(s: pd.Series) -> pd.Series:
     s_bar = s.mean()
     return s - s_bar
 
-def postprocess() -> None:
+def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike) -> None:
+    '''
+    Runs any analysis/plotting prior to running it through COARE/EC/etc.
+
+    :param eraDf: (pd.Dataframe) Df containing data from ERA5.
+    :param remsDf: (pd.Dataframe) Df containing data from REMS.
+    :writeDir: (os.PathLike) Path to the save location for images.
+    '''
+    plt.plot(remsDf.timemet, remsDf.press)
+    plt.plot(eraDf.timemet, eraDf.press)
+    plt.xlabel('time')
+    plt.ylabel('Pressure (mBar)')
+    plt.legend(['REMS', 'ERA5'])
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
+
+    plt.plot(remsDf.timemet, remsDf.ta)
+    plt.plot(eraDf.timemet, eraDf.ta)
+    plt.xlabel('time')
+    plt.ylabel('Sea Surface Temperature (degC)')
+    plt.legend(['REMS', 'ERA5'])
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
+
+    plt.plot(remsDf.timemet, remsDf.tsea)
+    plt.plot(eraDf.timemet, eraDf.tsea)
+    plt.xlabel('time')
+    plt.ylabel('Air Temperature (degC)')
+    plt.legend([f'REMS (28m)', 'ERA5 (2m)'])
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
+
+    plt.subplot(1, 2, 1)
+    plt.plot(remsDf.timemet, remsDf.tsea)
+    plt.plot(remsDf.timemet, remsDf.ta)
+    plt.ylim([20,30])
+    plt.xlabel('time')
+    plt.ylabel('Temperature (degC)')
+    plt.legend([f'Sea Temp', 'Air Temp'])
+    plt.title('REMS')
+    plt.subplot(1,2,2)
+    rems_time_period = eraDf.loc[(eraDf.timemet >= remsDf.timemet[0]) & (eraDf.timemet <= remsDf.timemet[len(remsDf) - 1])]
+    plt.plot(rems_time_period.timemet, rems_time_period.tsea)
+    plt.plot(rems_time_period.timemet, rems_time_period.ta)
+    plt.ylim([20,30])
+    plt.xlabel('time')
+    plt.ylabel('Temperature (degC)')
+    plt.legend([f'Sea Temp', 'Air Temp'])
+    plt.title('ERA5')
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
+
+    time_j = []
+    solrad_j = []
+    time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
+    amountOfSlices = time_delta.total_seconds()//3600 #seconds -> hours
+    solSlices = np.array_split(remsDf, amountOfSlices)
+    #Integrating over each hour
+    for slice in solSlices:
+        slice = slice.reset_index()
+        xVals = slice.timemet - slice.timemet[0]
+        xVals = xVals.apply(lambda x: x.total_seconds()).values
+        solrad_j.append(integrate.trapezoid(slice.solrad, x=xVals))
+        time_j.append(slice.timemet[len(slice) - 1])
+
+    plt.plot(time_j, solrad_j, "-o")
+    plt.plot(eraDf.timemet, eraDf.solrad, "-o")
+    plt.xlabel('time')
+    plt.ylabel('Downward Solar Radiation (J/m^2)')
+    plt.legend(['REMS', 'ERA5'])
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
+
+    time_j = []
+    thermrad_j = []
+    time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
+    amountOfSlices = time_delta.total_seconds()//3600 #seconds -> hours
+    solSlices = np.array_split(remsDf, amountOfSlices)
+    #Integrating over each hour
+    for slice in solSlices:
+        slice = slice.reset_index()
+        xVals = slice.timemet - slice.timemet[0]
+        xVals = xVals.apply(lambda x: x.total_seconds()).values
+        thermrad_j.append(integrate.trapezoid(370*np.ones((len(xVals))), x=xVals))
+        time_j.append(slice.timemet[len(slice) - 1])
+
+    plt.plot(time_j, thermrad_j)
+    plt.plot(eraDf.timemet, eraDf.thermrad)
+    plt.xlabel('time')
+    plt.ylabel('Downward IR Radiation (J/m^2)')
+    plt.legend(['Default Value', 'ERA5'])
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
+    
+    # TODO: PATCH FIX
+    eraDf.solrad = eraDf.solrad/3600
+    eraDf.thermrad = eraDf.thermrad/3600
+
+    
+    dt = eraDf.timemet.diff()
+    dt = dt.apply(lambda t: t.total_seconds())
+    solrad_diff = eraDf.solrad.diff()/dt
+
+    plt.plot(remsDf.timemet, remsDf.solrad, "-o")
+    #plt.plot(eraDf.timemet, solrad_diff, "-o")
+    plt.plot(eraDf.timemet, eraDf.solrad, "-o")
+    plt.xlabel('time')
+    plt.ylabel('Downward Solar Radiation (W/m^2)')
+    plt.legend(['REMS', 'ERA5'])
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
+
+    # NOTE: Missing plots: water current speeds
+
+    plt.plot(remsDf.timemet, remsDf.rh)
+    plt.plot(eraDf.timemet, eraDf.rh)
+    #plt.plot(eraDf.timemet, 100*np.ones(len(eraDf)))
+    plt.xlabel('time')
+    plt.ylabel('Relative humidity (%)')
+    plt.legend(['REMS','ERA5'])
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
+
+    plt.plot(remsDf.timemet, remsDf.spech)
+    plt.plot(eraDf.timemet, eraDf.spech)
+    plt.xlabel('time')
+    plt.ylabel('Specific humidity (kg/kg)')
+    plt.legend(['REMS','ERA5'])
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
+
+    #outDf = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=True, no_era=False)
+    #outDf2 = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=True, no_era=False)
+    #outDf2 = outDf2.loc[outDf2.HCoare != 0]
+
+def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike) -> None:
+    '''
+    Runs all the plotting and postprocessing after data generation from COARE/EC/etc. is complete.
+
+    :param outDf: (pd.Dataframe) Df containing the outputs from analysis_loop.
+    :param eraDf: (pd.Dataframe) Df containing data from ERA5.
+    :param remsDf: (pd.Dataframe) Df containing data from REMS.
+    :writeDir: (os.PathLike) Path to the save location for images.
+    '''
     plt.plot(outDf.time, outDf.rho, "-o")
     plt.xlabel('time')
     plt.ylabel('Air Density (kg/m^3)')
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
     
     plt.plot(outDf.time, outDf.HCoare, "-o")
     #plt.plot(outDf2.time, outDf2.HCoare, "-o")
     #plt.legend(['REMS', 'ERA5'])
     plt.xlabel('time')
     plt.ylabel('Sensible Heat Flux')
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
 
     plt.plot(outDf.time, outDf.u)
     plt.plot(eraDf.timemet, eraDf.v_10)
     plt.legend(['Our data: u component (14.8m)', 'ERA5: v component (10m)'])
     plt.xlabel('time')
     plt.ylabel('Northerly component of wind speed (m/s)')
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
 
     plt.plot(outDf.time, outDf.v)
     plt.plot(eraDf.timemet, eraDf.u_10)
     plt.legend(['Our data: v component (14.8m)', 'ERA5: u component (10m)'])
     plt.xlabel('time')
     plt.ylabel('Easterly component of wind speed (m/s)')
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
 
     plt.plot(outDf.time, outDf.ta)
     plt.plot(eraDf.timemet, eraDf.ta)
     plt.xlabel('time')
     plt.ylabel('Sea Surface Temperature (degC)')
     plt.legend(['Anem 2', 'ERA5'])
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
 
     plt.plot([min([min(outDf.tauCoare), min(outDf.tauApprox)]), max([max(outDf.tauCoare), max(outDf.tauApprox)])], [min([min(outDf.tauCoare), min(outDf.tauApprox)]), max([max(outDf.tauCoare), max(outDf.tauApprox)])], color="r")
     plt.scatter(outDf.tauCoare, outDf.tauApprox, c=outDf.U10)
@@ -419,7 +567,8 @@ def postprocess() -> None:
     plt.xlabel("COARE")
     plt.ylabel("rho*u_star^2")
     plt.title("Shear Stress")
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
     
     for i in range(len(outDf.Cd)):
         outDf.Cd[i] = 1000*outDf.Cd[i]
@@ -429,7 +578,8 @@ def postprocess() -> None:
     plt.ylim([-2,5])
     plt.xlabel('U_10 (m/s)')
     plt.ylabel('C_d*1000')
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
 
     plt.plot([min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])], [min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])], color="r")
     plt.scatter(outDf.HCoare, outDf.HApprox, c=outDf.U10)
@@ -439,21 +589,24 @@ def postprocess() -> None:
     plt.xlabel("COARE")
     plt.ylabel("rho*C_P*cov(w',T')")
     plt.title("Sensible Heat Flux")
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
 
     plt.plot(outDf.time, outDf.tauApprox, "-o")
     plt.plot(outDf.time, outDf.tauCoare, "-o")
     plt.legend(['EC', 'COARE'])
     plt.xlabel('Time')
     plt.ylabel('Shear Stress')
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
 
     plt.plot(outDf.time, outDf.HApprox, "-o")
     plt.plot(outDf.time, outDf.HCoare, "-o")
     plt.legend(['EC', 'COARE'])
     plt.xlabel('Time')
     plt.ylabel('Sensible Heat Flux')
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
 
     fig, ax = plt.subplots()
     lns1 = ax.plot(outDf.time, outDf.HApprox, "-o", label='EC')
@@ -467,7 +620,8 @@ def postprocess() -> None:
     lns = lns1+lns2+lns3
     labs = [l.get_label() for l in lns]
     ax.legend(lns, labs, loc=0)
-    plt.show()
+    plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    plt.close()
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
@@ -518,134 +672,15 @@ if __name__=='__main__':
     eraDf = pd.DataFrame({"timemet": timemet, "u_10": u_10, "v_10": v_10, "tsea": tsea, "waveDir": waveDir, 
                             "ta": ta, "rh": rh, "spech": spech, "press": press, "solrad": solrad, "thermrad": thermrad})
 
-    '''
-    plt.plot(remsDf.timemet, remsDf.press)
-    plt.plot(eraDf.timemet, eraDf.press)
-    plt.xlabel('time')
-    plt.ylabel('Pressure (mBar)')
-    plt.legend(['REMS', 'ERA5'])
-    plt.show()
-
-    plt.plot(remsDf.timemet, remsDf.ta)
-    plt.plot(eraDf.timemet, eraDf.ta)
-    plt.xlabel('time')
-    plt.ylabel('Sea Surface Temperature (degC)')
-    plt.legend(['REMS', 'ERA5'])
-    plt.show()
-
-    plt.plot(remsDf.timemet, remsDf.tsea)
-    plt.plot(eraDf.timemet, eraDf.tsea)
-    plt.xlabel('time')
-    plt.ylabel('Air Temperature (degC)')
-    plt.legend([f'REMS (28m)', 'ERA5 (2m)'])
-    plt.show()
-
-    plt.subplot(1, 2, 1)
-    plt.plot(remsDf.timemet, remsDf.tsea)
-    plt.plot(remsDf.timemet, remsDf.ta)
-    plt.ylim([20,30])
-    plt.xlabel('time')
-    plt.ylabel('Temperature (degC)')
-    plt.legend([f'Sea Temp', 'Air Temp'])
-    plt.title('REMS')
-    plt.subplot(1,2,2)
-    rems_time_period = eraDf.loc[(eraDf.timemet >= remsDf.timemet[0]) & (eraDf.timemet <= remsDf.timemet[len(remsDf) - 1])]
-    plt.plot(rems_time_period.timemet, rems_time_period.tsea)
-    plt.plot(rems_time_period.timemet, rems_time_period.ta)
-    plt.ylim([20,30])
-    plt.xlabel('time')
-    plt.ylabel('Temperature (degC)')
-    plt.legend([f'Sea Temp', 'Air Temp'])
-    plt.title('ERA5')
-    plt.show()
-
-    time_j = []
-    solrad_j = []
-    time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
-    amountOfSlices = time_delta.total_seconds()//3600 #seconds -> hours
-    solSlices = np.array_split(remsDf, amountOfSlices)
-    #Integrating over each hour
-    for slice in solSlices:
-        slice = slice.reset_index()
-        xVals = slice.timemet - slice.timemet[0]
-        xVals = xVals.apply(lambda x: x.total_seconds()).values
-        solrad_j.append(integrate.trapezoid(slice.solrad, x=xVals))
-        time_j.append(slice.timemet[len(slice) - 1])
-
-    plt.plot(time_j, solrad_j, "-o")
-    plt.plot(eraDf.timemet, eraDf.solrad, "-o")
-    plt.xlabel('time')
-    plt.ylabel('Downward Solar Radiation (J/m^2)')
-    plt.legend(['REMS', 'ERA5'])
-    plt.show()
-
-    time_j = []
-    thermrad_j = []
-    time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
-    amountOfSlices = time_delta.total_seconds()//3600 #seconds -> hours
-    solSlices = np.array_split(remsDf, amountOfSlices)
-    #Integrating over each hour
-    for slice in solSlices:
-        slice = slice.reset_index()
-        xVals = slice.timemet - slice.timemet[0]
-        xVals = xVals.apply(lambda x: x.total_seconds()).values
-        thermrad_j.append(integrate.trapezoid(370*np.ones((len(xVals))), x=xVals))
-        time_j.append(slice.timemet[len(slice) - 1])
-
-    plt.plot(time_j, thermrad_j)
-    plt.plot(eraDf.timemet, eraDf.thermrad)
-    plt.xlabel('time')
-    plt.ylabel('Downward IR Radiation (J/m^2)')
-    plt.legend(['Default Value', 'ERA5'])
-    plt.show()
-    '''
-    
-    # TODO: PATCH FIX
-    eraDf.solrad = eraDf.solrad/3600
-    eraDf.thermrad = eraDf.thermrad/3600
-
-    '''
-    dt = eraDf.timemet.diff()
-    dt = dt.apply(lambda t: t.total_seconds())
-    solrad_diff = eraDf.solrad.diff()/dt
-
-    plt.plot(remsDf.timemet, remsDf.solrad, "-o")
-    #plt.plot(eraDf.timemet, solrad_diff, "-o")
-    plt.plot(eraDf.timemet, eraDf.solrad, "-o")
-    plt.xlabel('time')
-    plt.ylabel('Downward Solar Radiation (W/m^2)')
-    plt.legend(['REMS', 'ERA5'])
-    plt.show()
-
-    # NOTE: Missing plots: water current speeds
-
-    plt.plot(remsDf.timemet, remsDf.rh)
-    plt.plot(eraDf.timemet, eraDf.rh)
-    #plt.plot(eraDf.timemet, 100*np.ones(len(eraDf)))
-    plt.xlabel('time')
-    plt.ylabel('Relative humidity (%)')
-    plt.legend(['REMS','ERA5'])
-    plt.show()
-
-    plt.plot(remsDf.timemet, remsDf.spech)
-    plt.plot(eraDf.timemet, eraDf.spech)
-    plt.xlabel('time')
-    plt.ylabel('Specific humidity (kg/kg)')
-    plt.legend(['REMS','ERA5'])
-    plt.show()
-    '''
-
-    #outDf = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=True, no_era=False)
-    #outDf2 = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=True, no_era=False)
-    #outDf2 = outDf2.loc[outDf2.HCoare != 0]
-
     t0 = time.perf_counter()
     write_message(f"Starting Analysis Run", filename='analysis_log.txt', writemode='w')
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
+
+        preprocess(eraDf, remsDf, writeDir=writeDir)
         outDf = analysis_loop(readDir, remsDf, eraDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
-        postprocess()
+        postprocess(outDf, eraDf, remsDf, writeDir=writeDir)
     t1 = time.perf_counter()
     
     write_message(f"Took {(t1-t0)/60}min", filename='analysis_log.txt')
