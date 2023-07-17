@@ -68,9 +68,14 @@ def run_aggregate_files(readDir: Path) -> None:
     '''
     badFiles = read_loop(readDir)
 
-    write_message("FILES WITH IRREGULAR HOUR START TIMES:", filename='cleanup_log.txt')
-    for file in badFiles:
-        print(file.stem)
+    if len(badFiles) == 0:
+        write_message("NO FILES WITH IRREGULAR HOUR START TIMES.", filename='cleanup_log.txt')
+
+    else:
+        write_message("FILES WITH IRREGULAR HOUR START TIMES:", filename='cleanup_log.txt')
+        for file in badFiles:
+            print(file.stem)
+        write_message(f"{len(badFiles)} files.")
 
     combine_bad_files(badFiles, readDir)
 
