@@ -332,7 +332,7 @@ if __name__=='__main__':
         cleanup_loop(readDir, writeDir, supervised=args.run_supervised, cpuFraction=args.cpu_fraction)
     t1 = time.perf_counter()
     
-    write_message(f"Took {t1-t0}s", filename='cleanup_log.txt')
+    write_message(f"Took {(t1-t0)/3600}hrs", filename='cleanup_log.txt')
 
     # ioList = ['Sep2015','Nov2015']
 
