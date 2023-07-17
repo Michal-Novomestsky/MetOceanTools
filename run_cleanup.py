@@ -331,7 +331,7 @@ if __name__=='__main__':
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
         #cleanup_loop(readDir, writeDir, supervised=args.run_supervised, cpuFraction=args.cpu_fraction)
-        run_aggregate_files(readDir)
+        run_aggregate_files(writeDir)
     t1 = time.perf_counter()
     
     write_message(f"Took {(t1-t0)/3600}hrs", filename='cleanup_log.txt')
