@@ -385,11 +385,11 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
     :param remsDf: (pd.Dataframe) Df containing data from REMS.
     :writeDir: (os.PathLike) Path to the save location for images.
     '''
-    sns.lineplot(data=remsDf, x='timemet', y='press')
-    sns.lineplot(data=eraDf, x='timemet', y='press')
+    sns.lineplot(data=remsDf, x='timemet', y='press', label='REMS')
+    sns.lineplot(data=eraDf, x='timemet', y='press', label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Pressure (mBar)')
-    plt.legend(['REMS', 'ERA5'])
+    #plt.legend(['REMS', 'ERA5'])
     plt.savefig(os.path.join(writeDir, 'REMS vs ERA', 'air_pressure.png'))
     plt.close()    
 
