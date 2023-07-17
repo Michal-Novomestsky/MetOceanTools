@@ -5,7 +5,7 @@ import pandas as pd
 import datetime
 import MeterologicalParameters.humidity as hum
 import matplotlib.pyplot as plt
-import glob
+import seaborn as sns
 import multiprocessing as mp
 import sys
 import argparse
@@ -385,29 +385,53 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
     :param remsDf: (pd.Dataframe) Df containing data from REMS.
     :writeDir: (os.PathLike) Path to the save location for images.
     '''
-    plt.plot(remsDf.timemet, remsDf.press)
-    plt.plot(eraDf.timemet, eraDf.press)
+    sns.lineplot(data=remsDf, x='timemet', y='press')
+    sns.lineplot(data=eraDf, x='timemet', y='press')
     plt.xlabel('time')
     plt.ylabel('Pressure (mBar)')
     plt.legend(['REMS', 'ERA5'])
-    plt.savefig(os.path.join(writeDir, f"{title}.png"))
-    plt.close()
+    plt.savefig(os.path.join(writeDir, 'REMS vs ERA', 'air_pressure.png'))
+    plt.close()    
 
-    plt.plot(remsDf.timemet, remsDf.ta)
-    plt.plot(eraDf.timemet, eraDf.ta)
-    plt.xlabel('time')
-    plt.ylabel('Sea Surface Temperature (degC)')
-    plt.legend(['REMS', 'ERA5'])
-    plt.savefig(os.path.join(writeDir, f"{title}.png"))
-    plt.close()
+    # plt.plot(remsDf.timemet, remsDf.press)
+    # plt.plot(eraDf.timemet, eraDf.press)
+    # plt.xlabel('time')
+    # plt.ylabel('Pressure (mBar)')
+    # plt.legend(['REMS', 'ERA5'])
+    # plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    # plt.close()
 
-    plt.plot(remsDf.timemet, remsDf.tsea)
-    plt.plot(eraDf.timemet, eraDf.tsea)
+    sns.lineplot(data=remsDf, x='timemet', y='ta')
+    sns.lineplot(data=eraDf, x='timemet', y='ta')
     plt.xlabel('time')
     plt.ylabel('Air Temperature (degC)')
+    plt.legend(['REMS', 'ERA5'])
+    plt.savefig(os.path.join(writeDir, 'REMS vs ERA', 'air_temp.png'))
+    plt.close()    
+
+    # plt.plot(remsDf.timemet, remsDf.ta)
+    # plt.plot(eraDf.timemet, eraDf.ta)
+    # plt.xlabel('time')
+    # plt.ylabel('Sea Surface Temperature (degC)')
+    # plt.legend(['REMS', 'ERA5'])
+    # plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    # plt.close()
+
+    sns.lineplot(data=remsDf, x='timemet', y='tsea')
+    sns.lineplot(data=eraDf, x='timemet', y='tsea')
+    plt.xlabel('time')
+    plt.ylabel('Sea Surface Temperature (degC)')
     plt.legend([f'REMS (28m)', 'ERA5 (2m)'])
-    plt.savefig(os.path.join(writeDir, f"{title}.png"))
-    plt.close()
+    plt.savefig(os.path.join(writeDir, 'REMS vs ERA', 'sea_surface_temp.png'))
+    plt.close()    
+
+    # plt.plot(remsDf.timemet, remsDf.tsea)
+    # plt.plot(eraDf.timemet, eraDf.tsea)
+    # plt.xlabel('time')
+    # plt.ylabel('Air Temperature (degC)')
+    # plt.legend([f'REMS (28m)', 'ERA5 (2m)'])
+    # plt.savefig(os.path.join(writeDir, f"{title}.png"))
+    # plt.close()
 
     plt.subplot(1, 2, 1)
     plt.plot(remsDf.timemet, remsDf.tsea)
