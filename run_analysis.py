@@ -419,13 +419,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
         solrad_j.append(integrate.trapezoid(slice.solrad, x=xVals))
         time_j.append(slice.timemet[len(slice) - 1])
 
-    sns.lineplot(x=time_j, y=solrad_j, markers=True, label='REMS')
-    sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
-    plt.xlabel('time')
-    plt.ylabel('Downward Solar Radiation (J/m^2)')
-    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
-    plt.close()
-
     time_j = []
     thermrad_j = []
     time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
@@ -439,28 +432,28 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
         thermrad_j.append(integrate.trapezoid(370*np.ones((len(xVals))), x=xVals))
         time_j.append(slice.timemet[len(slice) - 1])
 
+    # TODO: PATCH FIX
+    eraDf.solrad = eraDf.solrad/3600
+    eraDf.thermrad = eraDf.thermrad/3600
+
+    sns.lineplot(x=time_j, y=solrad_j, markers=True, label='REMS')
+    sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
+    plt.xlabel('time')
+    plt.ylabel('Downward Solar Radiation (J/m^2)')
+    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
+    plt.close()
+
     sns.lineplot(x=time_j, y=thermrad_j, markers=True, label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='thermrad', markers=True, label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Downward IR Radiation (J/m^2)')
     plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_int.png'))
     plt.close()
-    
-    # TODO: PATCH FIX
-    eraDf.solrad = eraDf.solrad/3600
-    eraDf.thermrad = eraDf.thermrad/3600
 
     sns.lineplot(data=remsDf, x='timemet', y='solrad', markers=True, label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Downward Solar Radiation (J/m^2)')
-    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_diff.png'))
-    plt.close()
-
-    sns.lineplot(data=remsDf, x='timemet', y='thermrad', markers=True, label='REMS')
-    sns.lineplot(data=eraDf, x='timemet', y='thermrad', markers=True, label='ERA5')
-    plt.xlabel('time')
-    plt.ylabel('Downward IR Radiation (J/m^2)')
     plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_diff.png'))
     plt.close()
 
