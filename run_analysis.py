@@ -629,7 +629,7 @@ if __name__=='__main__':
     eraDf = pd.DataFrame({"timemet": timemet, "u_10": u_10, "v_10": v_10, "tsea": tsea, "waveDir": waveDir, 
                             "ta": ta, "rh": rh, "spech": spech, "press": press, "solrad": solrad, "thermrad": thermrad})
 
-    sns.set_theme('darkgrid')
+    sns.set_theme(style='darkgrid')
 
     t0 = time.perf_counter()
     write_message(f"Starting Analysis Run", filename='analysis_log.txt', writemode='w')
