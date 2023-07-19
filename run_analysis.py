@@ -35,7 +35,7 @@ def blockPrint():
 def enablePrint():
     sys.stdout = sys.__stdout__
 
-def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supervised=True, cpuFraction=1, era_only=False, no_era=False) -> pd.DataFrame:
+def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supervised=True, cpuFraction=1, era_only=False, no_era=False) -> pd.DataFrame:
     """
     Steps through each data file located in readDir.
     Unsupervised enables multiprocessing using cpuFraction% of all available cores.
@@ -61,7 +61,7 @@ def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supe
     # One-by-one
     if supervised:
         for file in files:
-            output = _analysis_iteration(file, remsDf, eraDf, era_only, no_era)
+            output = _analysis_iteration(file, eraDf, remsDf, era_only, no_era)
             if output is not None:
                 collector_tauApprox += output[0]
                 collector_tauCoare += output[1]
@@ -91,7 +91,7 @@ def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supe
         eraArr = [eraDf]*len(files)
         eraOnlyArr = [era_only]*len(files)
         noEraArr = [no_era]*len(files)
-        args = [*zip(files, remsArr, eraArr, eraOnlyArr, noEraArr)]
+        args = [*zip(files, eraArr, remsArr, eraOnlyArr, noEraArr)]
 
         with mp.Pool(coresToUse) as p:
             output = p.starmap(_analysis_iteration, iterable=args)
@@ -117,7 +117,7 @@ def analysis_loop(readDir: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, supe
                             "wTurb": collector_w_turb, "u": collector_u, "v": collector_v, "w": collector_w, "ta": collector_t,
                             "rho": collector_rho})
 
-def _analysis_iteration(file: Path, remsDf: pd.DataFrame, eraDf: pd.DataFrame, era_only=False, no_era=False) -> None:
+def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
     Internal function which runs an iteration of an analysis run. Iterated externally by analysis_loop.
     """
@@ -473,9 +473,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
     plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'spec_hum.png'))
     plt.close()
 
-    #outDf = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=True, no_era=False)
-    #outDf2 = analysis_loop(readDir, remsDf, eraDf, supervised=False, cpuFraction=1, era_only=True, no_era=False)
-    #outDf2 = outDf2.loc[outDf2.HCoare != 0]
+    return eraDf, remsDf
 
 def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike) -> None:
     '''
@@ -630,8 +628,8 @@ if __name__=='__main__':
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
 
-        preprocess(eraDf, remsDf, writeDir=writeDir)
-        outDf = analysis_loop(readDir, remsDf, eraDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
+        eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir)
+        outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
         postprocess(outDf, eraDf, remsDf, writeDir=writeDir)
     t1 = time.perf_counter()
     
