@@ -628,7 +628,7 @@ if __name__=='__main__':
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
 
-        eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir)
+        preprocess(eraDf, remsDf, writeDir=writeDir)
         outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
         postprocess(outDf, eraDf, remsDf, writeDir=writeDir)
     t1 = time.perf_counter()
