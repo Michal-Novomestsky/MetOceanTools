@@ -433,8 +433,8 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
         time_j.append(slice.timemet[len(slice) - 1])
 
     # TODO: PATCH FIX
-    eraDf.solrad = eraDf.solrad/3600
-    eraDf.thermrad = eraDf.thermrad/3600
+    # eraDf.solrad = eraDf.solrad/3600
+    # eraDf.thermrad = eraDf.thermrad/3600
 
     sns.lineplot(x=time_j, y=solrad_j, markers=True, label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
@@ -521,9 +521,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.close()
 
     outDf.Cd = 1000*outDf.Cd
-    
-    # for i in range(len(outDf.Cd)):
-    #     outDf.Cd[i] = 1000*outDf.Cd[i]
 
     sns.scatterplot(data=outDf, x='U10', y='Cd')
     # plt.xlim([0, 25])
@@ -628,7 +625,7 @@ if __name__=='__main__':
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
 
-        preprocess(eraDf, remsDf, writeDir=writeDir)
+        eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir)
         outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
         postprocess(outDf, eraDf, remsDf, writeDir=writeDir)
     t1 = time.perf_counter()
