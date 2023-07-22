@@ -208,7 +208,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         w2_turb = get_turbulent(slice[w2])
         T2_turb = get_turbulent(slice[t2])
         #T2_turb = T2_turb/(1 + 0.378*e/p)
-        w_turb_list.append(np.mean(w2_turb*T2_turb))
+        w_turb_list.append(np.mean(w2_turb))
 
         # Getting magnitude of turbulent horizontal velocity vector
         U2_turb = get_turbulent(np.sqrt(slice[u2]**2 + slice[v2]**2))
@@ -226,7 +226,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         u = np.sqrt(U_vec.North**2 + U_vec.East**2)
 
         u_star_2 = get_covariance(U2_turb, w2_turb)
-        
         tau_approx.append(-rho*u_star_2)
         H_approx.append(rho*hum.cpd*get_covariance(w2_turb, T2_turb))
 
@@ -243,7 +242,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
         try:
             blockPrint()
-            coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,zrf_u = ZU,zrf_t = ZU,zrf_q = ZU)
+            try:
+                coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,zrf_u = ZU,zrf_t = ZU,zrf_q = ZU)
+            except ValueError as e:
+                raise Exception(f'Error at {fileName}')
             enablePrint()
             tau_coare.append(coare_res[0][1])
             H_coare.append(coare_res[0][2])
@@ -258,7 +260,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         if tau_approx[i]/tau_coare[i] >= 2/0.5 and tau_approx[i] >= 1.5:
             write_message(f"tau spike in {fileName}", filename='analysis_log.txt')
     
-    write_message(f"Analysed {fileName} with ERA5", filename='analysis_log.txt')
+    if era_and_rems:
+        write_message(f"Analysed {fileName} with REMS", filename='analysis_log.txt')
+    else:
+        write_message(f"Analysed {fileName} with ERA5", filename='analysis_log.txt')
 
     return (tau_approx, tau_coare, C_d, U_10_mag, H_approx, H_coare, w_turb_list, time_list, u_mean, v_mean, w_mean, t_mean, rho_mean)
 
