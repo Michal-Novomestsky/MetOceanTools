@@ -407,49 +407,42 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
     # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'sea_surface_temp.png'))
     # plt.close()
 
-    # time_j = []
-    # solrad_j = []
-    # time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
-    # amountOfSlices = time_delta.total_seconds()//3600 # seconds -> hours
-    # solSlices = np.array_split(remsDf, amountOfSlices)
-    # # Integrating over each hour
-    # for slice in solSlices:
-    #     slice = slice.reset_index()
-    #     xVals = slice.timemet - slice.timemet[0]
-    #     xVals = xVals.apply(lambda x: x.total_seconds()).values
-    #     solrad_j.append(integrate.trapezoid(slice.solrad, x=xVals))
-    #     time_j.append(slice.timemet[len(slice) - 1])
+    time_j = []
+    solrad_j = []
+    time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
+    amountOfSlices = time_delta.total_seconds()//3600 # seconds -> hours
+    solSlices = np.array_split(remsDf, amountOfSlices)
+    # Integrating over each hour
+    for slice in solSlices:
+        slice = slice.reset_index()
+        xVals = slice.timemet - slice.timemet[0]
+        xVals = xVals.apply(lambda x: x.total_seconds()).values
+        solrad_j.append(integrate.trapezoid(slice.solrad, x=xVals))
+        time_j.append(slice.timemet[len(slice) - 1])
 
-    # time_j = []
-    # thermrad_j = []
-    # time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
-    # amountOfSlices = time_delta.total_seconds()//3600 # seconds -> hours
-    # solSlices = np.array_split(remsDf, amountOfSlices)
-    # # Integrating over each hour
-    # for slice in solSlices:
-    #     slice = slice.reset_index()
-    #     xVals = slice.timemet - slice.timemet[0]
-    #     xVals = xVals.apply(lambda x: x.total_seconds()).values
-    #     thermrad_j.append(integrate.trapezoid(370*np.ones((len(xVals))), x=xVals))
-    #     time_j.append(slice.timemet[len(slice) - 1])
+    time_j = []
+    thermrad_j = []
+    time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
+    amountOfSlices = time_delta.total_seconds()//3600 # seconds -> hours
+    solSlices = np.array_split(remsDf, amountOfSlices)
+    # Integrating over each hour
+    for slice in solSlices:
+        slice = slice.reset_index()
+        xVals = slice.timemet - slice.timemet[0]
+        xVals = xVals.apply(lambda x: x.total_seconds()).values
+        thermrad_j.append(integrate.trapezoid(370*np.ones((len(xVals))), x=xVals))
+        time_j.append(slice.timemet[len(slice) - 1])
 
     # # TODO: PATCH FIX
-    # eraDf.solrad = eraDf.solrad/3600
-    # eraDf.thermrad = eraDf.thermrad/3600
+    eraDf.solrad = eraDf.solrad/3600
+    eraDf.thermrad = eraDf.thermrad/3600
 
     # sns.lineplot(x=time_j, y=solrad_j, markers=True, label='REMS', ax=ax)
     # sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5', ax=ax)
-    fig_handle = plt.figure()
-    x = np.linspace(0,2*np.pi)
-    y = np.sin(x)
-    sns.lineplot(x=x,y=y)
 
     # plt.xlabel('time')
     # plt.ylabel('Downward Solar Radiation (J/m^2)')
     # #plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
-    # #with open('FigureObject.fig.pickle', 'wb') as output_file:
-    pickle.dump(fig_handle,open('sinus.pickle','wb'),protocol=0)
-    plt.close()
 
     # sns.lineplot(x=time_j, y=thermrad_j, markers=True, label='REMS')
     # sns.lineplot(data=eraDf, x='timemet', y='thermrad', markers=True, label='ERA5')
@@ -634,8 +627,13 @@ if __name__=='__main__':
         writeDir = Path(args.write_dir[i])
 
         eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir)
-        #outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
-        #postprocess(outDf, eraDf, remsDf, writeDir=writeDir)
+        outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
+
+        eraDf.to_csv(os.path.join(writeDir, 'eraDf.csv'))
+        remsDf.to_csv(os.path.join(writeDir, 'remsDf.csv'))
+        outDf.to_csv(os.path.join(writeDir, 'outDf.csv'))
+
+        postprocess(outDf, eraDf, remsDf, writeDir=writeDir)
     t1 = time.perf_counter()
     
     write_message(f"Took {(t1-t0)/60}min", filename='analysis_log.txt')
