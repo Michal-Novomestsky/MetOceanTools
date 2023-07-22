@@ -378,34 +378,39 @@ def get_turbulent(s: pd.Series) -> pd.Series:
     s_bar = s.mean()
     return s - s_bar
 
-def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike) -> None:
+def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool) -> pd.DataFrame:
     '''
     Runs any analysis/plotting prior to running it through COARE/EC/etc.
 
     :param eraDf: (pd.Dataframe) Df containing data from ERA5.
     :param remsDf: (pd.Dataframe) Df containing data from REMS.
-    :writeDir: (os.PathLike) Path to the save location for images.
+    :param writeDir: (os.PathLike) Path to the save location for images.
+    :param era_only: (bool) True if no REMS is being used (only ERA5).
+    :return: (pd.DataFrame) updated eraDf and remsDf.
     '''
-    # sns.lineplot(data=remsDf, x='timemet', y='press', label='REMS')
-    # sns.lineplot(data=eraDf, x='timemet', y='press', label='ERA5')
-    # plt.xlabel('time')
-    # plt.ylabel('Pressure (mBar)')
-    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_pressure.png'))
-    # plt.close()    
+    sns.lineplot(data=remsDf, x='timemet', y='press', label='REMS')
+    sns.lineplot(data=eraDf, x='timemet', y='press', label='ERA5')
+    plt.xlabel('time')
+    plt.ylabel('Pressure (mBar)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_pressure.png'))
+    plt.close()    
 
-    # sns.lineplot(data=remsDf, x='timemet', y='ta', label='REMS (28m AMSL)')
-    # sns.lineplot(data=eraDf, x='timemet', y='ta', label='ERA5 (2m AMSL)')
-    # plt.xlabel('time')
-    # plt.ylabel('Air Temperature (degC)')
-    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_temp.png'))
-    # plt.close()    
+    sns.lineplot(data=remsDf, x='timemet', y='ta', label='REMS (28m AMSL)')
+    sns.lineplot(data=eraDf, x='timemet', y='ta', label='ERA5 (2m AMSL)')
+    plt.xlabel('time')
+    plt.ylabel('Air Temperature (degC)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_temp.png'))
+    plt.close()    
 
-    # sns.lineplot(data=remsDf, x='timemet', y='tsea', label='REMS')
-    # sns.lineplot(data=eraDf, x='timemet', y='tsea', label='ERA5')
-    # plt.xlabel('time')
-    # plt.ylabel('Sea Surface Temperature (degC)')
-    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'sea_surface_temp.png'))
-    # plt.close()
+    sns.lineplot(data=remsDf, x='timemet', y='tsea', label='REMS')
+    sns.lineplot(data=eraDf, x='timemet', y='tsea', label='ERA5')
+    plt.xlabel('time')
+    plt.ylabel('Sea Surface Temperature (degC)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'sea_surface_temp.png'))
+    plt.close()
 
     time_j = []
     solrad_j = []
@@ -430,49 +435,54 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
         slice = slice.reset_index()
         xVals = slice.timemet - slice.timemet[0]
         xVals = xVals.apply(lambda x: x.total_seconds()).values
-        thermrad_j.append(integrate.trapezoid(370*np.ones((len(xVals))), x=xVals))
+        thermrad_j.append(integrate.trapezoid(370*np.ones((len(xVals))), x=xVals)) # NOTE: 370 is default downward IR val
         time_j.append(slice.timemet[len(slice) - 1])
 
     # # TODO: PATCH FIX
     eraDf.solrad = eraDf.solrad/3600
     eraDf.thermrad = eraDf.thermrad/3600
 
-    # sns.lineplot(x=time_j, y=solrad_j, markers=True, label='REMS', ax=ax)
-    # sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5', ax=ax)
+    sns.lineplot(x=time_j, y=solrad_j, markers=True, label='REMS')
+    sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
+    plt.xlabel('time')
+    plt.ylabel('Downward Solar Radiation (J/m^2)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
+    plt.close()
 
-    # plt.xlabel('time')
-    # plt.ylabel('Downward Solar Radiation (J/m^2)')
-    # #plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
+    sns.lineplot(x=time_j, y=thermrad_j, markers=True, label='REMS')
+    sns.lineplot(data=eraDf, x='timemet', y='thermrad', markers=True, label='ERA5')
+    plt.xlabel('time')
+    plt.ylabel('Downward IR Radiation (J/m^2)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_int.png'))
+    plt.close()
 
-    # sns.lineplot(x=time_j, y=thermrad_j, markers=True, label='REMS')
-    # sns.lineplot(data=eraDf, x='timemet', y='thermrad', markers=True, label='ERA5')
-    # plt.xlabel('time')
-    # plt.ylabel('Downward IR Radiation (J/m^2)')
-    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_int.png'))
-    # plt.close()
+    sns.lineplot(data=remsDf, x='timemet', y='solrad', markers=True, label='REMS')
+    sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
+    plt.xlabel('time')
+    plt.ylabel('Downward Solar Radiation (J/m^2)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_diff.png'))
+    plt.close()
 
-    # sns.lineplot(data=remsDf, x='timemet', y='solrad', markers=True, label='REMS')
-    # sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
-    # plt.xlabel('time')
-    # plt.ylabel('Downward Solar Radiation (J/m^2)')
-    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_diff.png'))
-    # plt.close()
+    # NOTE: Missing plots: water current speeds
 
-    # # NOTE: Missing plots: water current speeds
+    sns.lineplot(data=remsDf, x='timemet', y='rh', label='REMS')
+    sns.lineplot(data=eraDf, x='timemet', y='rh', label='ERA5')
+    plt.xlabel('time')
+    plt.ylabel('Relative humidity (%)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'rel_hum.png'))
+    plt.close()
 
-    # sns.lineplot(data=remsDf, x='timemet', y='rh', label='REMS')
-    # sns.lineplot(data=eraDf, x='timemet', y='rh', label='ERA5')
-    # plt.xlabel('time')
-    # plt.ylabel('Relative humidity (%)')
-    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'rel_hum.png'))
-    # plt.close()
-
-    # sns.lineplot(data=remsDf, x='timemet', y='spech', label='REMS')
-    # sns.lineplot(data=eraDf, x='timemet', y='spech', label='ERA5')
-    # plt.xlabel('time')
-    # plt.ylabel('Specific humidity (kg/kg)')
-    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'spec_hum.png'))
-    # plt.close()
+    sns.lineplot(data=remsDf, x='timemet', y='spech', label='REMS')
+    sns.lineplot(data=eraDf, x='timemet', y='spech', label='ERA5')
+    plt.xlabel('time')
+    plt.ylabel('Specific humidity (kg/kg)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'spec_hum.png'))
+    plt.close()
 
     return eraDf, remsDf
 
@@ -626,7 +636,7 @@ if __name__=='__main__':
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
 
-        eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir)
+        eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
         outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
 
         eraDf.to_csv(os.path.join(writeDir, 'eraDf.csv'))
