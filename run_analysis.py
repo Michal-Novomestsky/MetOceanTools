@@ -386,100 +386,100 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
     :param remsDf: (pd.Dataframe) Df containing data from REMS.
     :writeDir: (os.PathLike) Path to the save location for images.
     '''
-    sns.lineplot(data=remsDf, x='timemet', y='press', label='REMS')
-    sns.lineplot(data=eraDf, x='timemet', y='press', label='ERA5')
-    plt.xlabel('time')
-    plt.ylabel('Pressure (mBar)')
-    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_pressure.png'))
-    plt.close()    
+    # sns.lineplot(data=remsDf, x='timemet', y='press', label='REMS')
+    # sns.lineplot(data=eraDf, x='timemet', y='press', label='ERA5')
+    # plt.xlabel('time')
+    # plt.ylabel('Pressure (mBar)')
+    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_pressure.png'))
+    # plt.close()    
 
-    sns.lineplot(data=remsDf, x='timemet', y='ta', label='REMS (28m AMSL)')
-    sns.lineplot(data=eraDf, x='timemet', y='ta', label='ERA5 (2m AMSL)')
-    plt.xlabel('time')
-    plt.ylabel('Air Temperature (degC)')
-    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_temp.png'))
-    plt.close()    
+    # sns.lineplot(data=remsDf, x='timemet', y='ta', label='REMS (28m AMSL)')
+    # sns.lineplot(data=eraDf, x='timemet', y='ta', label='ERA5 (2m AMSL)')
+    # plt.xlabel('time')
+    # plt.ylabel('Air Temperature (degC)')
+    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_temp.png'))
+    # plt.close()    
 
-    sns.lineplot(data=remsDf, x='timemet', y='tsea', label='REMS')
-    sns.lineplot(data=eraDf, x='timemet', y='tsea', label='ERA5')
-    plt.xlabel('time')
-    plt.ylabel('Sea Surface Temperature (degC)')
-    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'sea_surface_temp.png'))
-    plt.close()
+    # sns.lineplot(data=remsDf, x='timemet', y='tsea', label='REMS')
+    # sns.lineplot(data=eraDf, x='timemet', y='tsea', label='ERA5')
+    # plt.xlabel('time')
+    # plt.ylabel('Sea Surface Temperature (degC)')
+    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'sea_surface_temp.png'))
+    # plt.close()
 
-    time_j = []
-    solrad_j = []
-    time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
-    amountOfSlices = time_delta.total_seconds()//3600 # seconds -> hours
-    solSlices = np.array_split(remsDf, amountOfSlices)
-    # Integrating over each hour
-    for slice in solSlices:
-        slice = slice.reset_index()
-        xVals = slice.timemet - slice.timemet[0]
-        xVals = xVals.apply(lambda x: x.total_seconds()).values
-        solrad_j.append(integrate.trapezoid(slice.solrad, x=xVals))
-        time_j.append(slice.timemet[len(slice) - 1])
+    # time_j = []
+    # solrad_j = []
+    # time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
+    # amountOfSlices = time_delta.total_seconds()//3600 # seconds -> hours
+    # solSlices = np.array_split(remsDf, amountOfSlices)
+    # # Integrating over each hour
+    # for slice in solSlices:
+    #     slice = slice.reset_index()
+    #     xVals = slice.timemet - slice.timemet[0]
+    #     xVals = xVals.apply(lambda x: x.total_seconds()).values
+    #     solrad_j.append(integrate.trapezoid(slice.solrad, x=xVals))
+    #     time_j.append(slice.timemet[len(slice) - 1])
 
-    time_j = []
-    thermrad_j = []
-    time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
-    amountOfSlices = time_delta.total_seconds()//3600 # seconds -> hours
-    solSlices = np.array_split(remsDf, amountOfSlices)
-    # Integrating over each hour
-    for slice in solSlices:
-        slice = slice.reset_index()
-        xVals = slice.timemet - slice.timemet[0]
-        xVals = xVals.apply(lambda x: x.total_seconds()).values
-        thermrad_j.append(integrate.trapezoid(370*np.ones((len(xVals))), x=xVals))
-        time_j.append(slice.timemet[len(slice) - 1])
+    # time_j = []
+    # thermrad_j = []
+    # time_delta = remsDf.timemet[len(remsDf) - 1] - remsDf.timemet[0]
+    # amountOfSlices = time_delta.total_seconds()//3600 # seconds -> hours
+    # solSlices = np.array_split(remsDf, amountOfSlices)
+    # # Integrating over each hour
+    # for slice in solSlices:
+    #     slice = slice.reset_index()
+    #     xVals = slice.timemet - slice.timemet[0]
+    #     xVals = xVals.apply(lambda x: x.total_seconds()).values
+    #     thermrad_j.append(integrate.trapezoid(370*np.ones((len(xVals))), x=xVals))
+    #     time_j.append(slice.timemet[len(slice) - 1])
 
-    # TODO: PATCH FIX
-    eraDf.solrad = eraDf.solrad/3600
-    eraDf.thermrad = eraDf.thermrad/3600
+    # # TODO: PATCH FIX
+    # eraDf.solrad = eraDf.solrad/3600
+    # eraDf.thermrad = eraDf.thermrad/3600
 
     # sns.lineplot(x=time_j, y=solrad_j, markers=True, label='REMS', ax=ax)
     # sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5', ax=ax)
     fig_handle = plt.figure()
     x = np.linspace(0,2*np.pi)
     y = np.sin(x)
-    plt.plot(x,y)
+    sns.lineplot(x=x,y=y)
 
-    plt.xlabel('time')
-    plt.ylabel('Downward Solar Radiation (J/m^2)')
-    #plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
-    #with open('FigureObject.fig.pickle', 'wb') as output_file:
+    # plt.xlabel('time')
+    # plt.ylabel('Downward Solar Radiation (J/m^2)')
+    # #plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
+    # #with open('FigureObject.fig.pickle', 'wb') as output_file:
     pickle.dump(fig_handle,open('sinus.pickle','wb'))
     plt.close()
 
-    sns.lineplot(x=time_j, y=thermrad_j, markers=True, label='REMS')
-    sns.lineplot(data=eraDf, x='timemet', y='thermrad', markers=True, label='ERA5')
-    plt.xlabel('time')
-    plt.ylabel('Downward IR Radiation (J/m^2)')
-    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_int.png'))
-    plt.close()
+    # sns.lineplot(x=time_j, y=thermrad_j, markers=True, label='REMS')
+    # sns.lineplot(data=eraDf, x='timemet', y='thermrad', markers=True, label='ERA5')
+    # plt.xlabel('time')
+    # plt.ylabel('Downward IR Radiation (J/m^2)')
+    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_int.png'))
+    # plt.close()
 
-    sns.lineplot(data=remsDf, x='timemet', y='solrad', markers=True, label='REMS')
-    sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
-    plt.xlabel('time')
-    plt.ylabel('Downward Solar Radiation (J/m^2)')
-    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_diff.png'))
-    plt.close()
+    # sns.lineplot(data=remsDf, x='timemet', y='solrad', markers=True, label='REMS')
+    # sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
+    # plt.xlabel('time')
+    # plt.ylabel('Downward Solar Radiation (J/m^2)')
+    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_diff.png'))
+    # plt.close()
 
-    # NOTE: Missing plots: water current speeds
+    # # NOTE: Missing plots: water current speeds
 
-    sns.lineplot(data=remsDf, x='timemet', y='rh', label='REMS')
-    sns.lineplot(data=eraDf, x='timemet', y='rh', label='ERA5')
-    plt.xlabel('time')
-    plt.ylabel('Relative humidity (%)')
-    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'rel_hum.png'))
-    plt.close()
+    # sns.lineplot(data=remsDf, x='timemet', y='rh', label='REMS')
+    # sns.lineplot(data=eraDf, x='timemet', y='rh', label='ERA5')
+    # plt.xlabel('time')
+    # plt.ylabel('Relative humidity (%)')
+    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'rel_hum.png'))
+    # plt.close()
 
-    sns.lineplot(data=remsDf, x='timemet', y='spech', label='REMS')
-    sns.lineplot(data=eraDf, x='timemet', y='spech', label='ERA5')
-    plt.xlabel('time')
-    plt.ylabel('Specific humidity (kg/kg)')
-    plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'spec_hum.png'))
-    plt.close()
+    # sns.lineplot(data=remsDf, x='timemet', y='spech', label='REMS')
+    # sns.lineplot(data=eraDf, x='timemet', y='spech', label='ERA5')
+    # plt.xlabel('time')
+    # plt.ylabel('Specific humidity (kg/kg)')
+    # plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'spec_hum.png'))
+    # plt.close()
 
     return eraDf, remsDf
 
@@ -634,8 +634,8 @@ if __name__=='__main__':
         writeDir = Path(args.write_dir[i])
 
         eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir)
-        outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
-        postprocess(outDf, eraDf, remsDf, writeDir=writeDir)
+        #outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
+        #postprocess(outDf, eraDf, remsDf, writeDir=writeDir)
     t1 = time.perf_counter()
     
     write_message(f"Took {(t1-t0)/60}min", filename='analysis_log.txt')
