@@ -247,6 +247,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             tau_coare.append(coare_res[0][1])
             H_coare.append(coare_res[0][2])
         except Exception as e:
+            tau_coare.append(np.nan)
+            H_coare.append(np.nan)
             write_message(f"ERROR IN {fileName}: {e} - SKIPPED FOR NOW", filename='analysis_log.txt')
 
         # Updating time
