@@ -200,7 +200,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         p = dataSlice.press
         tsea = dataSlice.tsea
         sw_dn = dataSlice.solrad
-        lw_dn = dataSlice.thermrad
+        if not era_and_rems: lw_dn = dataSlice.thermrad # Only available with ERA5
         spechum = dataSlice.spech
         #e = hum.hum2ea_modified(p, spechum)
         rho = hum.rhov_modified(tair, p, sh=spechum)
