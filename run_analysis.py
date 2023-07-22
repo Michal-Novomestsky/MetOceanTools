@@ -301,12 +301,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             #U_vec.North = U_vec.North - remsSlice.cur_n_comp
             u = np.sqrt(U_vec.North**2 + U_vec.East**2)
 
-            #u_star_2 = np.mean(-U2_turb*w2_turb)
-            u_star_2 = np.mean(U2_turb*w2_turb) - np.mean(U2_turb)*np.mean(w2_turb)
+            u_star_2 = get_covariance(U2_turb, w2_turb)
             
             tau_approx[i] = -rho*u_star_2
-            #H_approx[i] = rho*hum.cpd*np.mean(w2_turb*T2_turb)
-            H_approx[i] = rho*hum.cpd*(np.mean(w2_turb*T2_turb) - np.mean(w2_turb)*np.mean(T2_turb))
+            H_approx[i] = rho*hum.cpd*get_covariance(w2_turb, T2_turb)
 
             # TODO: Assume U_10 ~= U_14.8 for now
             C_d[i] = np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2)
@@ -377,6 +375,17 @@ def get_turbulent(s: pd.Series) -> pd.Series:
     """
     s_bar = s.mean()
     return s - s_bar
+
+def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
+    '''
+    Calculates the covariances for two variables u and v.
+
+    :param u: (np.ndarray) Var 1.
+    :param v: (np.ndarray) Var 2.
+    :return: (float) cov(u, v)
+    '''
+    #u_star_2 = np.mean(-U2_turb*w2_turb)
+    return np.mean(u*v) - np.mean(u)*np.mean(v)
 
 def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool) -> pd.DataFrame:
     '''
