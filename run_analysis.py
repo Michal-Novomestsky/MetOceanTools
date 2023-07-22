@@ -10,7 +10,6 @@ import multiprocessing as mp
 import sys
 import argparse
 import time
-import pickle
 
 from scipy import integrate
 from Modules.DataAnalyser import *
@@ -24,6 +23,7 @@ ZQ = 28 # Approx. height of flare bridge AMSL
 LAT = -19.5856 # 19.5856S (Babanin et al.)
 LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
+TIME_INTERVAL = 40
 
 # Default parameters
 LW_DN = 370
@@ -137,10 +137,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     eraDf = eraDf.loc[(eraDf.timemet.map(lambda x: x.day) == int(day)) & (eraDf.timemet.map(lambda x: x.hour) == int(hour)) & (eraDf.timemet.map(lambda x: x.month) == int(month))]
     eraDf = eraDf.reset_index()
 
-    # Getting time_interval minute long slices and using them to get turbulent avg data over that same time frame
-    time_interval = 10
+    # Getting TIME_INTERVAL minute long slices and using them to get turbulent avg data over that same time frame
     data = DataAnalyser(file)
-    slices = get_time_slices(data.df, time_interval)
+    slices = get_time_slices(data.df, TIME_INTERVAL)
 
     # NOTE: FILL IN AS REQUIRED
     time_list = []
@@ -176,16 +175,16 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     else:
         raise ValueError("None of the analyses cases were triggered")  
 
-    for i, slice in enumerate(slices):
+    for _, slice in enumerate(slices):
         # Using ERA5 data
         if not era_and_rems:
-            dataSliceTemp = eraDf.loc[(time <= eraDf.timemet) & (eraDf.timemet <= time + datetime.timedelta(minutes=time_interval))]
+            dataSliceTemp = eraDf.loc[(time <= eraDf.timemet) & (eraDf.timemet <= time + datetime.timedelta(minutes=TIME_INTERVAL))]
             dataSliceTemp = dataSliceTemp.mean(numeric_only=True)
             if pd.notna(dataSliceTemp.loc['index']):
                 dataSlice = dataSliceTemp # Guarding against ERA5's hour resolution from resulting in NaNs when incrementing up by less than 1hr at a time
         # Using REMS data
         else:
-            dataSlice = remsDf.loc[(time <= remsDf.timemet) & (remsDf.timemet <= time + datetime.timedelta(minutes=time_interval))]
+            dataSlice = remsDf.loc[(time <= remsDf.timemet) & (remsDf.timemet <= time + datetime.timedelta(minutes=TIME_INTERVAL))]
             dataSlice = dataSlice.mean(numeric_only=True)
 
         # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
@@ -253,7 +252,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         # Updating time
         time_list.append(time)
-        time += datetime.timedelta(minutes=time_interval)
+        time += datetime.timedelta(minutes=TIME_INTERVAL)
 
         # Investigating the streak
         if tau_approx[-1]/tau_coare[-1] >= 2/0.5 and tau_approx[-1] >= 1.5:
