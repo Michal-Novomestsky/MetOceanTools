@@ -443,7 +443,8 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike)
     plt.xlabel('time')
     plt.ylabel('Downward Solar Radiation (J/m^2)')
     #plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
-    pickle.dump(fig, open('FigureObject.fig.pickle', 'wb'))
+    with open('FigureObject.fig.pickle', 'wb') as output_file:
+        pickle.dump(fig, output_file)
     plt.close()
 
     sns.lineplot(x=time_j, y=thermrad_j, markers=True, label='REMS')
