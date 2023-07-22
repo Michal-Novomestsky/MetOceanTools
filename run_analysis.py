@@ -208,7 +208,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         w2_turb = get_turbulent(slice[w2])
         T2_turb = get_turbulent(slice[t2])
         #T2_turb = T2_turb/(1 + 0.378*e/p)
-        w_turb_list[i] = np.mean(w2_turb*T2_turb)
+        w_turb_list.append(np.mean(w2_turb*T2_turb))
 
         # Getting magnitude of turbulent horizontal velocity vector
         U2_turb = get_turbulent(np.sqrt(slice[u2]**2 + slice[v2]**2))
