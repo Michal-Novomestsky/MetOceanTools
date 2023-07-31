@@ -364,7 +364,7 @@ class DataCleaner:
                 return True
         return False
 
-    def prune_and(self, entry: str, logicals: tuple[pd.Series], naive_nans=False) -> None:
+    def prune_and(self, entry: str, logicals: pd.Series, naive_nans=False) -> None:
         """
         Cuts out datapoints of type entry which fit into the intersection of all conditions in the tuple logicals and replaces them
         with linear interpolations.
@@ -379,7 +379,7 @@ class DataCleaner:
         self.df.loc[logical, entry] = np.nan
         self.remove_nans(entry, self.df, naive=naive_nans)
 
-    def prune_or(self, entry: str, logicals: tuple[pd.Series], naive_nans=False) -> None:
+    def prune_or(self, entry: str, logicals: pd.Series, naive_nans=False) -> None:
         """
         Cuts out datapoints of type entry which fit into the union of all conditions in the tuple logicals and replaces them
         with linear interpolations.
@@ -514,7 +514,7 @@ class DataCleaner:
             else:
                 raise ValueError("This dataset is scuffed. Every single point was flagged as bad.")
 
-    def _interp_aux(self, entry, left, right) -> tuple[int]:
+    def _interp_aux(self, entry, left, right) -> int:
         """
         Recursively searching for the nearest non-NaN value to interpolate to. left is the index left of the value being interpolated. Vice versa with
         right.
