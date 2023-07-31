@@ -301,9 +301,10 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :return: (float) cov(u, v)
     '''
     #u_star_2 = np.mean(-U2_turb*w2_turb)
-    return np.mean(u*v) - np.mean(u)*np.mean(v)
+    #return np.mean(u*v) - np.mean(u)*np.mean(v)
+    return np.cov(u, v)[0][1]
 
-def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True) -> pd.DataFrame:
+def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True, time_lim=None) -> pd.DataFrame:
     '''
     Runs any analysis/plotting prior to running it through COARE/EC/etc.
 
@@ -312,8 +313,18 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     :param writeDir: (os.PathLike) Path to the save location for images.
     :param era_only: (bool) True if no REMS is being used (only ERA5).
     :param save_plots: (bool) Save if True. Otherwise plot.
+    :param time_lim: (list[datetime.datetime]) A list of the form [t_start, t_end] which contains the time bounds to plot between.
     :return: (pd.DataFrame) updated eraDf and remsDf.
     '''
+    # Grabbing cropped data
+    if time_lim is not None:
+        eraDf = eraDf[(eraDf.timemet >= time_lim[0]) & (eraDf.timemet <= time_lim[1])].reset_index(drop=True)
+        remsDf = remsDf[(remsDf.timemet >= time_lim[0]) & (remsDf.timemet <= time_lim[1])].reset_index(drop=True)
+
+    # Removing REMS xlim if it gets cropped out by time_lim
+    if len(remsDf) == 0:
+        era_only = True
+
     sns.lineplot(data=remsDf, x='timemet', y='press', label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='press', label='ERA5')
     plt.xlabel('time')
@@ -438,7 +449,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
 
     return eraDf, remsDf
 
-def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True) -> None:
+def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True, time_lim=None) -> None:
     '''
     Runs all the plotting and postprocessing after data generation from COARE/EC/etc. is complete.
 
@@ -448,7 +459,18 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     :writeDir: (os.PathLike) Path to the save location for images.
     :param era_only: (bool) True if no REMS is being used (only ERA5).
     :param save_plots: (bool) Save if True. Otherwise plot.
+    :param time_lim: (list[datetime.datetime]) A list of the form [t_start, t_end] which contains the time bounds to plot between.
     '''
+    # Grabbing cropped data
+    if time_lim is not None:
+        outDf = outDf[(outDf.time >= time_lim[0]) & (outDf.time <= time_lim[1])].reset_index(drop=True)
+        eraDf = eraDf[(eraDf.timemet >= time_lim[0]) & (eraDf.timemet <= time_lim[1])].reset_index(drop=True)
+        remsDf = remsDf[(remsDf.timemet >= time_lim[0]) & (remsDf.timemet <= time_lim[1])].reset_index(drop=True)
+
+    # Removing REMS xlim if it gets cropped out by time_lim
+    if len(remsDf) == 0:
+        era_only = True
+
     sns.lineplot(data=outDf, x='time', y='rho', markers=True)
     plt.xlabel('time')
     plt.ylabel('Air Density (kg/m^3)')
@@ -487,39 +509,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'upward_wind.png'))
-        plt.close()
-    else:
-        plt.show()
-
-    sns.lineplot(data=outDf, x='time', y='v', label="Anem V Component")
-    sns.lineplot(data=eraDf, x='timemet', y='u_10', label="ERA5 U Component (10m)")
-    plt.xlabel('time')
-    plt.ylabel('Easterly Component of Wind Speed (m/s)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'east_wind.png'))
-        plt.close()
-    else:
-        plt.show()
-
-    sns.lineplot(data=outDf, x='time', y='v', label="Anem V Component")
-    sns.lineplot(data=eraDf, x='timemet', y='u_10', label="ERA5 U Component (10m)")
-    plt.xlabel('time')
-    plt.ylabel('Easterly Component of Wind Speed (m/s)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'east_wind.png'))
-        plt.close()
-    else:
-        plt.show()
-
-    sns.lineplot(data=outDf, x='time', y='v', label="Anem V Component")
-    sns.lineplot(data=eraDf, x='timemet', y='u_10', label="ERA5 U Component (10m)")
-    plt.xlabel('time')
-    plt.ylabel('Easterly Component of Wind Speed (m/s)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'east_wind.png'))
         plt.close()
     else:
         plt.show()
