@@ -321,12 +321,66 @@ class DataCleaner:
 
             return False
 
-    def std_cutoff(self, entry: str, stdMargain: float) -> pd.Series:
+    def std_cutoff(self, entry: str, stdMargain: float, sec_stepsize=None) -> pd.Series:
         """
-        Returns logicals set to True for data of type entry that lies beyond +-stdMargain standard deviations from the mean of the dataset.
+        Returns logicals set to True for data of type entry that lies beyond +-stdMargain standard deviations from the mean of the dataset over sec_stepsize seconds (Over the entire dataset if None).
         """
-        cutOff = stdMargain*self.std.loc[entry]
-        return np.abs(self.mean.loc[entry] - self.df[entry]) > cutOff
+        logical = self.df[entry] == self.df[entry]
+        df = self.df[entry]
+
+        lwr = 0
+        if sec_stepsize is None:
+            sec_stepsize = self.df.GlobalSecs.max()
+            upr = sec_stepsize
+        else:
+            upr = sec_stepsize
+
+        while upr <= self.df.GlobalSecs.max():            
+            slice = df[(self.df.GlobalSecs >= lwr) & (self.df.GlobalSecs <= upr)]
+            cutOff = stdMargain * slice.std()
+            mean = slice.mean()
+
+            logical = logical & np.abs(mean - slice) > cutOff
+
+            upr += sec_stepsize
+            lwr += sec_stepsize
+
+        return logical
+    
+    def reject_file_on_gradient(self, entry: str, margain: float, sec_stepsize=None) -> bool:
+        '''
+        Checks if data gradients are too extreme and removes it if so.
+
+        :param entry: (str) The parameter key.
+        :param margain: (float) Rejects file if avg_deviation > margain.
+        :param sec_stepsize: (float) The amount of seconds to look at at a time.
+        :return: (bool) True if rejected, False if not.
+        '''
+        upr = self.df.GlobalSecs.max() if sec_stepsize is None else sec_stepsize
+
+        lwr = 0
+        if sec_stepsize is None:
+            sec_stepsize = self.df.GlobalSecs.max()
+            upr = sec_stepsize
+        else:
+            upr = sec_stepsize
+
+        while upr <= self.df.GlobalSecs.max():            
+            slice = self.df[(self.df.GlobalSecs >= lwr) & (self.df.GlobalSecs <= upr)]
+            # Finding the derivative in unit/s
+            dt = slice.loc[pd.notna(slice[entry]), 'GlobalSecs'].diff()
+            dy = slice.loc[pd.notna(slice[entry]), entry].diff()
+            slopes = dy.div(dt) # dy/dt
+
+            deviation = np.abs(slopes.mean() - slopes)
+
+            if deviation.mean() > margain:
+                return True
+            
+            upr += sec_stepsize
+            lwr += sec_stepsize
+
+        return False
 
     def gradient_cutoff(self, entry: str, diffStdMargain: float) -> pd.Series:
         """
