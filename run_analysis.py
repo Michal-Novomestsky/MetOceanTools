@@ -655,6 +655,10 @@ if __name__=='__main__':
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
 
+        # Making folders
+        os.mkdir(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA'))
+        os.mkdir(os.path.join(writeDir, 'Postprocess'))
+
         eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
         outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
         postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
