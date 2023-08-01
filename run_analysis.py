@@ -656,6 +656,7 @@ if __name__=='__main__':
         writeDir = Path(args.write_dir[i])
 
         # Making folders
+        os.mkdir(os.path.join(writeDir, 'Preprocess'))
         os.mkdir(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA'))
         os.mkdir(os.path.join(writeDir, 'Postprocess'))
 
