@@ -587,8 +587,32 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
+    sns.lineplot(data=eraDf, x='timemet', y='crr')
+    plt.xlabel('time')
+    plt.ylabel('Convective Rain Rate (kg m^-2 s^-1)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
+        plt.close()
+    else:
+        plt.show() 
+
+    sns.lineplot(data=eraDf, x='timemet', y='swh')
+    plt.xlabel('time')
+    plt.ylabel('Significant Wave Height (m)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
+        plt.close()
+    else:
+        plt.show()   
+
     sns.lineplot(data=outDf, x='time', y='HApprox', label="EC", markers=True)
     sns.lineplot(data=outDf, x='time', y='HCoare', label="COARE", markers=True)
+    ax2 = plt.twinx()
+    sns.lineplot(data=eraDf, x='timemet', y='crr', label='Convective Rain Rate (kg m^-2 s^-1)', ax=ax2)
     plt.xlabel('time')
     plt.ylabel('Sensible Heat Flux')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
@@ -629,14 +653,14 @@ if __name__=='__main__':
 
     # Grabbing REMS stuff
     for cyclone in ['quang']:
-        with np_load_modified(os.path.join(os.getcwd(), 'REMS', f'meteo_{cyclone}.npz')) as metFile:
+        with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}.npz')) as metFile:
             timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             press = metFile['press.npy'] # Barometric Pressure (hPa=mbar)
             rh = metFile['rh.npy'] # Relative Humidity (%)
             spech = metFile['spech.npy'] # Specific humidity (rh: ratio, p: Pa; T: Kelvin)
             ta = metFile['ta.npy'] # Air Temperature (C)
             solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
-        with np_load_modified(os.path.join(os.getcwd(), 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
+        with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
             #timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
@@ -647,7 +671,7 @@ if __name__=='__main__':
                             "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
     # Grabbing ERA5 data
-    with np_load_modified(os.path.join(os.getcwd(), 'ERA5', 'ERA5_2015.npz')) as eraFile:
+    with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', 'era2015.npz')) as eraFile:
         timemet = eraFile['timemet.npy']
         u_10 = eraFile['u_10.npy'] # 10 metre U wind component (m/s)
         v_10 = eraFile['v_10.npy'] # 10 metre V wind component (m/s)
@@ -659,9 +683,12 @@ if __name__=='__main__':
         press = eraFile['surface_pres.npy']/100 # Surface pressure (mBar)
         solrad = eraFile['surface_solrad.npy'] # Surface solar radiation downwards (J/m^2)
         thermrad = eraFile['surface_thermrad.npy'] # Surface thermal radiation downwards (J/m^2)
+        crr = eraFile['crr.npy'] # Precipitation rate (kgm^-2s^-1)
+        swh = eraFile['swh.npy'] # Significant wave height of wind waves + swell (m) (http://www.bom.gov.au/marine/knowledge-centre/reference/waves.shtml)
 
     eraDf = pd.DataFrame({"timemet": timemet, "u_10": u_10, "v_10": v_10, "tsea": tsea, "waveDir": waveDir, 
-                            "ta": ta, "rh": rh, "spech": spech, "press": press, "solrad": solrad, "thermrad": thermrad})
+                            "ta": ta, "rh": rh, "spech": spech, "press": press, "solrad": solrad, "thermrad": thermrad,
+                            "crr": crr, "swh": swh})
 
     sns.set_theme(style='darkgrid')
 
@@ -672,13 +699,13 @@ if __name__=='__main__':
         writeDir = Path(args.write_dir[i])
 
         # Making folders
-        os.mkdir(os.path.join(writeDir, 'Preprocess'))
-        os.mkdir(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA'))
-        os.mkdir(os.path.join(writeDir, 'Postprocess'))
+        # os.mkdir(os.path.join(writeDir, 'Preprocess'))
+        # os.mkdir(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA'))
+        # os.mkdir(os.path.join(writeDir, 'Postprocess'))
 
-        eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
-        outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
-        postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
+        # eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
+        # outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
+        # postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
 
         eraDf.to_csv(os.path.join(writeDir, 'eraDf.csv'))
         remsDf.to_csv(os.path.join(writeDir, 'remsDf.csv'))
