@@ -174,9 +174,9 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True) -> str:
         if not rejectLog:
             rejectLog = rejectLog or data.plot_hist(v2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
         if not rejectLog:
-            rejectLog = rejectLog or data.reject_file_on_gradient(t1, margain=3/2, sec_stepsize=10*60)
+            rejectLog = rejectLog or data.reject_file_on_range(t1, margain=3, sec_stepsize=10*60)
         if not rejectLog:
-            rejectLog = rejectLog or data.reject_file_on_gradient(t2, margain=3/2, sec_stepsize=10*60)
+            rejectLog = rejectLog or data.reject_file_on_range(t2, margain=3, sec_stepsize=10*60)
         if not rejectLog:
             rejectLog = rejectLog or data.plot_hist(t1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
         if not rejectLog:
