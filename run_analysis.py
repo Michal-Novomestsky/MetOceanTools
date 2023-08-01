@@ -192,6 +192,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #slice[u2] = -slice[u2]
         #slice[v2] = -slice[v2]
 
+        # Getting parameters
         jd = time - datetime.datetime(2015, 1, 1)
         jd = float(jd.days)
         tair = dataSlice.ta
@@ -330,6 +331,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Pressure (mBar)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_pressure.png'))
         plt.close()
@@ -341,6 +343,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Air Temperature (degC)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_temp.png'))
         plt.close()
@@ -352,6 +355,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Sea Surface Temperature (degC)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'sea_surface_temp.png'))
         plt.close()
@@ -391,6 +395,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
         plt.xlabel('time')
         plt.ylabel('Downward Solar Radiation (J/m^2)')
         if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+        plt.xticks(plt.xticks()[0], rotation=90)
         if save_plots:
             plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
             plt.close()
@@ -402,6 +407,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
         plt.xlabel('time')
         plt.ylabel('Downward IR Radiation (J/m^2)')
         if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+        plt.xticks(plt.xticks()[0], rotation=90)
         if save_plots:
             plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_int.png'))
             plt.close()
@@ -417,6 +423,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Downward Solar Radiation (W/m^2)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_diff.png'))
         plt.close()
@@ -430,6 +437,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Relative humidity (%)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'rel_hum.png'))
         plt.close()
@@ -441,6 +449,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Specific humidity (kg/kg)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'spec_hum.png'))
         plt.close()
@@ -475,6 +484,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xlabel('time')
     plt.ylabel('Air Density (kg/m^3)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'air_dens.png'))
         plt.close()
@@ -486,6 +496,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xlabel('time')
     plt.ylabel('Northerly Component of Wind Speed (m/s)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'north_wind.png'))
         plt.close()
@@ -497,6 +508,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xlabel('time')
     plt.ylabel('Easterly Component of Wind Speed (m/s)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'east_wind.png'))
         plt.close()
@@ -507,6 +519,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xlabel('time')
     plt.ylabel('Upward Component of Wind Speed (m/s)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'upward_wind.png'))
         plt.close()
@@ -518,6 +531,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xlabel('time')
     plt.ylabel('Sea Surface Temperature (degC)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'sea_surf_temp.png'))
         plt.close()
@@ -566,6 +580,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xlabel('time')
     plt.ylabel('Shear Stress')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
         plt.close()
@@ -577,6 +592,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xlabel('time')
     plt.ylabel('Sensible Heat Flux')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
         plt.close()
