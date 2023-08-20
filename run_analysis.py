@@ -515,17 +515,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
-    sns.lineplot(data=outDf, x='time', y='U_10')
-    plt.xlabel('time')
-    plt.ylabel('Easterly Component of Wind Speed (m/s)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
-    plt.xticks(plt.xticks()[0], rotation=90)
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'east_wind.png'))
-        plt.close()
-    else:
-        plt.show()
-
     sns.lineplot(data=outDf, x='time', y='w', label="Anem W Component")
     plt.xlabel('time')
     plt.ylabel('Upward Component of Wind Speed (m/s)')
@@ -533,6 +522,18 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'upward_wind.png'))
+        plt.close()
+    else:
+        plt.show()
+
+    sns.lineplot(data=outDf, x='time', y='U10', label='Anem')
+    sns.lineplot(x=eraDf.timemet, y=np.linalg.norm(eraDf[['v_10', 'u_10']].values,axis=1), label='ERA5')
+    plt.xlabel('time')
+    plt.ylabel('Magnitude of Horizontal Wind Speed at 10m (m/s)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'east_wind.png'))
         plt.close()
     else:
         plt.show()
@@ -575,7 +576,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
 
     outDf.Cd = 1000*outDf.Cd
 
-    sns.scatterplot(data=outDf, x='U_10', y='Cd')
+    sns.scatterplot(data=outDf, x='U10', y='Cd')
     # plt.xlim([0, 25])
     # plt.ylim([-2,5])
     plt.xlabel('U_10 (m/s)')
@@ -588,6 +589,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
 
     sns.lineplot(data=outDf, x='time', y='tauApprox', label="EC", markers=True)
     sns.lineplot(data=outDf, x='time', y='tauCoare', label="COARE", markers=True)
+    sns.lineplot(x=outDf.time, y=outDf.tauApprox.rolling(window=5, step=5).mean())
     plt.xlabel('time')
     plt.ylabel('Shear Stress')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
@@ -600,6 +602,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
 
     sns.lineplot(data=outDf, x='time', y='HApprox', label="EC", markers=True)
     sns.lineplot(data=outDf, x='time', y='HCoare', label="COARE", markers=True)
+    sns.lineplot(x=outDf.time, y=outDf.HApprox.rolling(window=5, step=5).mean())
     plt.xlabel('time')
     plt.ylabel('Sensible Heat Flux')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
@@ -735,13 +738,16 @@ if __name__=='__main__':
         writeDir = Path(args.write_dir[i])
 
         # Making folders
-        # os.mkdir(os.path.join(writeDir, 'Preprocess'))
-        # os.mkdir(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA'))
-        # os.mkdir(os.path.join(writeDir, 'Postprocess'))
+        os.mkdir(os.path.join(writeDir, 'Preprocess'))
+        os.mkdir(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA'))
+        os.mkdir(os.path.join(writeDir, 'Postprocess'))
 
-        # eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
-        # outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
-        # postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
+        eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
+        outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
+
+        outDf = outDf.sort_values(by='time') # Sorting outDf since it may be jumbled due to multiprocessing
+
+        postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
 
         eraDf.to_csv(os.path.join(writeDir, 'eraDf.csv'))
         remsDf.to_csv(os.path.join(writeDir, 'remsDf.csv'))

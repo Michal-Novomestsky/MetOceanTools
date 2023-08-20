@@ -7,6 +7,16 @@ from matplotlib import pyplot as plt
 from scipy.fft import fft, fftfreq
 from scipy.stats import linregress
 
+def get_moving_avg(s: pd.Series, window_width: int) -> pd.Series:
+    '''
+    Returns the moving average for a series.
+
+    :param s: (pd.Series) The series to average over.
+    :param window_width: (int) How many indicies to consider at a time.
+    :return: (pd.Series) A series of moving averages.
+    '''
+    return s.rolling(window=window_width).mean()
+
 class DataCleaner:
     def __init__(self, dir: Path) -> None:
         # Reading in file
@@ -320,17 +330,34 @@ class DataCleaner:
                 plt.close()
 
             return False
+        
+    def reject_file_on_changing_mean(self, entry: str, margain:float, sec_stepsize: int, n_most=100) -> bool:
+        s = self.df[entry]
+        window_width = sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0]) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+        windows = s.rolling(window=window_width, step=window_width)
 
-    def reject_file_on_range(self, entry: str, margain: float, std_devs=2, sec_stepsize=None) -> bool:
+        means = windows.mean()
+        n_largest = means.nlargest(n=n_most)
+        n_smallest = means.nsmallest(n=n_most)
+        return (n_largest.mean() - n_smallest.mean()) > margain
+
+    def reject_file_on_range(self, entry: str, margain: float, std_devs=2, sec_stepsize=3600) -> bool:
         '''
         Checks if the avg range of the data (i.e. 2*standard devs) is larger margain.
 
         :param entry: (str) The parameter key.
-        :param margain: (float) Rejects file if 2*std_devs*std > margain.
+        :param margain: (float) Rejects file if std_devs*std > margain (i.e. if N standard deviations > a given margain, the range is too wide).
         :param std_devs: (float) Amount of stds away from mean to consider as the range.
-        :param sec_stepsize: (float) The amount of seconds to look at at a time. The whole dataset if None.
+        :param sec_stepsize: (float) The amount of seconds to look at at a time. The whole dataset by default.
         :return: (bool) True if rejected, False if not.
         '''
+        s = self.df[entry]
+        window_width = sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0]) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+        windows = s.rolling(window=window_width, step=window_width)
+
+        stds = windows.std()
+        return (std_devs*stds > margain).any()
+
         lwr = 0
         if sec_stepsize is None:
             sec_stepsize = self.df.GlobalSecs.max()
