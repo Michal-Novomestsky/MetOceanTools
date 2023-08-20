@@ -515,6 +515,17 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
+    sns.lineplot(data=outDf, x='time', y='U_10')
+    plt.xlabel('time')
+    plt.ylabel('Easterly Component of Wind Speed (m/s)')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'east_wind.png'))
+        plt.close()
+    else:
+        plt.show()
+
     sns.lineplot(data=outDf, x='time', y='w', label="Anem W Component")
     plt.xlabel('time')
     plt.ylabel('Upward Component of Wind Speed (m/s)')
@@ -585,40 +596,65 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
         plt.close()
     else:
-        plt.show()   
-
-    sns.lineplot(data=eraDf, x='timemet', y='crr')
-    plt.xlabel('time')
-    plt.ylabel('Convective Rain Rate (kg m^-2 s^-1)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
-    plt.xticks(plt.xticks()[0], rotation=90)
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
-        plt.close()
-    else:
-        plt.show() 
-
-    sns.lineplot(data=eraDf, x='timemet', y='swh')
-    plt.xlabel('time')
-    plt.ylabel('Significant Wave Height (m)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
-    plt.xticks(plt.xticks()[0], rotation=90)
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
-        plt.close()
-    else:
-        plt.show()   
+        plt.show()  
 
     sns.lineplot(data=outDf, x='time', y='HApprox', label="EC", markers=True)
     sns.lineplot(data=outDf, x='time', y='HCoare', label="COARE", markers=True)
-    ax2 = plt.twinx()
-    sns.lineplot(data=eraDf, x='timemet', y='crr', label='Convective Rain Rate (kg m^-2 s^-1)', ax=ax2)
     plt.xlabel('time')
     plt.ylabel('Sensible Heat Flux')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
+        plt.close()
+    else:
+        plt.show()     
+
+    ax1 = sns.lineplot(data=outDf, x='time', y='HApprox', label="EC Sensible Heat Flux", legend=False)
+    ax2 = plt.twinx()
+    sns.lineplot(data=eraDf, x='timemet', y='crr', label='Convective Rain Rate (kg m^-2 s^-1)', ax=ax2, color='orange', legend=False)
+    ax1.figure.legend()
+    plt.xlabel('time')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
+        plt.close()
+    else:
+        plt.show() 
+
+    ax1 = sns.lineplot(data=outDf, x='time', y='HApprox', label="EC Sensible Heat Flux", legend=False)
+    ax2 = plt.twinx()
+    sns.lineplot(data=eraDf, x='timemet', y='swh', label='Significant Wave Height (m)', ax=ax2, color='orange', legend=False)
+    ax1.figure.legend()
+    plt.xlabel('time')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
+        plt.close()
+    else:
+        plt.show()   
+
+    ax1 = sns.lineplot(data=outDf, x='time', y='HCoare', label="COARE Sensible Heat Flux", legend=False)
+    ax2 = plt.twinx()
+    sns.lineplot(data=eraDf, x='timemet', y='swh', label='Significant Wave Height (m)', ax=ax2, color='orange', legend=False)
+    ax1.figure.legend()
+    plt.xlabel('time')
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
+        plt.close()
+    else:
+        plt.show()
+
+    crr = eraDf.crr[eraDf.crr.isin(eraDf.timemet)]
+    sns.lineplot(x=crr, y=outDf.HApprox)
+    plt.xlabel('Convective Rain Rate (kg m^-2 s^-1)')
+    plt.ylabel('EC Sensible Heat Flux')
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
         plt.close()
     else:
         plt.show()   
