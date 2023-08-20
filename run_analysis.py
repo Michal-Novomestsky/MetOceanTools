@@ -51,7 +51,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_HApprox = []
     collector_HCoare = []
     collector_Cd = []
-    collector_U10 = []
+    collector_U_10 = []
     collector_w_turb = []
     collector_u = []
     collector_v = []
@@ -67,7 +67,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_tauApprox += output[0]
                 collector_tauCoare += output[1]
                 collector_Cd += output[2]
-                collector_U10 += output[3]
+                collector_U_10 += output[3]
                 collector_HApprox += output[4]
                 collector_HCoare += output[5]
                 collector_w_turb += output[6]
@@ -101,7 +101,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_tauApprox += outputElem[0]
                     collector_tauCoare += outputElem[1]
                     collector_Cd += outputElem[2]
-                    collector_U10 += outputElem[3]
+                    collector_U_10 += outputElem[3]
                     collector_HApprox += outputElem[4]
                     collector_HCoare += outputElem[5]
                     collector_w_turb += outputElem[6]
@@ -114,7 +114,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
 
     write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox": collector_tauApprox, "tauCoare": collector_tauCoare,
-                            "Cd": collector_Cd, "U10": collector_U10, "HApprox": collector_HApprox, "HCoare": collector_HCoare, 
+                            "Cd": collector_Cd, "U_10": collector_U_10, "HApprox": collector_HApprox, "HCoare": collector_HCoare, 
                             "wTurb": collector_w_turb, "u": collector_u, "v": collector_v, "w": collector_w, "ta": collector_t,
                             "rho": collector_rho})
 
@@ -575,7 +575,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
 
     outDf.Cd = 1000*outDf.Cd
 
-    sns.scatterplot(data=outDf, x='U10', y='Cd')
+    sns.scatterplot(data=outDf, x='U_10', y='Cd')
     # plt.xlim([0, 25])
     # plt.ylim([-2,5])
     plt.xlabel('U_10 (m/s)')
@@ -665,7 +665,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     # ax.set_xlabel('Time')
     # ax.set_ylabel('Sensible Heat Flux')
     # ax2 = ax.twinx()
-    # lns3 = ax2.plot(outDf.time, outDf.U10, "-o", color='r', label='U_10')
+    # lns3 = ax2.plot(outDf.time, outDf.U_10, "-o", color='r', label='U_10')
     # ax2.set_ylim([0,20])
     # ax2.set_ylabel('U_10 (m/s)')
     # lns = lns1+lns2+lns3
