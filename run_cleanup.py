@@ -9,7 +9,7 @@ from Modules.DataAnalyser import write_message
 from aggregate_files import run_aggregate_files
 from pathlib import Path
 
-def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1, file_selector_name=None) -> None:
+def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1, file_selector_name=None, mru_correct=True) -> None:
     """
     Steps through each data file located in readDir and outputs a cleaned-up version in writeDir. Otherwise keeps track of all rejected files.
     supervised sets whether user verification is needed to accept changes or whether it is completed automatically. Unsupervised enables multiprocessing
@@ -47,7 +47,8 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1,
         # Creating a tuple of tuples of inputs to pass into each iteration
         writeDirArr = [writeDir]*len(files)
         supervisedArr = [supervised]*len(files)
-        args = [*zip(files, writeDirArr, supervisedArr)]
+        mruArr = [mru_correct]*len(files)
+        args = [*zip(files, writeDirArr, supervisedArr, mruArr)]
 
         with mp.Pool(coresToUse) as p:
             rejectedFiles = p.starmap(_cleanup_iteration, iterable=args)
@@ -324,6 +325,7 @@ if __name__=='__main__':
     parser.add_argument('--write_dir', nargs='+', type=str, help='Path to output. Can be a list.')
     parser.add_argument('--cpu_fraction', type=float, help='% Of CPUs to use. Can be within (0,1].', default=1)
     parser.add_argument('--run_supervised', action='store_true', help='Run one-by-one cleanup.', default=False)
+    parser.add_argument('--mru_correct', action='store_true', help='Run one-by-one cleanup.', default=False)
     parser.add_argument('--file_selector_name', type=str, help='String which appears in the intended filename.', default=None)
     args = parser.parse_args()
 
@@ -333,7 +335,7 @@ if __name__=='__main__':
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
 
-        cleanup_loop(readDir, writeDir, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, file_selector_name=args.file_selector_name)
+        cleanup_loop(readDir, writeDir, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, file_selector_name=args.file_selector_name, mru_correct=args.mru_correct)
         run_aggregate_files(writeDir)
     t1 = time.perf_counter()
     
