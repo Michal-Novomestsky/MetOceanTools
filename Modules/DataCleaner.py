@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import seaborn as sns
 
 from pathlib import Path
 from matplotlib import pyplot as plt
@@ -41,10 +42,6 @@ class DataCleaner:
         else:
             self.df = pd.read_csv(dir, sep = "	")
 
-        # Handy values
-        self.mean = self.df.mean()
-        self.std = self.df.std()
-
         # Keeping an unedited copy for reference
         self.originalDf = self.df.copy(deep=True)
 
@@ -54,22 +51,21 @@ class DataCleaner:
 
         file.close()
 
-    def plot_comparison(self, entry: str, fileName: str, supervised=False, saveLoc=None, plotTitle="_COMPARISON_", plotType="-o") -> None:
+    def plot_comparison(self, entry: str, fileName: str, supervised=False, saveLoc=None, plotTitle="_COMPARISON_", y_lim=None) -> None:
         """
         Presents a plot of the values removed from entry during cleanup in the .txt fileName. plotType specifies the plotting marker.
         """
-        x = self.df.GlobalSecs
-
-        yChanged = self.df[entry]
-        yOriginal = self.originalDf[entry]
-
         title = fileName[:len(fileName) - 4] + plotTitle + entry
 
-        plt.plot(x, yOriginal, plotType, color='r')
-        plt.plot(x, yChanged, plotType, color='b')
-        plt.xlabel('GlobalSecs')
+        #sns.lineplot(data=self.originalDf, x='GlobalSecs', y=entry, label='Original', color='r')
+        sns.scatterplot(data=self.originalDf, x='GlobalSecs', y=entry, color='r', edgecolor=None, marker='.')
+        #sns.lineplot(data=self.df, x='GlobalSecs', y=entry, label='Cleaned', color='b')
+        sns.scatterplot(data=self.df, x='GlobalSecs', y=entry, color='b', edgecolor=None, marker='.')
         plt.ylabel(entry)
         plt.title(title)
+
+        if y_lim is not None:
+            plt.ylim(y_lim)
 
         if supervised:
             plt.show()
@@ -272,6 +268,7 @@ class DataCleaner:
                 y = timeSeries.loc[(tLower + i*windowWidth <= self.df.Minute) & (self.df.Minute <= tUpper - (len(windows) - i - 1)*windowWidth), entry]
                 y_bar = y.mean()
                 y_turb = y - y_bar
+                y_turb.dropna(inplace=True)
 
                 try:
                     ft_yTemp = fft(y_turb.values)
@@ -320,13 +317,115 @@ class DataCleaner:
                 plt.close()
 
             return False
+        
+    def reject_file_on_changing_mean(self, entry: str, margain:float, sec_stepsize: int, n_most=100) -> bool:
+        s = self.df[entry]
+        window_width = sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0]) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+        windows = s.rolling(window=window_width, step=window_width)
 
-    def std_cutoff(self, entry: str, stdMargain: float) -> pd.Series:
+        means = windows.mean()
+        n_largest = means.nlargest(n=n_most)
+        n_smallest = means.nsmallest(n=n_most)
+        return (n_largest.mean() - n_smallest.mean()) > margain
+
+    def reject_file_on_range(self, entry: str, margain: float, std_devs=2, sec_stepsize=3600) -> bool:
+        '''
+        Checks if the avg range of the data (i.e. 2*standard devs) is larger margain.
+
+        :param entry: (str) The parameter key.
+        :param margain: (float) Rejects file if std_devs*std > margain (i.e. if N standard deviations > a given margain, the range is too wide).
+        :param std_devs: (float) Amount of stds away from mean to consider as the range.
+        :param sec_stepsize: (float) The amount of seconds to look at at a time. The whole dataset by default.
+        :return: (bool) True if rejected, False if not.
+        '''
+        s = self.df[entry]
+        window_width = int(sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+        windows = s.rolling(window=window_width, step=window_width)
+
+        stds = windows.std()
+        return (std_devs*stds > margain).any()
+    
+    def reject_file_on_gradient(self, entry: str, margain: float, sec_stepsize=None) -> bool:
+        '''
+        Checks if data gradients are too extreme and removes it if so.
+
+        :param entry: (str) The parameter key.
+        :param margain: (float) Rejects file if avg_deviation > margain.
+        :param sec_stepsize: (float) The amount of seconds to look at at a time.
+        :return: (bool) True if rejected, False if not.
+        '''
+        lwr = 0
+        if sec_stepsize is None:
+            sec_stepsize = self.df.GlobalSecs.max()
+            upr = sec_stepsize
+        else:
+            upr = sec_stepsize
+
+        while upr <= self.df.GlobalSecs.max():            
+            slice = self.df[(self.df.GlobalSecs >= lwr) & (self.df.GlobalSecs <= upr)]
+            # Finding the derivative in unit/s
+            dt = slice.loc[pd.notna(slice[entry]), 'GlobalSecs'].diff()
+            dy = slice.loc[pd.notna(slice[entry]), entry].diff()
+            slopes = dy.div(dt) # dy/dt
+
+            deviation = np.abs(slopes - slopes.mean())
+
+            if deviation.mean() > margain:
+                return True
+            
+            upr += sec_stepsize
+            lwr += sec_stepsize
+
+        return False
+    
+    def std_cutoff(self, entry: str, stdMargain: float, sec_stepsize: float) -> pd.Series:
         """
-        Returns logicals set to True for data of type entry that lies beyond +-stdMargain standard deviations from the mean of the dataset.
+        Returns logicals set to True for data of type entry that lies beyond +-stdMargain standard deviations from the mean of the dataset over sec_stepsize seconds (Over the entire dataset if None).
         """
-        cutOff = stdMargain*self.std.loc[entry]
-        return np.abs(self.mean.loc[entry] - self.df[entry]) > cutOff
+        s = self.df[entry]
+
+        sec_0, sec_1 = self.df.GlobalSecs.nsmallest(n=2)
+        window_width = int(sec_stepsize // (sec_1 - sec_0)) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+        windows = s.rolling(window=window_width, step=window_width)
+
+        logical = pd.Series(len(s)*[False])
+        for window in windows:
+            std = window.std()
+            mean = window.mean()
+
+            if pd.isna(std):
+                logical[window.index] = pd.Series(len(window)*[False])
+            else:
+                logical[window.index] = np.abs(s[window.index] - mean) > stdMargain*std
+
+        return logical
+
+        stds = windows.std()
+        means = windows.mean()
+        return np.abs(windows - means) > stdMargain*stds
+        return (stdMargain*stds > margain).any()
+
+        logical = self.df[entry] == self.df[entry]
+        df = self.df[entry]
+
+        lwr = 0
+        if sec_stepsize is None:
+            sec_stepsize = self.df.GlobalSecs.max()
+            upr = sec_stepsize
+        else:
+            upr = sec_stepsize
+
+        while upr <= self.df.GlobalSecs.max():            
+            slice = df[(self.df.GlobalSecs >= lwr) & (self.df.GlobalSecs <= upr)]
+            cutOff = stdMargain * slice.std()
+            mean = slice.mean()
+
+            logical = logical & np.abs(mean - slice) > cutOff
+
+            upr += sec_stepsize
+            lwr += sec_stepsize
+
+        return logical
 
     def gradient_cutoff(self, entry: str, diffStdMargain: float) -> pd.Series:
         """
@@ -376,8 +475,8 @@ class DataCleaner:
             for log in logicals:
                 logical = logical & log
 
-        self.df.loc[logical, entry] = np.nan
-        self.remove_nans(entry, self.df, naive=naive_nans)
+        self.df = self.df[~logical]
+        self.df.reset_index(drop=True, inplace=True)
 
     def prune_or(self, entry: str, logicals: pd.Series, naive_nans=False) -> None:
         """
@@ -391,8 +490,8 @@ class DataCleaner:
             for log in logicals:
                 logical = logical | log
 
-        self.df.loc[logical, entry] = np.nan
-        self.remove_nans(entry, self.df, naive=naive_nans)
+        self.df = self.df[~logical]
+        self.df.reset_index(drop=True, inplace=True)
     
     def mru_correct(self) -> None:
         """
@@ -464,28 +563,38 @@ class DataCleaner:
         """
         nanIdx = df.loc[pd.isna(df[entry])].index.to_series()
         nanIdx.apply(lambda x: self._remove_nans_aux(entry, df, x, naive=naive))
-
-        #updating mean and std
-        self.mean = self.df.mean()
-        self.std = self.df.std()
+        df[entry].fillna(method='bfill')
 
     def _remove_nans_aux(self, entry: str, df: pd.DataFrame, nanIdx: int, naive=False) -> None:
         # If neighbouring points are NaN, recursively find the nearest points which aren't
-        xLower, xUpper = self._interp_aux(entry, nanIdx - 1, nanIdx + 1)
+        #xLower, xUpper = self._interp_aux(entry, nanIdx - 1, nanIdx + 1)
+        xLower = nanIdx
+        xUpper = nanIdx
+
+        while pd.isna(df.loc[xLower, entry]):
+            if xLower >= 0:
+                xLower -= 1
+            if xLower < 0:
+                break
+        while pd.isna(df.loc[xUpper, entry]):
+            if xUpper <= len(df) - 1:
+                xUpper += 1
+            if xUpper > len(df) - 1:
+                break
 
         if naive:
             # Just taking means of neighbours without caring about distance. If we need to extrapolate, just stick it to the edgepoint
-            if xLower >= 0 and xUpper <= len(self.df) - 1:
+            if xLower >= 0 and xUpper <= len(df) - 1:
                 # Catching edge cases where angles reset from 180 or 360 back to 0
                 if (df.loc[xLower, entry] < 10 and df.loc[xUpper, entry] > 10) or (df.loc[xLower, entry] > 10 and df.loc[xUpper, entry] < 10):
                     df.loc[nanIdx, entry] = df.loc[xLower, entry]
                 else:
                     df.loc[nanIdx, entry] = np.mean([df.loc[xLower, entry], df.loc[xUpper, entry]])
 
-            elif xLower < 0 and xUpper < len(self.df) - 1:
+            elif xLower < 0 and xUpper < len(df) - 1:
                 df.loc[nanIdx, entry] = df.loc[xUpper, entry]
 
-            elif xLower > 0 and xUpper > len(self.df) - 1:
+            elif xLower > 0 and xUpper > len(df) - 1:
                 df.loc[nanIdx, entry] = df.loc[xLower, entry]
 
             else:
@@ -493,37 +602,37 @@ class DataCleaner:
 
         else:
             # Finding neighbouring x and y values to interpolate between
-            if xLower >= 0 and xUpper <= len(self.df) - 1:
+            if xLower >= 0 and xUpper <= len(df) - 1:
                 xNeighbours = df.GlobalSecs[[xLower, xUpper]].values
                 yNeighbours = df.loc[[xLower, xUpper], entry].values
 
                 df.loc[nanIdx, entry] = np.interp(df.GlobalSecs[nanIdx], xNeighbours, yNeighbours) # Linearly interpolating. If we need to extrapolate (i.e. endpoints), we just say that the value = the neighbour
 
-            elif xLower < 0 and xUpper < len(self.df) - 1:
-                xNeighbours = [df.GlobalSecs[xUpper], df.GlobalSecs[len(self.df) - 1]] # Forcing the interpolator to extrapolate when we have an edgepoint
-                yNeighbours = [df.loc[xUpper, entry], 0]
+            elif xLower < 0 and xUpper < len(df) - 1:
+                xNeighbours = [df.GlobalSecs[xUpper], df.GlobalSecs[xUpper + 1]] # Forcing the interpolator to extrapolate when we have an edgepoint
+                yNeighbours = [df.loc[xUpper, entry], df.loc[xUpper + 1, entry]]
 
                 df.loc[nanIdx, entry] = np.interp(df.GlobalSecs[nanIdx], xNeighbours, yNeighbours, left=yNeighbours[0], right=yNeighbours[0])
 
-            elif xLower > 0 and xUpper > len(self.df) - 1:
-                xNeighbours = [0, df.GlobalSecs[xLower]]
-                yNeighbours = [0, df.loc[xLower, entry]]
+            elif xLower > 0 and xUpper > len(df) - 1:
+                xNeighbours = [df.GlobalSecs[xLower - 1], df.GlobalSecs[xLower]]
+                yNeighbours = [df.loc[xLower - 1, entry], df.loc[xLower, entry]]
 
-                df.loc[nanIdx, entry] = np.interp(self.df.GlobalSecs[nanIdx], xNeighbours, yNeighbours, left=yNeighbours[1], right=yNeighbours[1])
+                df.loc[nanIdx, entry] = np.interp(df.GlobalSecs[nanIdx], xNeighbours, yNeighbours, left=yNeighbours[1], right=yNeighbours[1])
 
             else:
                 raise ValueError("This dataset is scuffed. Every single point was flagged as bad.")
 
-    def _interp_aux(self, entry, left, right) -> int:
-        """
-        Recursively searching for the nearest non-NaN value to interpolate to. left is the index left of the value being interpolated. Vice versa with
-        right.
-        """
-        if right < len(self.df) - 1 and pd.isna(self.df.loc[right, entry]): # Need to check if right isn't already an edgepoint
-            return self._interp_aux(entry, left, right + 1)
+    # def _interp_aux(self, entry, left, right) -> int:
+    #     """
+    #     Recursively searching for the nearest non-NaN value to interpolate to. left is the index left of the value being interpolated. Vice versa with
+    #     right.
+    #     """
+    #     if right < len(df) - 1 and pd.isna(df.loc[right, entry]): # Need to check if right isn't already an edgepoint
+    #         return self._interp_aux(entry, left, right + 1)
 
-        elif left > 0 and pd.isna(self.df.loc[left, entry]):
-            return self._interp_aux(entry, left - 1, right)
+    #     elif left > 0 and pd.isna(df.loc[left, entry]):
+    #         return self._interp_aux(entry, left - 1, right)
         
-        else:
-            return (left, right)
+    #     else:
+    #         return (left, right)
