@@ -112,7 +112,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     data.prune_or([data.gradient_cutoff(w1, 3)])
     data.prune_or([data.std_cutoff(w1, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(data.originalDf)
+    data.remove_nans(w2, data.originalDf)
     data.prune_or([data.gradient_cutoff(w2, 3)])
     data.prune_or([data.std_cutoff(w2, 5, sec_stepsize=5*60)])
 
