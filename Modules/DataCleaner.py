@@ -435,7 +435,7 @@ class DataCleaner:
                 return True
         return False
 
-    def prune_and(self, entry: str, logicals: pd.Series, naive_nans=False) -> None:
+    def prune_and(self, logicals: pd.Series) -> None:
         """
         Cuts out datapoints of type entry which fit into the intersection of all conditions in the tuple logicals and replaces them
         with linear interpolations.
@@ -450,7 +450,7 @@ class DataCleaner:
         self.df = self.df[~logical]
         self.df.reset_index(drop=True, inplace=True)
 
-    def prune_or(self, entry: str, logicals: pd.Series, naive_nans=False) -> None:
+    def prune_or(self, logicals: pd.Series) -> None:
         """
         Cuts out datapoints of type entry which fit into the union of all conditions in the tuple logicals and replaces them
         with linear interpolations.
