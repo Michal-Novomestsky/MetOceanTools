@@ -423,8 +423,8 @@ class DataCleaner:
         freqDf = self.df.groupby([entry])[entry].count().reset_index(name='Count').sort_values(['Count'], ascending=False)
         idxSer = freqDf.index.to_series().reset_index()
         # Grabbing first counts counts since the latter are small anyway
-        idxSer = idxSer.drop(labels=range(counts+1, len(idxSer)))
-        idxSer = idxSer.drop(0, axis="columns")
+        idxSer.drop(labels=range(counts+1, len(idxSer)), inplace=True)
+        idxSer.drop(0, axis="columns", inplace=True)
         idxSer.rename(columns={"index":"countIdx"}, inplace=True)
 
         # Checking each pair and breaking out if it's too steep. Otherwise return false
