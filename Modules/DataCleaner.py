@@ -37,6 +37,9 @@ class DataCleaner:
                 # Adding in a global second entry to avoid having to deal with modular seconds
                 globSeconds = self.df.Second.add(60*self.df.Minute)
                 self.df.insert(3, "GlobalSecs", globSeconds)
+
+                self.df.insert(0, "is_temp_fluctating", len(self.df)*[False])
+                self.df.insert(0, "is_temp_range_large", len(self.df)*[False])
             
             # If the file has previously been cleaned, we can just directly read from it without any tidying required
             else:
@@ -298,7 +301,7 @@ class DataCleaner:
             print(f"Rejected {fileName}: Histogram has a spike")
             return True
         else:
-            self.df.hist(column=entry, bins=bins)
+            sns.histplot(data=self.df, x=entry, bins=bins)
 
             title = fileName[:len(fileName) - 4] + plotTitle + entry
 
@@ -393,33 +396,6 @@ class DataCleaner:
                 logical[window.index] = pd.Series(len(window)*[False])
             else:
                 logical[window.index] = np.abs(s[window.index] - mean) > stdMargain*std
-
-        return logical
-
-        stds = windows.std()
-        means = windows.mean()
-        return np.abs(windows - means) > stdMargain*stds
-        return (stdMargain*stds > margain).any()
-
-        logical = self.df[entry] == self.df[entry]
-        df = self.df[entry]
-
-        lwr = 0
-        if sec_stepsize is None:
-            sec_stepsize = self.df.GlobalSecs.max()
-            upr = sec_stepsize
-        else:
-            upr = sec_stepsize
-
-        while upr <= self.df.GlobalSecs.max():            
-            slice = df[(self.df.GlobalSecs >= lwr) & (self.df.GlobalSecs <= upr)]
-            cutOff = stdMargain * slice.std()
-            mean = slice.mean()
-
-            logical = logical & np.abs(mean - slice) > cutOff
-
-            upr += sec_stepsize
-            lwr += sec_stepsize
 
         return logical
 
