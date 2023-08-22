@@ -176,13 +176,23 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     if not rejectLog:
         rejectLog = rejectLog or data.plot_hist(v2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
     if not rejectLog:
-        rejectLog = rejectLog or data.reject_file_on_range(t1, margain=3, sec_stepsize=10*60)
-    # if not rejectLog:
-        # rejectLog = rejectLog or data.reject_file_on_range(t2, margain=3, sec_stepsize=10*60)
-    if not rejectLog:
         rejectLog = rejectLog or data.plot_hist(t1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
     if not rejectLog:
         rejectLog = rejectLog or data.plot_hist(t2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
+
+    if not rejectLog:
+        # Checking if temperature has an unusually large range or is mean shifting
+        is_temp_range_large = data.range_cutoff(t1, margain=4, sec_stepsize=5*60)
+        data.df.is_temp1_range_large = is_temp_range_large
+
+        is_temp_fluctuating = data.reject_file_on_changing_mean(t1, margain=2.5, sec_stepsize=10*60, n_most=2)
+        data.df.is_temp1_fluctating = len(data.df)*[is_temp_fluctuating]
+
+        is_temp_range_large = data.range_cutoff(t2, margain=4, sec_stepsize=5*60)
+        data.df.is_temp2_range_large = is_temp_range_large
+
+        is_temp_fluctuating = data.reject_file_on_changing_mean(t2, margain=2.5, sec_stepsize=10*60, n_most=2)
+        data.df.is_temp2_fluctating = len(data.df)*[is_temp_fluctuating]
 
     # Plotting points which were removed
     saveLoc = os.path.join(writeDir, "hists")
