@@ -39,8 +39,8 @@ class DataCleaner:
                 self.df.insert(3, "GlobalSecs", globSeconds)
 
                 self.df.insert(0, "is_temp1_fluctating", len(self.df)*[False])
-                self.df.insert(0, "is_temp2_range_large", len(self.df)*[False])
-                self.df.insert(0, "is_temp1_fluctating", len(self.df)*[False])
+                self.df.insert(0, "is_temp1_range_large", len(self.df)*[False])
+                self.df.insert(0, "is_temp2_fluctating", len(self.df)*[False])
                 self.df.insert(0, "is_temp2_range_large", len(self.df)*[False])
             
             # If the file has previously been cleaned, we can just directly read from it without any tidying required
