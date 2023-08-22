@@ -11,45 +11,41 @@ from scipy.stats import linregress
 class DataCleaner:
     def __init__(self, dir: Path) -> None:
         # Reading in file
-        file = open(dir, "r")
-        lines = file.readlines()
+        with open(dir, "r") as file:
+            lines = file.readlines()
 
-        if lines[0] == "% NRA Flarebridge Research Data provided by Woodside Energy Ltd, collected by RPS OceanMonitor System v1.3\n":
-            # Grabbing headers
-            columnNames = lines[3].split("	")
-            units = lines[4].split("	")
+            if lines[0] == "% NRA Flarebridge Research Data provided by Woodside Energy Ltd, collected by RPS OceanMonitor System v1.3\n":
+                # Grabbing headers
+                columnNames = lines[3].split("	")
+                units = lines[4].split("	")
 
-            tempColumns = []
-            # We give special treatment to the first and last elements to avoid grabbing %Units and the like (these two entries don't have units anyway)
-            # We also chop off parts of the string in these two cases to avoid % and \n
-            tempColumns.append(columnNames[0][2:])
-            for i in range(1, len(columnNames) - 1):
-                # Avoiding adding spaces if the unit is dimensionless
-                if units[i] == "":
-                    tempColumns.append(columnNames[i])
-                else:
-                    tempColumns.append(columnNames[i] + " (" + units[i] + ")")
-            tempColumns.append(columnNames[len(columnNames) - 1][:len(columnNames[len(columnNames) - 1]) - 1])
+                tempColumns = []
+                # We give special treatment to the first and last elements to avoid grabbing %Units and the like (these two entries don't have units anyway)
+                # We also chop off parts of the string in these two cases to avoid % and \n
+                tempColumns.append(columnNames[0][2:])
+                for i in range(1, len(columnNames) - 1):
+                    # Avoiding adding spaces if the unit is dimensionless
+                    if units[i] == "":
+                        tempColumns.append(columnNames[i])
+                    else:
+                        tempColumns.append(columnNames[i] + " (" + units[i] + ")")
+                tempColumns.append(columnNames[len(columnNames) - 1][:len(columnNames[len(columnNames) - 1]) - 1])
+                
+                self.df = pd.read_csv(dir, sep = "	", skiprows=7)
+                self.df.columns = tempColumns
+
+                # Adding in a global second entry to avoid having to deal with modular seconds
+                globSeconds = self.df.Second.add(60*self.df.Minute)
+                self.df.insert(3, "GlobalSecs", globSeconds)
             
-            self.df = pd.read_csv(dir, sep = "	", skiprows=7)
-            self.df.columns = tempColumns
+            # If the file has previously been cleaned, we can just directly read from it without any tidying required
+            else:
+                self.df = pd.read_csv(dir, sep = "	")
+                # Chopping off erroneous endpoints where time resets
+                self.df = self.df.loc[self.df.index < len(self.df) - 1]
 
-            # Adding in a global second entry to avoid having to deal with modular seconds
-            globSeconds = self.df.Second.add(60*self.df.Minute)
-            self.df.insert(3, "GlobalSecs", globSeconds)
-        
-        # If the file has previously been cleaned, we can just directly read from it without any tidying required
-        else:
-            self.df = pd.read_csv(dir, sep = "	")
-
-        # Keeping an unedited copy for reference
-        self.originalDf = self.df.copy(deep=True)
-
-        # Chopping off erroneous endpoints where time resets
-        self.df = self.df.loc[self.df.index < len(self.df) - 1]
-        self.originalDf = self.originalDf.loc[self.originalDf.index < len(self.originalDf) - 1]
-
-        file.close()
+            # Keeping an unedited copy for reference
+            self.originalDf = self.df.copy(deep=True)
 
     def plot_comparison(self, entry: str, fileName: str, supervised=False, saveLoc=None, plotTitle="_COMPARISON_", y_lim=None) -> None:
         """
