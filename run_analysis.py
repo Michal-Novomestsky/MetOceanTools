@@ -58,6 +58,10 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_w = []
     collector_t = []
     collector_rho = []
+    collector_t1_fluct = []
+    collector_t1_rng = []
+    collector_t2_fluct = []
+    collector_t2_rng = []
 
     # One-by-one
     if supervised:
@@ -77,6 +81,10 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_w += output[10]
                 collector_t += output[11]
                 collector_rho += output[12]
+                collector_t1_fluct += output[13]
+                collector_t1_rng += output[14]
+                collector_t2_fluct += output[15]
+                collector_t2_rng += output[16]
 
     # Enabling multiprocessing
     else:
@@ -111,12 +119,17 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_w += outputElem[10]
                     collector_t += outputElem[11]
                     collector_rho += outputElem[12]
+                    collector_t1_fluct += outputElem[13]
+                    collector_t1_rng += outputElem[14]
+                    collector_t2_fluct += outputElem[15]
+                    collector_t2_rng += outputElem[16]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox": collector_tauApprox, "tauCoare": collector_tauCoare,
                             "Cd": collector_Cd, "U_10": collector_U_10, "HApprox": collector_HApprox, "HCoare": collector_HCoare, 
                             "wTurb": collector_w_turb, "u": collector_u, "v": collector_v, "w": collector_w, "ta": collector_t,
-                            "rho": collector_rho})
+                            "rho": collector_rho, "is_temp1_fluctating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
+                            "is_temp2_fluctating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
@@ -155,6 +168,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     w_mean = []
     t_mean = []
     rho_mean = []
+    is_temp1_fluctating = []
+    is_temp1_range_large = []
+    is_temp2_fluctating = []
+    is_temp2_range_large = []
 
     w2 = "Anemometer #1 W Velocity (ms-1)"
     u2 = "Anemometer #1 U Velocity (ms-1)"
@@ -230,7 +247,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         H_approx.append(rho*hum.cpd*get_covariance(w2_turb, T2_turb))
 
         #TODO: Assume U_10 ~= U_14.8 for now
-        C_d.append(np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2))
+        #C_d.append(np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2))
+        C_d.append(u_star_2/(np.mean(U2_mag)**2))
         #C_d.append(-np.cov([U2_turb.mean(), w2_turb.mean()])/np.mean(U2_mag)
         U_10_mag.append(np.mean(U2_mag))
         u_mean.append(np.mean(slice[u2]))
@@ -238,6 +256,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         w_mean.append(np.mean(slice[w2]))
         t_mean.append(np.mean(slice[t2]))
         rho_mean.append(np.mean(rho))
+        is_temp1_fluctating.append(slice.is_temp1_fluctuating.any())
+        is_temp1_range_large.append(slice.is_temp1_range_large.any())
+        is_temp2_fluctating.append(slice.is_temp2_fluctuating.any())
+        is_temp2_range_large.append(slice.is_temp2_range_large.any())
 
         # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
         try:
@@ -264,7 +286,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     else:
         write_message(f"Analysed {fileName} with ERA5", filename='analysis_log.txt')
 
-    return (tau_approx, tau_coare, C_d, U_10_mag, H_approx, H_coare, w_turb_list, time_list, u_mean, v_mean, w_mean, t_mean, rho_mean)
+    return (tau_approx, tau_coare, C_d, U_10_mag, H_approx, H_coare, w_turb_list, time_list, 
+            u_mean, v_mean, w_mean, t_mean, rho_mean, is_temp1_fluctating, is_temp1_range_large,
+            is_temp2_fluctating, is_temp2_range_large)
 
 def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     """
