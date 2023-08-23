@@ -256,9 +256,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         w_mean.append(np.mean(slice[w2]))
         t_mean.append(np.mean(slice[t2]))
         rho_mean.append(np.mean(rho))
-        is_temp1_fluctating.append(slice.is_temp1_fluctuating.any())
+        is_temp1_fluctating.append(slice.is_temp1_fluctating.any())
         is_temp1_range_large.append(slice.is_temp1_range_large.any())
-        is_temp2_fluctating.append(slice.is_temp2_fluctuating.any())
+        is_temp2_fluctating.append(slice.is_temp2_fluctating.any())
         is_temp2_range_large.append(slice.is_temp2_range_large.any())
 
         # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
