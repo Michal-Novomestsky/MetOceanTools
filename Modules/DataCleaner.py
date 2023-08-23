@@ -330,7 +330,7 @@ class DataCleaner:
         :return: (bool) True if rejected, False if not.
         '''
         s = self.df[entry]
-        window_width = sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0]) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+        window_width = int(sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
         windows = s.rolling(window=window_width, step=window_width)
 
         # Getting the N largest and smallest means and taking the mean of them to get an estimate for the mean shift 
