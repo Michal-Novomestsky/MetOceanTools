@@ -550,7 +550,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
-    sns.lineplot(data=outDf, x='time', y='U10', label='Anem')
+    sns.lineplot(data=outDf, x='time', y='U_10', label='Anem')
     sns.lineplot(x=eraDf.timemet, y=np.linalg.norm(eraDf[['v_10', 'u_10']].values,axis=1), label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Magnitude of Horizontal Wind Speed at 10m (m/s)')
@@ -600,7 +600,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
 
     outDf.Cd = 1000*outDf.Cd
 
-    sns.scatterplot(data=outDf, x='U10', y='Cd')
+    sns.scatterplot(data=outDf, x='U_10', y='Cd')
     # plt.xlim([0, 25])
     # plt.ylim([-2,5])
     plt.xlabel('U_10 (m/s)')
