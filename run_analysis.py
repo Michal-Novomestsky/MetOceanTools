@@ -676,16 +676,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
-    crr = eraDf.crr[eraDf.crr.isin(eraDf.timemet)]
-    sns.lineplot(x=crr, y=outDf.HApprox)
-    plt.xlabel('Convective Rain Rate (kg m^-2 s^-1)')
-    plt.ylabel('EC Sensible Heat Flux')
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
-        plt.close()
-    else:
-        plt.show()   
-
     # fig, ax = plt.subplots()
     # lns1 = ax.plot(outDf.time, outDf.HApprox, "-o", label='EC')
     # lns2 = ax.plot(outDf.time, outDf.HCoare, "-o", label='COARE')
