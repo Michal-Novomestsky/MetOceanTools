@@ -128,8 +128,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     return pd.DataFrame({"time": collector_time, "tauApprox": collector_tauApprox, "tauCoare": collector_tauCoare,
                             "Cd": collector_Cd, "U_10": collector_U_10, "HApprox": collector_HApprox, "HCoare": collector_HCoare, 
                             "wTurb": collector_w_turb, "u": collector_u, "v": collector_v, "w": collector_w, "ta": collector_t,
-                            "rho": collector_rho, "is_temp1_fluctating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
-                            "is_temp2_fluctating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng})
+                            "rho": collector_rho, "is_temp1_fluctuating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
+                            "is_temp2_fluctuating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
@@ -168,9 +168,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     w_mean = []
     t_mean = []
     rho_mean = []
-    is_temp1_fluctating = []
+    is_temp1_fluctuating = []
     is_temp1_range_large = []
-    is_temp2_fluctating = []
+    is_temp2_fluctuating = []
     is_temp2_range_large = []
 
     w2 = "Anemometer #1 W Velocity (ms-1)"
@@ -256,9 +256,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         w_mean.append(np.mean(slice[w2]))
         t_mean.append(np.mean(slice[t2]))
         rho_mean.append(np.mean(rho))
-        is_temp1_fluctating.append(slice.is_temp1_fluctating.any())
+        is_temp1_fluctuating.append(slice.is_temp1_fluctuating.any())
         is_temp1_range_large.append(slice.is_temp1_range_large.any())
-        is_temp2_fluctating.append(slice.is_temp2_fluctating.any())
+        is_temp2_fluctuating.append(slice.is_temp2_fluctuating.any())
         is_temp2_range_large.append(slice.is_temp2_range_large.any())
 
         # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
@@ -287,8 +287,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         write_message(f"Analysed {fileName} with ERA5", filename='analysis_log.txt')
 
     return (tau_approx, tau_coare, C_d, U_10_mag, H_approx, H_coare, w_turb_list, time_list, 
-            u_mean, v_mean, w_mean, t_mean, rho_mean, is_temp1_fluctating, is_temp1_range_large,
-            is_temp2_fluctating, is_temp2_range_large)
+            u_mean, v_mean, w_mean, t_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
+            is_temp2_fluctuating, is_temp2_range_large)
 
 def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     """
