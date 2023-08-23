@@ -183,13 +183,13 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     if not rejectLog:
         # Checking if temperature has an unusually large range or is mean shifting
         is_temp_fluctuating = data.reject_file_on_changing_mean(t1, margain=2.5, sec_stepsize=10*60, n_most=1)
-        data.df.is_temp1_fluctating = len(data.df)*[is_temp_fluctuating]
+        data.df.is_temp1_fluctuating = len(data.df)*[is_temp_fluctuating]
 
         is_temp_range_large = data.range_cutoff(t1, margain=4, sec_stepsize=5*60)
         data.df.is_temp1_range_large = is_temp_range_large
 
         is_temp_fluctuating = data.reject_file_on_changing_mean(t2, margain=2.5, sec_stepsize=5*60, n_most=1)
-        data.df.is_temp2_fluctating = len(data.df)*[is_temp_fluctuating]
+        data.df.is_temp2_fluctuating = len(data.df)*[is_temp_fluctuating]
 
         is_temp_range_large = data.range_cutoff(t2, margain=4, sec_stepsize=5*60)
         data.df.is_temp2_range_large = is_temp_range_large
