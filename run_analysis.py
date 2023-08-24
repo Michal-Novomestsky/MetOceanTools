@@ -23,7 +23,7 @@ ZQ = 28 # Approx. height of flare bridge AMSL
 LAT = -19.5856 # 19.5856S (Babanin et al.)
 LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
-TIME_INTERVAL = 40
+TIME_INTERVAL = 10
 
 # Default parameters
 LW_DN = 370
@@ -565,7 +565,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=outDf, x='time', y='ta', label="Anem")
     sns.lineplot(data=eraDf, x='timemet', y='ta', label="ERA5")
     plt.xlabel('time')
-    plt.ylabel('Sea Surface Temperature (degC)')
+    plt.ylabel('Air Temperature (degC)')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
