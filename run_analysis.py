@@ -183,7 +183,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     comp2 = "Compass #1 (deg)"
     
     if (era_only or len(remsDf) == 0) and not no_era:
-        time = eraDf.timemet[0]
+        try:
+            time = eraDf.timemet[0]
+        except:
+            print(eraDf)
         era_and_rems = False
     elif len(remsDf) != 0:
         time = remsDf.timemet[0]
