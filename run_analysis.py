@@ -25,7 +25,7 @@ LAT = -19.5856 # 19.5856S (Babanin et al.)
 LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
 CPD = hum.cpd # Isobaric specific heat of dry air at constant pressure [J/(kg K)]
-TIME_INTERVAL = 40
+TIME_INTERVAL = 10
 WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
 
 # Default parameters
@@ -328,9 +328,8 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :param v: (np.ndarray) Var 2.
     :return: (float) cov(u, v)
     '''
-    #u_star_2 = np.mean(-U2_turb*w2_turb)
-    #return np.mean(u*v) - np.mean(u)*np.mean(v)
-    return np.cov(np.concatenate((u, v)))#[0][1]
+    # return np.cov(np.concatenate((u, v)))#[0][1]
+    return np.cov(u, v)[0][1]
 
 def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True, time_lim=None) -> pd.DataFrame:
     '''
