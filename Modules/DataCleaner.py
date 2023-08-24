@@ -5,51 +5,70 @@ import seaborn as sns
 
 from pathlib import Path
 from matplotlib import pyplot as plt
+from typing import Callable
 from scipy.fft import fft, fftfreq
 from scipy.stats import linregress
+
+def apply_window_wise(s: pd.Series, window_width: int, func: Callable) -> np.ndarray:
+    '''
+    Applies func to each window slice for a given series.
+
+    :param s: (pd.Series) Series of data.
+    :param window_width: (int) How many indexes per window.
+    :func: (Callable) Function to apply to each window seperately.
+    :return: (np.ndarray) Array where each element is the result of each window-wise function call.
+    '''
+    windows = s.rolling(window=window_width, step=window_width)
+    quantities = np.empty(int(np.ceil(len(s)/window_width)))
+    
+    for i, window in enumerate(windows):
+        quantities[i] = func(window)
+
+    return quantities
 
 class DataCleaner:
     def __init__(self, dir: Path) -> None:
         # Reading in file
-        file = open(dir, "r")
-        lines = file.readlines()
+        with open(dir, "r") as file:
+            lines = file.readlines()
 
-        if lines[0] == "% NRA Flarebridge Research Data provided by Woodside Energy Ltd, collected by RPS OceanMonitor System v1.3\n":
-            # Grabbing headers
-            columnNames = lines[3].split("	")
-            units = lines[4].split("	")
+            if lines[0] == "% NRA Flarebridge Research Data provided by Woodside Energy Ltd, collected by RPS OceanMonitor System v1.3\n":
+                # Grabbing headers
+                columnNames = lines[3].split("	")
+                units = lines[4].split("	")
 
-            tempColumns = []
-            # We give special treatment to the first and last elements to avoid grabbing %Units and the like (these two entries don't have units anyway)
-            # We also chop off parts of the string in these two cases to avoid % and \n
-            tempColumns.append(columnNames[0][2:])
-            for i in range(1, len(columnNames) - 1):
-                # Avoiding adding spaces if the unit is dimensionless
-                if units[i] == "":
-                    tempColumns.append(columnNames[i])
-                else:
-                    tempColumns.append(columnNames[i] + " (" + units[i] + ")")
-            tempColumns.append(columnNames[len(columnNames) - 1][:len(columnNames[len(columnNames) - 1]) - 1])
+                tempColumns = []
+                # We give special treatment to the first and last elements to avoid grabbing %Units and the like (these two entries don't have units anyway)
+                # We also chop off parts of the string in these two cases to avoid % and \n
+                tempColumns.append(columnNames[0][2:])
+                for i in range(1, len(columnNames) - 1):
+                    # Avoiding adding spaces if the unit is dimensionless
+                    if units[i] == "":
+                        tempColumns.append(columnNames[i])
+                    else:
+                        tempColumns.append(columnNames[i] + " (" + units[i] + ")")
+                tempColumns.append(columnNames[len(columnNames) - 1][:len(columnNames[len(columnNames) - 1]) - 1])
+                
+                self.df = pd.read_csv(dir, sep = "	", skiprows=7)
+                self.df.columns = tempColumns
+
+                # Adding in a global second entry to avoid having to deal with modular seconds
+                globSeconds = self.df.Second.add(60*self.df.Minute)
+                self.df.insert(3, "GlobalSecs", globSeconds)
+
+                self.df.insert(0, "is_temp1_fluctuating", len(self.df)*[False])
+                self.df.insert(0, "is_temp1_range_large", len(self.df)*[False])
+                self.df.insert(0, "is_temp2_fluctuating", len(self.df)*[False])
+                self.df.insert(0, "is_temp2_range_large", len(self.df)*[False])
             
-            self.df = pd.read_csv(dir, sep = "	", skiprows=7)
-            self.df.columns = tempColumns
+            # If the file has previously been cleaned, we can just directly read from it without any tidying required
+            else:
+                self.df = pd.read_csv(dir, sep = "	")
+                # Chopping off erroneous endpoints where time resets
+                self.df = self.df.loc[self.df.index < len(self.df) - 1]
 
-            # Adding in a global second entry to avoid having to deal with modular seconds
-            globSeconds = self.df.Second.add(60*self.df.Minute)
-            self.df.insert(3, "GlobalSecs", globSeconds)
-        
-        # If the file has previously been cleaned, we can just directly read from it without any tidying required
-        else:
-            self.df = pd.read_csv(dir, sep = "	")
-
-        # Keeping an unedited copy for reference
-        self.originalDf = self.df.copy(deep=True)
-
-        # Chopping off erroneous endpoints where time resets
-        self.df = self.df.loc[self.df.index < len(self.df) - 1]
-        self.originalDf = self.originalDf.loc[self.originalDf.index < len(self.originalDf) - 1]
-
-        file.close()
+            # Keeping an unedited copy for reference
+            self.originalDf = self.df.copy(deep=True)
 
     def plot_comparison(self, entry: str, fileName: str, supervised=False, saveLoc=None, plotTitle="_COMPARISON_", y_lim=None) -> None:
         """
@@ -57,9 +76,7 @@ class DataCleaner:
         """
         title = fileName[:len(fileName) - 4] + plotTitle + entry
 
-        #sns.lineplot(data=self.originalDf, x='GlobalSecs', y=entry, label='Original', color='r')
         sns.scatterplot(data=self.originalDf, x='GlobalSecs', y=entry, color='r', edgecolor=None, marker='.')
-        #sns.lineplot(data=self.df, x='GlobalSecs', y=entry, label='Cleaned', color='b')
         sns.scatterplot(data=self.df, x='GlobalSecs', y=entry, color='b', edgecolor=None, marker='.')
         plt.ylabel(entry)
         plt.title(title)
@@ -302,7 +319,7 @@ class DataCleaner:
             print(f"Rejected {fileName}: Histogram has a spike")
             return True
         else:
-            self.df.hist(column=entry, bins=bins)
+            sns.histplot(data=self.df, x=entry, bins=bins)
 
             title = fileName[:len(fileName) - 4] + plotTitle + entry
 
@@ -318,32 +335,51 @@ class DataCleaner:
 
             return False
         
-    def reject_file_on_changing_mean(self, entry: str, margain:float, sec_stepsize: int, n_most=100) -> bool:
-        s = self.df[entry]
-        window_width = sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0]) # Amount of indicies to consider = wanted_stepsize/data_stepsize
-        windows = s.rolling(window=window_width, step=window_width)
-
-        means = windows.mean()
-        n_largest = means.nlargest(n=n_most)
-        n_smallest = means.nsmallest(n=n_most)
-        return (n_largest.mean() - n_smallest.mean()) > margain
-
-    def reject_file_on_range(self, entry: str, margain: float, std_devs=2, sec_stepsize=3600) -> bool:
+    def reject_file_on_changing_mean(self, entry: str, margain:float, sec_stepsize: int, n_most=2) -> bool:
         '''
-        Checks if the avg range of the data (i.e. 2*standard devs) is larger margain.
+        Checks if the data has a mean shift > margain and returns True if so.
 
         :param entry: (str) The parameter key.
-        :param margain: (float) Rejects file if std_devs*std > margain (i.e. if N standard deviations > a given margain, the range is too wide).
+        :param margain: (float) Rejects the dataset if mean shift > margain.
+        :param sec_stepsize: (float) The amount of seconds to look at at a time. The whole dataset by default.
+        :param n_most: (int) N largest and smallest window means to average over and take the difference of to determine the mean shift
+        :return: (bool) True if rejected, False if not.
+        '''
+        s = self.df[entry]
+        window_width = round(sec_stepsize/(self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+
+        # Getting the N largest and smallest means and taking the mean of them to get an estimate for the mean shift 
+        means = np.argsort(apply_window_wise(s, window_width, np.mean))
+        n_smallest = means[:n_most]
+        n_largest = means[-(n_most+1):-1]
+        mean_shift = n_largest.mean() - n_smallest.mean()
+        return mean_shift > margain
+
+    def range_cutoff(self, entry: str, margain: float, std_devs=2, sec_stepsize=3600) -> bool:
+        '''
+        Checks if the avg range of the data window (i.e. 2*standard devs, 1 both ways) is larger than margain.
+
+        :param entry: (str) The parameter key.
+        :param margain: (float) Rejects window if std_devs*std > margain (i.e. if N standard deviations > a given margain, the range is too wide).
         :param std_devs: (float) Amount of stds away from mean to consider as the range.
         :param sec_stepsize: (float) The amount of seconds to look at at a time. The whole dataset by default.
         :return: (bool) True if rejected, False if not.
         '''
         s = self.df[entry]
-        window_width = int(sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+
+        window_width = round(sec_stepsize/(self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
         windows = s.rolling(window=window_width, step=window_width)
 
-        stds = windows.std()
-        return (std_devs*stds > margain).any()
+        logical = pd.Series(len(s)*[False])
+        for window in windows:
+            std = window.std()
+
+            if pd.isna(std):
+                logical[window.index] = pd.Series(len(window)*[False])
+            else:
+                logical[window.index] = 2*std_devs*std > margain
+
+        return logical
     
     def reject_file_on_gradient(self, entry: str, margain: float, sec_stepsize=None) -> bool:
         '''
@@ -384,8 +420,7 @@ class DataCleaner:
         """
         s = self.df[entry]
 
-        sec_0, sec_1 = self.df.GlobalSecs.nsmallest(n=2)
-        window_width = int(sec_stepsize // (sec_1 - sec_0)) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+        window_width = round(sec_stepsize/(self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
         windows = s.rolling(window=window_width, step=window_width)
 
         logical = pd.Series(len(s)*[False])
@@ -397,33 +432,6 @@ class DataCleaner:
                 logical[window.index] = pd.Series(len(window)*[False])
             else:
                 logical[window.index] = np.abs(s[window.index] - mean) > stdMargain*std
-
-        return logical
-
-        stds = windows.std()
-        means = windows.mean()
-        return np.abs(windows - means) > stdMargain*stds
-        return (stdMargain*stds > margain).any()
-
-        logical = self.df[entry] == self.df[entry]
-        df = self.df[entry]
-
-        lwr = 0
-        if sec_stepsize is None:
-            sec_stepsize = self.df.GlobalSecs.max()
-            upr = sec_stepsize
-        else:
-            upr = sec_stepsize
-
-        while upr <= self.df.GlobalSecs.max():            
-            slice = df[(self.df.GlobalSecs >= lwr) & (self.df.GlobalSecs <= upr)]
-            cutOff = stdMargain * slice.std()
-            mean = slice.mean()
-
-            logical = logical & np.abs(mean - slice) > cutOff
-
-            upr += sec_stepsize
-            lwr += sec_stepsize
 
         return logical
 
@@ -451,8 +459,8 @@ class DataCleaner:
         freqDf = self.df.groupby([entry])[entry].count().reset_index(name='Count').sort_values(['Count'], ascending=False)
         idxSer = freqDf.index.to_series().reset_index()
         # Grabbing first counts counts since the latter are small anyway
-        idxSer = idxSer.drop(labels=range(counts+1, len(idxSer)))
-        idxSer = idxSer.drop(0, axis="columns")
+        idxSer.drop(labels=range(counts+1, len(idxSer)), inplace=True)
+        idxSer.drop(0, axis="columns", inplace=True)
         idxSer.rename(columns={"index":"countIdx"}, inplace=True)
 
         # Checking each pair and breaking out if it's too steep. Otherwise return false
@@ -463,7 +471,7 @@ class DataCleaner:
                 return True
         return False
 
-    def prune_and(self, entry: str, logicals: pd.Series, naive_nans=False) -> None:
+    def prune_and(self, logicals: pd.Series) -> None:
         """
         Cuts out datapoints of type entry which fit into the intersection of all conditions in the tuple logicals and replaces them
         with linear interpolations.
@@ -478,7 +486,7 @@ class DataCleaner:
         self.df = self.df[~logical]
         self.df.reset_index(drop=True, inplace=True)
 
-    def prune_or(self, entry: str, logicals: pd.Series, naive_nans=False) -> None:
+    def prune_or(self, logicals: pd.Series) -> None:
         """
         Cuts out datapoints of type entry which fit into the union of all conditions in the tuple logicals and replaces them
         with linear interpolations.

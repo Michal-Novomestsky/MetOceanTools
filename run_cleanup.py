@@ -107,38 +107,29 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         write_message(f"{fileName}: MRU CORRECTION OFF", filename='cleanup_log.txt')
 
     # Pruning
-    data.remove_nans(w1, data.originalDf)
-    data.remove_nans(w1, data.df)
-    data.prune_or(w1, [data.gradient_cutoff(w2, 3)])
-    data.prune_or(w1, [data.std_cutoff(w1, 5, sec_stepsize=5*60)])
+    data.prune_or([data.gradient_cutoff(w1, 3)])
+    data.prune_or([data.std_cutoff(w1, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(w2, data.originalDf)
-    data.prune_or(w2, [data.gradient_cutoff(w2, 3)])
-    data.prune_or(w2, [data.std_cutoff(w2, 5, sec_stepsize=5*60)])
+    data.prune_or([data.gradient_cutoff(w2, 3)])
+    data.prune_or([data.std_cutoff(w2, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(u1, data.originalDf)
-    data.prune_or(u1, [data.gradient_cutoff(u1, 3)])
-    data.prune_or(u1, [data.std_cutoff(u1, 5, sec_stepsize=5*60)])
+    data.prune_or([data.gradient_cutoff(u1, 3)])
+    data.prune_or([data.std_cutoff(u1, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(u2, data.originalDf)
-    data.prune_or(u2, [data.gradient_cutoff(u2, 3)])
-    data.prune_or(u2, [data.std_cutoff(u2, 5, sec_stepsize=5*60)])
+    data.prune_or([data.gradient_cutoff(u2, 3)])
+    data.prune_or([data.std_cutoff(u2, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(v1, data.originalDf)
-    data.prune_or(v1, [data.gradient_cutoff(v1, 3)])
-    data.prune_or(v1, [data.std_cutoff(v1, 5, sec_stepsize=5*60)])
+    data.prune_or([data.gradient_cutoff(v1, 3)])
+    data.prune_or([data.std_cutoff(v1, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(v2, data.originalDf)
-    data.prune_or(v2, [data.gradient_cutoff(v2, 3)])
-    data.prune_or(v2, [data.std_cutoff(v2, 5, sec_stepsize=5*60)])
+    data.prune_or([data.gradient_cutoff(v2, 3)])
+    data.prune_or([data.std_cutoff(v2, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(t1, data.originalDf)
-    data.prune_and(t1, [data.gradient_cutoff(t1, 3)])
-    data.prune_and(t1, [data.std_cutoff(t1, 5, sec_stepsize=5*60)])
+    data.prune_and([data.gradient_cutoff(t1, 3)])
+    data.prune_and([data.std_cutoff(t1, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(t2, data.originalDf)
-    data.prune_and(t2, [data.gradient_cutoff(t2, 3)])
-    data.prune_and(t2, [data.std_cutoff(t2, 5, sec_stepsize=5*60)])
+    data.prune_and([data.gradient_cutoff(t2, 3)])
+    data.prune_and([data.std_cutoff(t2, 5, sec_stepsize=5*60)])
     write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
     
     # FFT plotting/checking
@@ -176,13 +167,23 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     if not rejectLog:
         rejectLog = rejectLog or data.plot_hist(v2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
     if not rejectLog:
-        rejectLog = rejectLog or data.reject_file_on_range(t1, margain=3, sec_stepsize=10*60)
-    # if not rejectLog:
-        # rejectLog = rejectLog or data.reject_file_on_range(t2, margain=3, sec_stepsize=10*60)
-    if not rejectLog:
         rejectLog = rejectLog or data.plot_hist(t1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
     if not rejectLog:
         rejectLog = rejectLog or data.plot_hist(t2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
+
+    if not rejectLog:
+        # Checking if temperature has an unusually large range or is mean shifting
+        is_temp_fluctuating = data.reject_file_on_changing_mean(t1, margain=4, sec_stepsize=10*60, n_most=1)
+        data.df.is_temp1_fluctuating = len(data.df)*[is_temp_fluctuating]
+
+        is_temp_range_large = data.range_cutoff(t1, margain=2.5, sec_stepsize=5*60)
+        data.df.is_temp1_range_large = is_temp_range_large
+
+        is_temp_fluctuating = data.reject_file_on_changing_mean(t2, margain=4, sec_stepsize=10*60, n_most=1)
+        data.df.is_temp2_fluctuating = len(data.df)*[is_temp_fluctuating]
+
+        is_temp_range_large = data.range_cutoff(t2, margain=2.5, sec_stepsize=5*60)
+        data.df.is_temp2_range_large = is_temp_range_large
 
     # Plotting points which were removed
     saveLoc = os.path.join(writeDir, "hists")
