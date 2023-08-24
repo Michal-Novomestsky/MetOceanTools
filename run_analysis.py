@@ -147,10 +147,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     # Defining constants
     TS_DEPTH = remsDf.depth[0] # Note that depth has to be extracted before we select the corresponding day as sometimes REMS may not exist on that day
 
-    t1 = datetime.datetime.strptime("2015-04-28 18:00:00", '%Y-%m-%d %H:%M:%S')
-    t2 = datetime.datetime.strptime("2015-04-06 00:00:00", '%Y-%m-%d %H:%M:%S')
-    print(eraDf)#[eraDf.timemet > t1][0:])
-
     # Getting the corresponding day in the REMS data
     remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month))]
     remsDf = remsDf.reset_index()
@@ -352,8 +348,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     if time_lim is not None:
         eraDf = eraDf[(eraDf.timemet >= time_lim[0]) & (eraDf.timemet <= time_lim[1])].reset_index(drop=True)
         remsDf = remsDf[(remsDf.timemet >= time_lim[0]) & (remsDf.timemet <= time_lim[1])].reset_index(drop=True)
-    if not era_only:
-        eraDf = eraDf[(eraDf.timemet >= remsDf.timemet[0]) & (eraDf.timemet <= remsDf.timemet[len(remsDf) - 1])].reset_index(drop=True)
 
     # Removing REMS xlim if it gets cropped out by time_lim
     if len(remsDf) == 0:
@@ -364,6 +358,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Pressure (mBar)')
     plt.xticks(plt.xticks()[0], rotation=90)
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_pressure.png'))
         plt.close()
@@ -375,6 +370,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Air Temperature (degC)')
     plt.xticks(plt.xticks()[0], rotation=90)
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_temp.png'))
         plt.close()
@@ -386,6 +382,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Sea Surface Temperature (degC)')
     plt.xticks(plt.xticks()[0], rotation=90)
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'sea_surface_temp.png'))
         plt.close()
@@ -425,6 +422,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
         plt.xlabel('time')
         plt.ylabel('Downward Solar Radiation (J/m^2)')
         plt.xticks(plt.xticks()[0], rotation=90)
+        if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
         if save_plots:
             plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
             plt.close()
@@ -436,6 +434,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
         plt.xlabel('time')
         plt.ylabel('Downward IR Radiation (J/m^2)')
         plt.xticks(plt.xticks()[0], rotation=90)
+        if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
         if save_plots:
             plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_int.png'))
             plt.close()
@@ -451,6 +450,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Downward Solar Radiation (W/m^2)')
     plt.xticks(plt.xticks()[0], rotation=90)
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_diff.png'))
         plt.close()
@@ -464,6 +464,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Relative humidity (%)')
     plt.xticks(plt.xticks()[0], rotation=90)
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'rel_hum.png'))
         plt.close()
@@ -475,6 +476,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     plt.xlabel('time')
     plt.ylabel('Specific humidity (kg/kg)')
     plt.xticks(plt.xticks()[0], rotation=90)
+    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'spec_hum.png'))
         plt.close()
