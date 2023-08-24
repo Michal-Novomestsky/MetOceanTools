@@ -19,7 +19,7 @@ def apply_window_wise(s: pd.Series, window_width: int, func: Callable) -> np.nda
     :return: (np.ndarray) Array where each element is the result of each window-wise function call.
     '''
     windows = s.rolling(window=window_width, step=window_width)
-    quantities = np.empty(round(len(s)/window_width))
+    quantities = np.empty(int(np.ceil(len(s)/window_width)))
     
     for i, window in enumerate(windows):
         quantities[i] = func(window)
