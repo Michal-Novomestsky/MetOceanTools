@@ -5,16 +5,17 @@ import seaborn as sns
 
 from pathlib import Path
 from matplotlib import pyplot as plt
+from typing import Callable
 from scipy.fft import fft, fftfreq
 from scipy.stats import linregress
 
-def apply_window_wise(s: pd.Series, window_width: int, func: function) -> np.ndarray:
+def apply_window_wise(s: pd.Series, window_width: int, func: Callable) -> np.ndarray:
     '''
     Applies func to each window slice for a given series.
 
     :param s: (pd.Series) Series of data.
     :param window_width: (int) How many indexes per window.
-    :func: (function) Function to apply to each window seperately.
+    :func: (Callable) Function to apply to each window seperately.
     :return: (np.ndarray) Array where each element is the result of each window-wise function call.
     '''
     windows = s.rolling(window=window_width, step=window_width)
