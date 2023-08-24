@@ -23,7 +23,8 @@ ZQ = 28 # Approx. height of flare bridge AMSL
 LAT = -19.5856 # 19.5856S (Babanin et al.)
 LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
-TIME_INTERVAL = 10
+CPD = hum.cpd # Isobaric specific heat of dry air at constant pressure [J/(kg K)]
+TIME_INTERVAL = 40
 
 # Default parameters
 LW_DN = 370
@@ -242,11 +243,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         u = np.sqrt(U_vec.North**2 + U_vec.East**2)
 
-        if pd.isna(w2_turb).any():
-            print(f"{w2_turb} in {time}")
         u_star_2 = get_covariance(U2_turb, w2_turb)
         tau_approx.append(-rho*u_star_2)
-        H_approx.append(rho*hum.cpd*get_covariance(w2_turb, T2_turb))
+        H_approx.append(rho*CPD*get_covariance(w2_turb, T2_turb))
 
         #TODO: Assume U_10 ~= U_14.8 for now
         #C_d.append(np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2))
@@ -602,9 +601,16 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
 
     outDf.Cd = 1000*outDf.Cd
 
+    # Making a box for x [0, 25], y [-2, 5]
+    left_wall = [[0, 0], [-2, 5]]
+    right_wall = [[25, 25], [-2, 5]]
+    bottom_wall = [[0, 25], [-2, -2]]
+    top_wall = [[0, 25], [5, 5]]
+    sns.lineplot(x=left_wall[0], y=left_wall[1], color='black')
+    sns.lineplot(x=right_wall[0], y=right_wall[1], color='black')
+    sns.lineplot(x=bottom_wall[0], y=bottom_wall[1], color='black')
+    sns.lineplot(x=top_wall[0], y=top_wall[1], color='black')
     sns.scatterplot(data=outDf, x='U_10', y='Cd')
-    # plt.xlim([0, 25])
-    # plt.ylim([-2,5])
     plt.xlabel('U_10 (m/s)')
     plt.ylabel('1000*Cd')
     if save_plots:
