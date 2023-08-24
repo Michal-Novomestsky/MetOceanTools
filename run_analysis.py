@@ -329,7 +329,7 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     '''
     #u_star_2 = np.mean(-U2_turb*w2_turb)
     #return np.mean(u*v) - np.mean(u)*np.mean(v)
-    return np.cov(u, v)[0][1]
+    return np.cov(np.concatenate((u, v)))#[0][1]
 
 def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True, time_lim=None) -> pd.DataFrame:
     '''
