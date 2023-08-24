@@ -25,6 +25,7 @@ LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
 CPD = hum.cpd # Isobaric specific heat of dry air at constant pressure [J/(kg K)]
 TIME_INTERVAL = 40
+WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
 
 # Default parameters
 LW_DN = 370
@@ -346,6 +347,8 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     if time_lim is not None:
         eraDf = eraDf[(eraDf.timemet >= time_lim[0]) & (eraDf.timemet <= time_lim[1])].reset_index(drop=True)
         remsDf = remsDf[(remsDf.timemet >= time_lim[0]) & (remsDf.timemet <= time_lim[1])].reset_index(drop=True)
+    if not era_only:
+        eraDf = eraDf[(eraDf.timemet >= remsDf.timemet[0]) & (eraDf.timemet <= remsDf.timemet[len(remsDf) - 1])].reset_index(drop=True)
 
     # Removing REMS xlim if it gets cropped out by time_lim
     if len(remsDf) == 0:
@@ -355,7 +358,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     sns.lineplot(data=eraDf, x='timemet', y='press', label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Pressure (mBar)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_pressure.png'))
@@ -367,7 +369,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     sns.lineplot(data=eraDf, x='timemet', y='ta', label='ERA5 (2m AMSL)')
     plt.xlabel('time')
     plt.ylabel('Air Temperature (degC)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'air_temp.png'))
@@ -379,7 +380,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     sns.lineplot(data=eraDf, x='timemet', y='tsea', label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Sea Surface Temperature (degC)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'sea_surface_temp.png'))
@@ -419,7 +419,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
         sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
         plt.xlabel('time')
         plt.ylabel('Downward Solar Radiation (J/m^2)')
-        if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
         plt.xticks(plt.xticks()[0], rotation=90)
         if save_plots:
             plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_rad_int.png'))
@@ -431,7 +430,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
         sns.lineplot(data=eraDf, x='timemet', y='thermrad', markers=True, label='ERA5')
         plt.xlabel('time')
         plt.ylabel('Downward IR Radiation (J/m^2)')
-        if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
         plt.xticks(plt.xticks()[0], rotation=90)
         if save_plots:
             plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_int.png'))
@@ -447,7 +445,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Downward Solar Radiation (W/m^2)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_solar_diff.png'))
@@ -461,7 +458,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     sns.lineplot(data=eraDf, x='timemet', y='rh', label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Relative humidity (%)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'rel_hum.png'))
@@ -473,7 +469,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     sns.lineplot(data=eraDf, x='timemet', y='spech', label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Specific humidity (kg/kg)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'spec_hum.png'))
@@ -500,6 +495,10 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         outDf = outDf[(outDf.time >= time_lim[0]) & (outDf.time <= time_lim[1])].reset_index(drop=True)
         eraDf = eraDf[(eraDf.timemet >= time_lim[0]) & (eraDf.timemet <= time_lim[1])].reset_index(drop=True)
         remsDf = remsDf[(remsDf.timemet >= time_lim[0]) & (remsDf.timemet <= time_lim[1])].reset_index(drop=True)
+    if not era_only:
+        outDf = outDf[(outDf.time >= remsDf.timemet[0]) & (outDf.time <= remsDf.timemet[len(remsDf) - 1])].reset_index(drop=True)
+        eraDf = eraDf[(eraDf.timemet >= remsDf.timemet[0]) & (eraDf.timemet <= remsDf.timemet[len(remsDf) - 1])].reset_index(drop=True)
+
 
     # Removing REMS xlim if it gets cropped out by time_lim
     if len(remsDf) == 0:
@@ -508,7 +507,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=outDf, x='time', y='rho', markers=True)
     plt.xlabel('time')
     plt.ylabel('Air Density (kg/m^3)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'air_dens.png'))
@@ -520,7 +518,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=eraDf, x='timemet', y='v_10', label="ERA5 V Component (10m)")
     plt.xlabel('time')
     plt.ylabel('Northerly Component of Wind Speed (m/s)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'north_wind.png'))
@@ -532,7 +529,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=eraDf, x='timemet', y='u_10', label="ERA5 U Component (10m)")
     plt.xlabel('time')
     plt.ylabel('Easterly Component of Wind Speed (m/s)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'east_wind.png'))
@@ -543,7 +539,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=outDf, x='time', y='w', label="Anem W Component")
     plt.xlabel('time')
     plt.ylabel('Upward Component of Wind Speed (m/s)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'upward_wind.png'))
@@ -555,7 +550,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(x=eraDf.timemet, y=np.linalg.norm(eraDf[['v_10', 'u_10']].values,axis=1), label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Magnitude of Horizontal Wind Speed at 10m (m/s)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'east_wind.png'))
@@ -567,7 +561,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=eraDf, x='timemet', y='ta', label="ERA5")
     plt.xlabel('time')
     plt.ylabel('Air Temperature (degC)')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'sea_surf_temp.png'))
@@ -617,12 +610,12 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    sns.lineplot(data=outDf, x='time', y='tauApprox', label="EC", markers=True)
-    sns.lineplot(data=outDf, x='time', y='tauCoare', label="COARE", markers=True)
-    sns.lineplot(x=outDf.time, y=outDf.tauApprox.rolling(window=5, step=5).mean())
+    sns.scatterplot(data=outDf, x='time', y='tauApprox', marker='.', color='blue', label='EC')
+    sns.lineplot(data=outDf, x='time', y='tauCoare', color='orange', label='COARE')
+    sns.scatterplot(x=outDf.time, y=outDf.tauApprox.rolling(window=WINDOW_WIDTH, step=WINDOW_WIDTH).mean(), color='green', label='Mean EC')
+    sns.lineplot(x=outDf.time, y=outDf.tauApprox.rolling(window=WINDOW_WIDTH, step=WINDOW_WIDTH).mean(), color='green')
     plt.xlabel('time')
     plt.ylabel('Shear Stress')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
@@ -630,12 +623,12 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()  
 
-    sns.lineplot(data=outDf, x='time', y='HApprox', label="EC", markers=True)
-    sns.lineplot(data=outDf, x='time', y='HCoare', label="COARE", markers=True)
-    sns.lineplot(x=outDf.time, y=outDf.HApprox.rolling(window=5, step=5).mean())
+    sns.scatterplot(data=outDf, x='time', y='HApprox', marker='.', color='blue', label='EC')
+    sns.lineplot(data=outDf, x='time', y='HCoare', color='orange', label='COARE')
+    sns.scatterplot(x=outDf.time, y=outDf.HApprox.rolling(window=WINDOW_WIDTH, step=WINDOW_WIDTH).mean(), color='green', label='Mean EC')
+    sns.lineplot(x=outDf.time, y=outDf.HApprox.rolling(window=WINDOW_WIDTH, step=WINDOW_WIDTH).mean(), color='green')
     plt.xlabel('time')
     plt.ylabel('Sensible Heat Flux')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
@@ -648,7 +641,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=eraDf, x='timemet', y='crr', label='Convective Rain Rate (kg m^-2 s^-1)', ax=ax2, color='orange', legend=False)
     ax1.figure.legend()
     plt.xlabel('time')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
@@ -661,7 +653,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=eraDf, x='timemet', y='swh', label='Significant Wave Height (m)', ax=ax2, color='orange', legend=False)
     ax1.figure.legend()
     plt.xlabel('time')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
@@ -674,7 +665,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=eraDf, x='timemet', y='swh', label='Significant Wave Height (m)', ax=ax2, color='orange', legend=False)
     ax1.figure.legend()
     plt.xlabel('time')
-    if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
