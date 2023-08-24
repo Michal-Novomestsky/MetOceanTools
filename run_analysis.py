@@ -186,7 +186,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         try:
             time = eraDf.timemet[0]
         except:
-            print(eraDf)
+            print(f'ERROR ERADF {fileName}')
         era_and_rems = False
     elif len(remsDf) != 0:
         time = remsDf.timemet[0]
