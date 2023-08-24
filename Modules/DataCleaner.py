@@ -8,6 +8,23 @@ from matplotlib import pyplot as plt
 from scipy.fft import fft, fftfreq
 from scipy.stats import linregress
 
+def apply_window_wise(s: pd.Series, window_width: int, func: function) -> np.ndarray:
+    '''
+    Applies func to each window slice for a given series.
+
+    :param s: (pd.Series) Series of data.
+    :param window_width: (int) How many indexes per window.
+    :func: (function) Function to apply to each window seperately.
+    :return: (np.ndarray) Array where each element is the result of each window-wise function call.
+    '''
+    windows = s.rolling(window=window_width, step=window_width)
+    quantities = np.empty(round(len(s)/window_width))
+    
+    for i, window in enumerate(windows):
+        quantities[i] = func(window)
+
+    return quantities
+
 class DataCleaner:
     def __init__(self, dir: Path) -> None:
         # Reading in file
@@ -328,13 +345,12 @@ class DataCleaner:
         :return: (bool) True if rejected, False if not.
         '''
         s = self.df[entry]
-        window_width = int(sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
-        windows = s.rolling(window=window_width, step=window_width)
+        window_width = round(sec_stepsize/(self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
 
         # Getting the N largest and smallest means and taking the mean of them to get an estimate for the mean shift 
-        means = windows.mean()
-        n_largest = means.nlargest(n=n_most)
-        n_smallest = means.nsmallest(n=n_most)
+        means = np.argsort(apply_window_wise(s, window_width, np.mean))
+        n_smallest = means[:n_most]
+        n_largest = means[-(n_most+1):-1]
         mean_shift = n_largest.mean() - n_smallest.mean()
         return mean_shift > margain
 
@@ -350,8 +366,7 @@ class DataCleaner:
         '''
         s = self.df[entry]
 
-        #sec_0, sec_1 = self.df.GlobalSecs.nsmallest(n=2)
-        window_width = int(sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+        window_width = round(sec_stepsize/(self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
         windows = s.rolling(window=window_width, step=window_width)
 
         logical = pd.Series(len(s)*[False])
@@ -364,13 +379,6 @@ class DataCleaner:
                 logical[window.index] = 2*std_devs*std > margain
 
         return logical
-
-        s = self.df[entry]
-        window_width = int(sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
-        windows = s.rolling(window=window_width, step=window_width)
-
-        stds = windows.std()
-        return (std_devs*stds > margain).any()
     
     def reject_file_on_gradient(self, entry: str, margain: float, sec_stepsize=None) -> bool:
         '''
@@ -411,8 +419,7 @@ class DataCleaner:
         """
         s = self.df[entry]
 
-        #sec_0, sec_1 = self.df.GlobalSecs.nsmallest(n=2)
-        window_width = int(sec_stepsize // (self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+        window_width = round(sec_stepsize/(self.df.GlobalSecs[1] - self.df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
         windows = s.rolling(window=window_width, step=window_width)
 
         logical = pd.Series(len(s)*[False])
