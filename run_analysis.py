@@ -599,8 +599,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    outDf.Cd = 1000*outDf.Cd
-
     # Making a box for x [0, 25], y [-2, 5]
     left_wall = [[0, 0], [-2, 5]]
     right_wall = [[25, 25], [-2, 5]]
@@ -610,7 +608,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(x=right_wall[0], y=right_wall[1], color='black')
     sns.lineplot(x=bottom_wall[0], y=bottom_wall[1], color='black')
     sns.lineplot(x=top_wall[0], y=top_wall[1], color='black')
-    sns.scatterplot(data=outDf, x='U_10', y='Cd')
+    sns.scatterplot(x=outDf.U_10, y=1000*outDf.Cd)
     plt.xlabel('U_10 (m/s)')
     plt.ylabel('1000*Cd')
     if save_plots:
