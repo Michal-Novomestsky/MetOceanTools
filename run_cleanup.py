@@ -107,36 +107,27 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         write_message(f"{fileName}: MRU CORRECTION OFF", filename='cleanup_log.txt')
 
     # Pruning
-    data.remove_nans(w1, data.originalDf)
-    data.remove_nans(w1, data.df)
     data.prune_or([data.gradient_cutoff(w1, 3)])
     data.prune_or([data.std_cutoff(w1, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(w2, data.originalDf)
     data.prune_or([data.gradient_cutoff(w2, 3)])
     data.prune_or([data.std_cutoff(w2, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(u1, data.originalDf)
     data.prune_or([data.gradient_cutoff(u1, 3)])
     data.prune_or([data.std_cutoff(u1, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(u2, data.originalDf)
     data.prune_or([data.gradient_cutoff(u2, 3)])
     data.prune_or([data.std_cutoff(u2, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(v1, data.originalDf)
     data.prune_or([data.gradient_cutoff(v1, 3)])
     data.prune_or([data.std_cutoff(v1, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(v2, data.originalDf)
     data.prune_or([data.gradient_cutoff(v2, 3)])
     data.prune_or([data.std_cutoff(v2, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(t1, data.originalDf)
     data.prune_and([data.gradient_cutoff(t1, 3)])
     data.prune_and([data.std_cutoff(t1, 5, sec_stepsize=5*60)])
 
-    data.remove_nans(t2, data.originalDf)
     data.prune_and([data.gradient_cutoff(t2, 3)])
     data.prune_and([data.std_cutoff(t2, 5, sec_stepsize=5*60)])
     write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
