@@ -13,6 +13,7 @@ import time
 
 from scipy import integrate
 from Modules.DataAnalyser import *
+from Modules.DataCleaner import apply_window_wise
 from COARE.COARE3_6.coare36vnWarm_et import coare36vnWarm_et as coare
 
 # Defining constants
@@ -610,10 +611,11 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
+    mean_ec = apply_window_wise(outDf.tauApprox, WINDOW_WIDTH, np.mean)
     sns.scatterplot(data=outDf, x='time', y='tauApprox', marker='.', color='blue', label='EC')
     sns.lineplot(data=outDf, x='time', y='tauCoare', color='orange', label='COARE')
-    sns.scatterplot(x=outDf.time, y=outDf.tauApprox.rolling(window=WINDOW_WIDTH, step=WINDOW_WIDTH).mean(), color='green', label='Mean EC')
-    sns.lineplot(x=outDf.time, y=outDf.tauApprox.rolling(window=WINDOW_WIDTH, step=WINDOW_WIDTH).mean(), color='green')
+    sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
     plt.xlabel('time')
     plt.ylabel('Shear Stress')
     plt.xticks(plt.xticks()[0], rotation=90)
@@ -623,10 +625,11 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()  
 
+    mean_ec = apply_window_wise(outDf.HApprox, WINDOW_WIDTH, np.mean)
     sns.scatterplot(data=outDf, x='time', y='HApprox', marker='.', color='blue', label='EC')
     sns.lineplot(data=outDf, x='time', y='HCoare', color='orange', label='COARE')
-    sns.scatterplot(x=outDf.time, y=outDf.HApprox.rolling(window=WINDOW_WIDTH, step=WINDOW_WIDTH).mean(), color='green', label='Mean EC')
-    sns.lineplot(x=outDf.time, y=outDf.HApprox.rolling(window=WINDOW_WIDTH, step=WINDOW_WIDTH).mean(), color='green')
+    sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
     plt.xlabel('time')
     plt.ylabel('Sensible Heat Flux')
     plt.xticks(plt.xticks()[0], rotation=90)
