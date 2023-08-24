@@ -147,6 +147,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     # Defining constants
     TS_DEPTH = remsDf.depth[0] # Note that depth has to be extracted before we select the corresponding day as sometimes REMS may not exist on that day
 
+    t1 = datetime.datetime.strptime("2015-04-28 18:00:00", '%Y-%m-%d %H:%M:%S')
+    t2 = datetime.datetime.strptime("2015-04-06 00:00:00", '%Y-%m-%d %H:%M:%S')
+    print(eraDf[eraDf.timemet > t1][0:])
+
     # Getting the corresponding day in the REMS data
     remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month))]
     remsDf = remsDf.reset_index()
@@ -181,12 +185,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     v2 = "Anemometer #1 V Velocity (ms-1)"
     t2 = "Anemometer #1 Temperature (degC)"
     comp2 = "Compass #1 (deg)"
-    
+
     if (era_only or len(remsDf) == 0) and not no_era:
-        try:
-            time = eraDf.timemet[0]
-        except:
-            print(f'ERROR ERADF {fileName}')
+        time = eraDf.timemet[0]
         era_and_rems = False
     elif len(remsDf) != 0:
         time = remsDf.timemet[0]
