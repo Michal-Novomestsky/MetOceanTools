@@ -58,9 +58,7 @@ class DataCleaner:
         """
         title = fileName[:len(fileName) - 4] + plotTitle + entry
 
-        #sns.lineplot(data=self.originalDf, x='GlobalSecs', y=entry, label='Original', color='r')
         sns.scatterplot(data=self.originalDf, x='GlobalSecs', y=entry, color='r', edgecolor=None, marker='.')
-        #sns.lineplot(data=self.df, x='GlobalSecs', y=entry, label='Cleaned', color='b')
         sns.scatterplot(data=self.df, x='GlobalSecs', y=entry, color='b', edgecolor=None, marker='.')
         plt.ylabel(entry)
         plt.title(title)
