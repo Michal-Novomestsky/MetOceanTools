@@ -149,7 +149,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
     t1 = datetime.datetime.strptime("2015-04-28 18:00:00", '%Y-%m-%d %H:%M:%S')
     t2 = datetime.datetime.strptime("2015-04-06 00:00:00", '%Y-%m-%d %H:%M:%S')
-    print(eraDf[eraDf.timemet > t1][0:])
+    print(eraDf)#[eraDf.timemet > t1][0:])
 
     # Getting the corresponding day in the REMS data
     remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month))]
