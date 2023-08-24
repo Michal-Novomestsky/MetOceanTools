@@ -242,7 +242,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         u = np.sqrt(U_vec.North**2 + U_vec.East**2)
 
-        if pd.isna(w2_turb):
+        if pd.isna(w2_turb).any():
             print(f"{w2_turb} in {time}")
         u_star_2 = get_covariance(U2_turb, w2_turb)
         tau_approx.append(-rho*u_star_2)
