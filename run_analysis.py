@@ -585,8 +585,32 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
+    lin_lims = [min([min(outDf.tauCoare), min(outDf.tauApprox)]), max([max(outDf.tauCoare), max(outDf.tauApprox)])]
+    sns.kdeplot(data=outDf, x='tauCoare', y='tauApprox', fill=True, levels=100, cmap='mako', thresh=0)
+    sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
+    plt.xlabel('COARE')
+    plt.ylabel('EC')
+    plt.title('Shear Stress')
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_xy.png'))
+        plt.close()
+    else:
+        plt.show()   
+
     lin_lims = [min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])]
     sns.regplot(data=outDf, x='HCoare', y='HApprox', label='Best fit with 95% CI')
+    sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
+    plt.xlabel('COARE')
+    plt.ylabel('EC')
+    plt.title('Sensible Heat Flux')
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_xy.png'))
+        plt.close()
+    else:
+        plt.show()   
+
+    lin_lims = [min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])]
+    sns.kdeplot(data=outDf, x='HCoare', y='HApprox', fill=True, levels=100, cmap='mako', thresh=0)
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
@@ -642,42 +666,6 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.close()
     else:
         plt.show()     
-
-    ax1 = sns.lineplot(data=outDf, x='time', y='HApprox', label="EC Sensible Heat Flux", legend=False)
-    ax2 = plt.twinx()
-    sns.lineplot(data=eraDf, x='timemet', y='crr', label='Convective Rain Rate (kg m^-2 s^-1)', ax=ax2, color='orange', legend=False)
-    ax1.figure.legend()
-    plt.xlabel('time')
-    plt.xticks(plt.xticks()[0], rotation=90)
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
-        plt.close()
-    else:
-        plt.show() 
-
-    ax1 = sns.lineplot(data=outDf, x='time', y='HApprox', label="EC Sensible Heat Flux", legend=False)
-    ax2 = plt.twinx()
-    sns.lineplot(data=eraDf, x='timemet', y='swh', label='Significant Wave Height (m)', ax=ax2, color='orange', legend=False)
-    ax1.figure.legend()
-    plt.xlabel('time')
-    plt.xticks(plt.xticks()[0], rotation=90)
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
-        plt.close()
-    else:
-        plt.show()   
-
-    ax1 = sns.lineplot(data=outDf, x='time', y='HCoare', label="COARE Sensible Heat Flux", legend=False)
-    ax2 = plt.twinx()
-    sns.lineplot(data=eraDf, x='timemet', y='swh', label='Significant Wave Height (m)', ax=ax2, color='orange', legend=False)
-    ax1.figure.legend()
-    plt.xlabel('time')
-    plt.xticks(plt.xticks()[0], rotation=90)
-    if save_plots:
-        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
-        plt.close()
-    else:
-        plt.show()
 
     # fig, ax = plt.subplots()
     # lns1 = ax.plot(outDf.time, outDf.HApprox, "-o", label='EC')
