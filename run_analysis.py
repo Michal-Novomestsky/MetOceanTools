@@ -165,10 +165,12 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     H_coare = []
     C_d = []
     U_10_mag = [] # NOTE: "_mag" is to prevent it being const from all caps
-    w_turb_list = []
-    u_mean = []
-    v_mean = []
-    w_mean = []
+    u2_mean = []
+    u2_turb_mean = []
+    v2_mean = []
+    v2_turb_mean = []
+    w2_mean = []
+    w2_turb_mean = []
     t_mean = []
     rho_mean = []
     is_temp1_fluctuating = []
@@ -176,11 +178,16 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     is_temp2_fluctuating = []
     is_temp2_range_large = []
 
-    w2 = "Anemometer #1 W Velocity (ms-1)"
-    u2 = "Anemometer #1 U Velocity (ms-1)"
-    v2 = "Anemometer #1 V Velocity (ms-1)"
-    t2 = "Anemometer #1 Temperature (degC)"
-    comp2 = "Compass #1 (deg)"
+    u1 = "Anemometer #1 U Velocity (ms-1)"
+    v1 = "Anemometer #1 V Velocity (ms-1)"
+    w1 = "Anemometer #1 W Velocity (ms-1)"
+    t1 = "Anemometer #1 Temperature (degC)"
+    comp1 = "Compass #1 (deg)"
+    u2 = "Anemometer #2 U Velocity (ms-1)"
+    v2 = "Anemometer #2 V Velocity (ms-1)"
+    w2 = "Anemometer #2 W Velocity (ms-1)"
+    t2 = "Anemometer #2 Temperature (degC)"
+    comp2 = "Compass #2 (deg)"
 
     if (era_only or len(remsDf) == 0) and not no_era:
         time = eraDf.timemet[0]
@@ -225,37 +232,33 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #e = hum.hum2ea_modified(p, spechum)
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
-        w2_turb = get_turbulent(slice[w2])
-        T2_turb = get_turbulent(slice[t2])
-        #T2_turb = T2_turb/(1 + 0.378*e/p)
-        w_turb_list.append(np.mean(w2_turb))
-
-        # Getting magnitude of turbulent horizontal velocity vector
-        U2_turb = get_turbulent(np.sqrt(slice[u2]**2 + slice[v2]**2))
-
-        # Getting current-corrected windspeed
-        U2_mag = np.sqrt(slice[u2]**2 + slice[v2]**2)
-        # Easterly -> +ive x axis, Northerly -> +ive y. Note that anem v+ is west so east is -v
-        U2_vec = pd.DataFrame({'East': slice[v2], 'North': slice[u2]})
-        U2_vec = U2_vec.mean() #Taking 10min avg
+        U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u2, v2, w2, t2)
 
         # u_AirWat = u_Air - u_Wat
-        U_vec = U2_vec
         #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
-        u = np.sqrt(U_vec.North**2 + U_vec.East**2)
+        u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2)
 
-        u_star_2 = get_covariance(U2_turb, w2_turb)
+        u_star_2 = get_covariance(U_10_turb, w_turb)
         tau_approx.append(-rho*u_star_2)
-        H_approx.append(rho*CPD*get_covariance(w2_turb, T2_turb))
+        H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
 
         #TODO: Assume U_10 ~= U_14.8 for now
-        C_d.append(np.mean(-U2_turb*w2_turb)/(np.mean(U2_mag)**2))
+        C_d.append(np.mean(-U_10_turb*w_turb)/(np.mean(U_10_mag)**2))
         #C_d.append(u_star_2/(np.mean(U2_mag)**2))
-        U_10_mag.append(np.mean(U2_mag))
-        u_mean.append(np.mean(slice[u2]))
-        v_mean.append(np.mean(slice[v2]))
-        w_mean.append(np.mean(slice[w2]))
+        U_10_mag.append(np.mean(U_10_mag))
+        u1_mean.append(np.mean(slice[u1]))
+        u1_turb_mean.append(np.mean(get_turbulent(slice[u1])))
+        v1_mean.append(np.mean(slice[v1]))
+        v1_turb_mean.append(np.mean(get_turbulent(slice[v1])))
+        w1_mean.append(np.mean(slice[w1]))
+        w1_turb_mean.append(np.mean(get_turbulent(slice[w1])))
+        u2_mean.append(np.mean(slice[u2]))
+        u2_turb_mean.append(np.mean(get_turbulent(slice[u2])))
+        v2_mean.append(np.mean(slice[v2]))
+        v2_turb_mean.append(np.mean(get_turbulent(slice[v2])))
+        w2_mean.append(np.mean(slice[w2]))
+        w2_turb_mean.append(np.mean(w_turb))
         t_mean.append(np.mean(slice[t2]))
         rho_mean.append(np.mean(rho))
         is_temp1_fluctuating.append(slice.is_temp1_fluctuating.any())
@@ -291,6 +294,22 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     return (tau_approx, tau_coare, C_d, U_10_mag, H_approx, H_coare, w_turb_list, time_list, 
             u_mean, v_mean, w_mean, t_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large)
+
+def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tuple:
+    w_turb = get_turbulent(slice[w])
+    T_turb = get_turbulent(slice[t])
+    #T_turb = T_turb/(1 + 0.378*e/p)
+
+    # Getting magnitude of turbulent horizontal velocity vector
+    U_turb = get_turbulent(np.sqrt(slice[u]**2 + slice[v]**2))
+
+    # Getting current-corrected windspeed
+    U_mag = np.sqrt(slice[u]**2 + slice[v]**2)
+    # Easterly -> +ive x axis, Northerly -> +ive y. Note that anem v+ is west so east is -v
+    U_vec = pd.DataFrame({'East': slice[v], 'North': slice[u]})
+    U_vec = U_vec.mean() #Taking TIME_INTERVAL min avg
+
+    return U_vec, U_mag, U_turb, w_turb, T_turb
 
 def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     """
