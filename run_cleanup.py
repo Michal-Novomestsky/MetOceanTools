@@ -55,8 +55,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1,
         with mp.Pool(coresToUse) as p:
             rejectedFiles = p.starmap(_cleanup_iteration, iterable=args)
 
-    write_message("Cleanup run done!", filename='cleanup_log.txt')
-    write_message(f"Rejected files:", filename='cleanup_log.txt')
+    write_message("Cleanup run done!\nRejected files:", filename='cleanup_log.txt')
     rejectedFileCount = 0
     for file in rejectedFiles:
         if file is not None:
@@ -90,17 +89,11 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     mru_y = 'MRU Y Axis Velocity'
     
     # Interpolating points in comp and MRU to bring it up to the same resolution
-    data.remove_nans(comp1, data.df, naive=True)
-    data.remove_nans(comp2, data.df, naive=True)
-    data.remove_nans(mru_pitch, data.df, naive=True)
-    data.remove_nans(mru_yaw, data.df, naive=True)
-    data.remove_nans(mru_roll, data.df, naive=True)
-    data.remove_nans(mru_p, data.df, naive=True)
-    data.remove_nans(mru_r, data.df, naive=True)
-    data.remove_nans(mru_y, data.df, naive=True)
+    for entry in [comp1, comp2, mru_pitch, mru_yaw, mru_roll, mru_p, mru_r, mru_y]:
+        data.remove_nans(entry, data.df, naive=True)
     write_message(f"{fileName}: Interpolated", filename='cleanup_log.txt')
 
-    # # Motion correction
+    # Motion correction
     if mru_correct:
         data.mru_correct()
         write_message(f"{fileName}: Motion Corrected", filename='cleanup_log.txt')
@@ -108,29 +101,9 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         write_message(f"{fileName}: MRU CORRECTION OFF", filename='cleanup_log.txt')
 
     # Pruning
-    data.prune_or([data.gradient_cutoff(w1, 3)])
-    data.prune_or([data.std_cutoff(w1, 5, sec_stepsize=5*60)])
-
-    data.prune_or([data.gradient_cutoff(w2, 3)])
-    data.prune_or([data.std_cutoff(w2, 5, sec_stepsize=5*60)])
-
-    data.prune_or([data.gradient_cutoff(u1, 3)])
-    data.prune_or([data.std_cutoff(u1, 5, sec_stepsize=5*60)])
-
-    data.prune_or([data.gradient_cutoff(u2, 3)])
-    data.prune_or([data.std_cutoff(u2, 5, sec_stepsize=5*60)])
-
-    data.prune_or([data.gradient_cutoff(v1, 3)])
-    data.prune_or([data.std_cutoff(v1, 5, sec_stepsize=5*60)])
-
-    data.prune_or([data.gradient_cutoff(v2, 3)])
-    data.prune_or([data.std_cutoff(v2, 5, sec_stepsize=5*60)])
-
-    data.prune_and([data.gradient_cutoff(t1, 3)])
-    data.prune_and([data.std_cutoff(t1, 5, sec_stepsize=5*60)])
-
-    data.prune_and([data.gradient_cutoff(t2, 3)])
-    data.prune_and([data.std_cutoff(t2, 5, sec_stepsize=5*60)])
+    for entry in [u1, u2, v1, v2, w1, w2]:
+        data.prune_or([data.gradient_cutoff(entry, 3)])
+        data.prune_or([data.std_cutoff(entry, 5, sec_stepsize=5*60)])
     write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
     
     # All subsequent analyses are skipped if an erroneous parameter is idenfied earlier with rejectLog
@@ -173,28 +146,20 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
 
         # Generating plots
         if generate_plots:
-            # hists
+            # Hists
             saveLoc = os.path.join(writeDir, "hists")
-            data.plot_hist(u1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-            data.plot_hist(u2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-            data.plot_hist(v1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-            data.plot_hist(v2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-            data.plot_hist(w1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-            data.plot_hist(w2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-            data.plot_hist(t1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
-            data.plot_hist(t2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
+            for entry in [u1, u2, v1, v2, w1, w2]:
+                data.plot_hist(entry, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
+            for t in [t1, t2]:
+                data.plot_hist(t, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
 
             # Plotting original timeseries vs filtered ones
             saveLoc = os.path.join(writeDir, "comparisons")
-            data.plot_comparison(w1, fileName, supervised=supervised, saveLoc=saveLoc)
-            data.plot_comparison(w2, fileName, supervised=supervised, saveLoc=saveLoc)
-            data.plot_comparison(u1, fileName, supervised=supervised, saveLoc=saveLoc)
-            data.plot_comparison(u2, fileName, supervised=supervised, saveLoc=saveLoc)
-            data.plot_comparison(v1, fileName, supervised=supervised, saveLoc=saveLoc)
-            data.plot_comparison(v2, fileName, supervised=supervised, saveLoc=saveLoc)
-            data.plot_comparison(t1, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
-            data.plot_comparison(t2, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
-        
+            for entry in [u1, u2, v1, v2, w1, w2]:
+                data.plot_comparison(entry, fileName, supervised=supervised, saveLoc=saveLoc)
+            for t in [t1, t2]:
+                data.plot_comparison(t, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
+
     write_message(f"{fileName}: Plotting/Sanity Checking Complete", filename='cleanup_log.txt')
 
     if supervised:
