@@ -9,7 +9,7 @@ from Modules.DataAnalyser import write_message
 from aggregate_files import run_aggregate_files
 from pathlib import Path
 
-def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1, file_selector_name=None, mru_correct=True) -> None:
+def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1, file_selector_name=None, mru_correct=True, generate_plots=True) -> None:
     """
     Steps through each data file located in readDir and outputs a cleaned-up version in writeDir. Otherwise keeps track of all rejected files.
     supervised sets whether user verification is needed to accept changes or whether it is completed automatically. Unsupervised enables multiprocessing
@@ -26,6 +26,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1,
     os.mkdir(os.path.join(writeDir, 'FTs'))
     os.mkdir(os.path.join(writeDir, 'FTs', 'loglogs'))
     os.mkdir(os.path.join(writeDir, 'hists'))
+    os.mkdir(os.path.join(writeDir, 'comparisons'))
 
     # Manual one-by-one checking
     if supervised:
@@ -48,7 +49,8 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1,
         writeDirArr = [writeDir]*len(files)
         supervisedArr = [supervised]*len(files)
         mruArr = [mru_correct]*len(files)
-        args = [*zip(files, writeDirArr, supervisedArr, mruArr)]
+        plotArr = [generate_plots]*len(files)
+        args = [*zip(files, writeDirArr, supervisedArr, mruArr, plotArr)]
 
         with mp.Pool(coresToUse) as p:
             rejectedFiles = p.starmap(_cleanup_iteration, iterable=args)
@@ -62,7 +64,7 @@ def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1,
             rejectedFileCount += 1
     write_message(f"{rejectedFileCount} files rejected", filename='cleanup_log.txt')
 
-def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=True) -> str:
+def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=True, generate_plots=True) -> str:
     """
     Internal function which runs an iteration of a cleanup run. Iterated externally by cleanup_loop.
     """
@@ -132,44 +134,29 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     data.prune_and([data.std_cutoff(t2, 5, sec_stepsize=5*60)])
     write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
     
+    # All subsequent analyses are skipped if an erroneous parameter is idenfied earlier with rejectLog
     # FFT plotting/checking
-    # The if nots are there as a simplistic means of lazychecking to prevent unecessary computation if we've already hit a faulty dataset
     saveLoc = os.path.join(writeDir, "FTs", "loglogs")
-    rejectLog = data.plot_ft_loglog(w1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_ft_loglog(w2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_ft_loglog(u1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_ft_loglog(u2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_ft_loglog(v1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_ft_loglog(v2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
-    # Not filtering with temperature FTs since their regression is poorly studied
-    if not rejectLog:
-        data.plot_ft_loglog(t1, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
-    if not rejectLog:
-        data.plot_ft_loglog(t2, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+    rejectLog = False
+    for entry in [u1, u2, v1, v2, w1, w2]:
+        if rejectLog:
+            break
+        rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
 
-    # Hist plotting/checking
-    saveLoc = os.path.join(writeDir, "hists")
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_hist(w1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_hist(w2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_hist(u1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_hist(u2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_hist(v1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_hist(v2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_hist(t1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
-    if not rejectLog:
-        rejectLog = rejectLog or data.plot_hist(t2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
+    for t in [t1, t2]:
+        # Not filtering with temperature FTs since their regression is poorly studied
+        if rejectLog:
+            break
+        data.plot_ft_loglog(t, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+
+    # Hist checking
+    for entry in [u1, u2, v1, v2, w1, w2, t1, t2]:
+        if rejectLog:
+            break
+        rejectLog = rejectLog or data.reject_hist_outliers(entry, diffCutoff=8)
+        # Seperate if-statement to prevent printing from rejectLogs caused by prior filter passes (e.g. plot_ft_loglog)
+        if rejectLog:
+            print(f"Rejected {fileName}: Histogram has a spike")
 
     if not rejectLog:
         # Checking if temperature has an unusually large range or is mean shifting
@@ -185,17 +172,29 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         is_temp_range_large = data.range_cutoff(t2, margain=2.5, sec_stepsize=5*60)
         data.df.is_temp2_range_large = is_temp_range_large
 
-    # Plotting points which were removed
-    saveLoc = os.path.join(writeDir, "hists")
-    if not rejectLog:
-        data.plot_comparison(w1, fileName, supervised=supervised, saveLoc=saveLoc)
-        data.plot_comparison(w2, fileName, supervised=supervised, saveLoc=saveLoc)
-        data.plot_comparison(u1, fileName, supervised=supervised, saveLoc=saveLoc)
-        data.plot_comparison(u2, fileName, supervised=supervised, saveLoc=saveLoc)
-        data.plot_comparison(v1, fileName, supervised=supervised, saveLoc=saveLoc)
-        data.plot_comparison(v2, fileName, supervised=supervised, saveLoc=saveLoc)
-        data.plot_comparison(t1, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
-        data.plot_comparison(t2, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
+        # Generating plots
+        if generate_plots:
+            # hists
+            saveLoc = os.path.join(writeDir, "hists")
+            data.plot_hist(u1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
+            data.plot_hist(u2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
+            data.plot_hist(v1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
+            data.plot_hist(v2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
+            data.plot_hist(w1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
+            data.plot_hist(w2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
+            data.plot_hist(t1, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
+            data.plot_hist(t2, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
+
+            # Plotting original timeseries vs filtered ones
+            saveLoc = os.path.join(writeDir, "comparisons")
+            data.plot_comparison(w1, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(w2, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(u1, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(u2, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(v1, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(v2, fileName, supervised=supervised, saveLoc=saveLoc)
+            data.plot_comparison(t1, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
+            data.plot_comparison(t2, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
         
     write_message(f"{fileName}: Plotting/Sanity Checking Complete", filename='cleanup_log.txt')
 
@@ -292,7 +291,6 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     data.remove_nans(mru_r, data.df, naive=True)
     data.remove_nans(mru_y, data.df, naive=True)
     '''
-
     if supervised:
         # Writing cleaned up file or rejecting it
         inputLoop = True
@@ -326,7 +324,8 @@ if __name__=='__main__':
     parser.add_argument('--write_dir', nargs='+', type=str, help='Path to output. Can be a list.')
     parser.add_argument('--cpu_fraction', type=float, help='% Of CPUs to use. Can be within (0,1].', default=1)
     parser.add_argument('--run_supervised', action='store_true', help='Run one-by-one cleanup.', default=False)
-    parser.add_argument('--mru_correct', action='store_true', help='Run one-by-one cleanup.', default=False)
+    parser.add_argument('--mru_correct', action='store_true', help='Correct for MRU inclination.', default=False)
+    parser.add_argument('--generate_plots', action='store_true', help='Save plots.', default=False)
     parser.add_argument('--file_selector_name', type=str, help='String which appears in the intended filename.', default=None)
     args = parser.parse_args()
 
@@ -336,8 +335,10 @@ if __name__=='__main__':
         readDir = Path(args.read_dir[i])
         writeDir = Path(args.write_dir[i])
 
-        cleanup_loop(readDir, writeDir, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, file_selector_name=args.file_selector_name, mru_correct=args.mru_correct)
+        cleanup_loop(readDir, writeDir, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, 
+                     file_selector_name=args.file_selector_name, mru_correct=args.mru_correct,
+                     generate_plots=args.generate_plots)
         run_aggregate_files(writeDir)
     t1 = time.perf_counter()
     
-    write_message(f"Took {(t1-t0)/3600}hrs", filename='cleanup_log.txt')
+    write_message(f"Took {round((t1-t0)/3600, 1)}hrs", filename='cleanup_log.txt')

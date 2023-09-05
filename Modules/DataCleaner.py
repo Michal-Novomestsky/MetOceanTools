@@ -124,7 +124,7 @@ class DataCleaner:
             plt.savefig(os.path.join(saveLoc, f"{title}.png"))
             plt.close()
 
-    def plot_ft_loglog(self, entry: str, fileName: str, gradient, gradient_cutoff, pearson_cutoff, supervised=False, saveLoc=None, plotTitle="_FT_LOGLOG_", plotType="-o", sampleSpacing=1, turbSampleMins=None, windowWidth=None) -> None:
+    def plot_ft_loglog(self, entry: str, fileName: str, gradient, gradient_cutoff, pearson_cutoff, supervised=False, saveLoc=None, generate_plots=True, plotTitle="_FT_LOGLOG_", plotType="-o", sampleSpacing=1, turbSampleMins=None, windowWidth=None) -> None:
         """
         Presents a plot of the FFT spectral density with both x and y axes in log10. Turbulent switches on u' = u - u_bar with u_bar evaulated over 
         turbSampleMins minutes averaged over the total time and gradient provides the slope for a line in the tail of the FT curve. Does not plot and returns
@@ -190,8 +190,10 @@ class DataCleaner:
                         print(f"Rejected {fileName}: Pearson R = {pearson_r}, m = {m}")
                         plt.close()
                         return True
-                    else:
+                    elif generate_plots:
                         plt.savefig(os.path.join(saveLoc, f"{title}.png"))
+                        plt.close()
+                    else:
                         plt.close()
                     
                     return False
@@ -233,8 +235,10 @@ class DataCleaner:
                         print(f"Rejected {fileName}: Pearson R = {pearson_r}, m = {m}")
                         plt.close()
                         return True
-                    else:
+                    elif generate_plots:
                         plt.savefig(os.path.join(saveLoc, f"{title}.png"))
+                        plt.close()
+                    else:
                         plt.close()
 
                     return False
@@ -269,8 +273,10 @@ class DataCleaner:
                 print(f"Rejected {fileName}: Pearson R = {pearson_r}, m = {m}")
                 plt.close()
                 return True
-            else:
+            elif generate_plots:
                 plt.savefig(os.path.join(saveLoc, f"{title}.png"))
+                plt.close()
+            else:
                 plt.close()
 
             return False
@@ -312,28 +318,21 @@ class DataCleaner:
 
     def plot_hist(self, entry: str, fileName: str, diffCutOff: float, supervised=False, saveLoc=None, plotTitle="_HIST_", bins=50):
         """
-        Plots a histogram of entry with the specified amount of bins. Does not do so and returns True if the two neighboruing count values are more
-        than diffCutOff times larger than each other. Refer to plot_comparison for other parameters.
+        Plots a histogram of entry with the specified amount of bins. Refer to plot_comparison for other parameters.
         """
-        if self.reject_hist_outliers(entry, diffCutOff):
-            print(f"Rejected {fileName}: Histogram has a spike")
-            return True
+        sns.histplot(data=self.df, x=entry, bins=bins)
+
+        title = fileName[:len(fileName) - 4] + plotTitle + entry
+
+        plt.xlabel(entry)
+        plt.ylabel('Frequency (no. occurences)')
+        plt.title(title)
+
+        if supervised:
+            plt.show()
         else:
-            sns.histplot(data=self.df, x=entry, bins=bins)
-
-            title = fileName[:len(fileName) - 4] + plotTitle + entry
-
-            plt.xlabel(entry)
-            plt.ylabel('Frequency (no. occurences)')
-            plt.title(title)
-
-            if supervised:
-                plt.show()
-            else:
-                plt.savefig(os.path.join(saveLoc, f"{title}.png"), dpi=500)
-                plt.close()
-
-            return False
+            plt.savefig(os.path.join(saveLoc, f"{title}.png"), dpi=500)
+            plt.close()
         
     def reject_file_on_changing_mean(self, entry: str, margain:float, sec_stepsize: int, n_most=2) -> bool:
         '''
@@ -454,7 +453,7 @@ class DataCleaner:
     def reject_hist_outliers(self, entry: str, diffCutoff: float, counts=20) -> bool:
         """
         Checks for values with unusually high frequencies and returns true if the any bin is diffCutoff times larger than the next largest. Only
-        checks the first counts counts
+        checks the counts largest bins
         """
         freqDf = self.df.groupby([entry])[entry].count().reset_index(name='Count').sort_values(['Count'], ascending=False)
         idxSer = freqDf.index.to_series().reset_index()
