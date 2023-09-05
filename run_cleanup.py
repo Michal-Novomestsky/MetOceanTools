@@ -113,13 +113,13 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     for entry in [u1, u2, v1, v2, w1, w2]:
         if rejectLog:
             break
-        rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+        rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
 
     for t in [t1, t2]:
         # Not filtering with temperature FTs since their regression is poorly studied
         if rejectLog:
             break
-        data.plot_ft_loglog(t, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+        data.plot_ft_loglog(t, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
 
     # Hist checking
     for entry in [u1, u2, v1, v2, w1, w2, t1, t2]:
