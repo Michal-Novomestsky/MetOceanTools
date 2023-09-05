@@ -571,7 +571,8 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    sns.lineplot(data=outDf, x='time', y='u', label="Anem U Component")
+    sns.lineplot(data=outDf, x='time', y='u1', label="Anem U1 Component")
+    sns.lineplot(data=outDf, x='time', y='u2', label="Anem U2 Component")
     sns.lineplot(data=eraDf, x='timemet', y='v_10', label="ERA5 V Component (10m)")
     plt.xlabel('time')
     plt.ylabel('Northerly Component of Wind Speed (m/s)')
@@ -580,9 +581,20 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'north_wind.png'))
         plt.close()
     else:
+        plt.show() 
+
+    sns.lineplot(data=outDf, x='time', y='u1_turb', label=f"{TIME_INTERVAL}min Avg Anem U1 Turbulent Component")
+    sns.lineplot(data=outDf, x='time', y='u2_turb', label=f"{TIME_INTERVAL}min Avg Anem U2 Turbulent Component")
+    plt.xlabel('time')
+    plt.ylabel('Northerly Turbulent Component of Wind Speed (m/s)')
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.close()
+    else:
         plt.show()   
 
-    sns.lineplot(data=outDf, x='time', y='v', label="Anem V Component")
+    sns.lineplot(data=outDf, x='time', y='v1', label="Anem V1 Component")
+    sns.lineplot(data=outDf, x='time', y='v2', label="Anem V2 Component")
     sns.lineplot(data=eraDf, x='timemet', y='u_10', label="ERA5 U Component (10m)")
     plt.xlabel('time')
     plt.ylabel('Easterly Component of Wind Speed (m/s)')
@@ -593,7 +605,18 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
-    sns.lineplot(data=outDf, x='time', y='w', label="Anem W Component")
+    sns.lineplot(data=outDf, x='time', y='v1_turb', label=f"{TIME_INTERVAL}min Avg Anem V1 Turbulent Component")
+    sns.lineplot(data=outDf, x='time', y='v2_turb', label=f"{TIME_INTERVAL}min Avg Anem V2 Turbulent Component")
+    plt.xlabel('time')
+    plt.ylabel('Easterly Turbulent Component of Wind Speed (m/s)')
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.close()
+    else:
+        plt.show()   
+
+    sns.lineplot(data=outDf, x='time', y='w1', label="Anem W Component")
+    sns.lineplot(data=outDf, x='time', y='w2', label="Anem W Component")
     plt.xlabel('time')
     plt.ylabel('Upward Component of Wind Speed (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)
@@ -602,6 +625,16 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.close()
     else:
         plt.show()
+
+    sns.lineplot(data=outDf, x='time', y='w1_turb', label=f"{TIME_INTERVAL}min Avg Anem U1 Turbulent Component")
+    sns.lineplot(data=outDf, x='time', y='w2_turb', label=f"{TIME_INTERVAL}min Avg Anem U2 Turbulent Component")
+    plt.xlabel('time')
+    plt.ylabel('Upward Turbulent Component of Wind Speed (m/s)')
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.close()
+    else:
+        plt.show()   
 
     sns.lineplot(data=outDf, x='time', y='U_10', label='Anem')
     sns.lineplot(x=eraDf.timemet, y=np.linalg.norm(eraDf[['v_10', 'u_10']].values,axis=1), label='ERA5')
