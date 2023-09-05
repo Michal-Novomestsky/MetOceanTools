@@ -55,10 +55,18 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_HCoare = []
     collector_Cd = []
     collector_U_10 = []
-    collector_w_turb = []
-    collector_u = []
-    collector_v = []
-    collector_w = []
+    collector_u1 = []
+    collector_u1_turb = []
+    collector_v1 = []
+    collector_v1_turb = []
+    collector_w1 = []
+    collector_w1_turb = []
+    collector_u2 = []
+    collector_u2_turb = []
+    collector_v2 = []
+    collector_v2_turb = []
+    collector_w2 = []
+    collector_w2_turb = []
     collector_t = []
     collector_rho = []
     collector_t1_fluct = []
@@ -77,17 +85,25 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_U_10 += output[3]
                 collector_HApprox += output[4]
                 collector_HCoare += output[5]
-                collector_w_turb += output[6]
-                collector_time += output[7]
-                collector_u += output[8]
-                collector_v += output[9]
-                collector_w += output[10]
-                collector_t += output[11]
-                collector_rho += output[12]
-                collector_t1_fluct += output[13]
-                collector_t1_rng += output[14]
-                collector_t2_fluct += output[15]
-                collector_t2_rng += output[16]
+                collector_time += output[6]
+                collector_u1 += output[7]
+                collector_u1_turb += output[8]
+                collector_v1 += output[9]
+                collector_v1_turb += output[10]
+                collector_w1 += output[11]
+                collector_w1_turb += output[12]
+                collector_u2 += output[13]
+                collector_u2_turb += output[14]
+                collector_v2 += output[15]
+                collector_v2_turb += output[16]
+                collector_w2 += output[17]
+                collector_w2_turb += output[18]
+                collector_t += output[19]
+                collector_rho += output[20]
+                collector_t1_fluct += output[21]
+                collector_t1_rng += output[22]
+                collector_t2_fluct += output[23]
+                collector_t2_rng += output[24]
 
     # Enabling multiprocessing
     else:
@@ -115,23 +131,32 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_U_10 += outputElem[3]
                     collector_HApprox += outputElem[4]
                     collector_HCoare += outputElem[5]
-                    collector_w_turb += outputElem[6]
-                    collector_time += outputElem[7]
-                    collector_u += outputElem[8]
-                    collector_v += outputElem[9]
-                    collector_w += outputElem[10]
-                    collector_t += outputElem[11]
-                    collector_rho += outputElem[12]
-                    collector_t1_fluct += outputElem[13]
-                    collector_t1_rng += outputElem[14]
-                    collector_t2_fluct += outputElem[15]
-                    collector_t2_rng += outputElem[16]
+                    collector_time += outputElem[6]
+                    collector_u1 += outputElem[7]
+                    collector_u1_turb += outputElem[8]
+                    collector_v1 += outputElem[9]
+                    collector_v1_turb += outputElem[10]
+                    collector_w1 += outputElem[11]
+                    collector_w1_turb += outputElem[12]
+                    collector_u2 += outputElem[13]
+                    collector_u2_turb += outputElem[14]
+                    collector_v2 += outputElem[15]
+                    collector_v2_turb += outputElem[16]
+                    collector_w2 += outputElem[17]
+                    collector_w2_turb += outputElem[18]
+                    collector_t += outputElem[19]
+                    collector_rho += outputElem[20]
+                    collector_t1_fluct += outputElem[21]
+                    collector_t1_rng += outputElem[22]
+                    collector_t2_fluct += outputElem[23]
+                    collector_t2_rng += outputElem[24]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox": collector_tauApprox, "tauCoare": collector_tauCoare,
                             "Cd": collector_Cd, "U_10": collector_U_10, "HApprox": collector_HApprox, "HCoare": collector_HCoare, 
-                            "wTurb": collector_w_turb, "u": collector_u, "v": collector_v, "w": collector_w, "ta": collector_t,
-                            "rho": collector_rho, "is_temp1_fluctuating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
+                            "u1": collector_u1, "u1_turb": collector_u1_turb, "v1": collector_v1, "v1_turb": collector_v1_turb, "w1": collector_w1, "w1_turb": collector_w1_turb,
+                            "u2": collector_u2, "u2_turb": collector_u2_turb, "v2": collector_v2, "v2_turb": collector_v2_turb, "w2": collector_w2, "w2_turb": collector_w2_turb, 
+                            "ta": collector_t, "rho": collector_rho, "is_temp1_fluctuating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
                             "is_temp2_fluctuating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
@@ -165,6 +190,12 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     H_coare = []
     C_d = []
     U_10_mag = [] # NOTE: "_mag" is to prevent it being const from all caps
+    u1_mean = []
+    u1_turb_mean = []
+    v1_mean = []
+    v1_turb_mean = []
+    w1_mean = []
+    w1_turb_mean = []
     u2_mean = []
     u2_turb_mean = []
     v2_mean = []
@@ -291,8 +322,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     else:
         write_message(f"Analysed {fileName} with ERA5", filename='analysis_log.txt')
 
-    return (tau_approx, tau_coare, C_d, U_10_mag, H_approx, H_coare, w_turb_list, time_list, 
-            u_mean, v_mean, w_mean, t_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
+    return (tau_approx, tau_coare, C_d, U_10_mag, H_approx, H_coare, time_list, 
+            u1_mean, u1_turb_mean, v1_mean, v1_turb_mean, w1_mean, w1_turb_mean, 
+            u2_mean, u2_turb_mean, v2_mean, v2_turb_mean, w2_mean, w2_turb_mean, 
+            t_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large)
 
 def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tuple:
