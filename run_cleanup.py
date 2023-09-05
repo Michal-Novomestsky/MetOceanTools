@@ -72,7 +72,6 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
 
     fileName = file.stem
 
-    ###NOTE: EDIT THIS TO GRAB THE DATAPOINTS YOU NEED FOR A PARTICULAR CLEANUP RUN
     w1 = "Anemometer #1 W Velocity (ms-1)"
     w2 = "Anemometer #2 W Velocity (ms-1)"
     u1 = "Anemometer #1 U Velocity (ms-1)"
@@ -197,7 +196,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
             data.plot_comparison(t2, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
         
     write_message(f"{fileName}: Plotting/Sanity Checking Complete", filename='cleanup_log.txt')
-    
+
     if supervised:
         # Writing cleaned up file or rejecting it
         inputLoop = True
