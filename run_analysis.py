@@ -599,8 +599,8 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    sns.lineplot(data=outDf, x='time', y='v1', label="Anem V1 Component")
-    sns.lineplot(data=outDf, x='time', y='v2', label="Anem V2 Component")
+    sns.lineplot(data=outDf, x='time', y='v1', label="Anem 1 V Component")
+    sns.lineplot(data=outDf, x='time', y='v2', label="Anem 2 V Component")
     sns.lineplot(data=eraDf, x='timemet', y='u_10', label="ERA5 U Component (10m)")
     plt.xlabel('time')
     plt.ylabel('Easterly Component of Wind Speed (m/s)')
@@ -611,8 +611,8 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
-    sns.lineplot(data=outDf, x='time', y='v1_turb', label=f"{TIME_INTERVAL}min Avg Anem V1 Turbulent Component")
-    sns.lineplot(data=outDf, x='time', y='v2_turb', label=f"{TIME_INTERVAL}min Avg Anem V2 Turbulent Component")
+    sns.lineplot(data=outDf, x='time', y='v1_turb', label=f"{TIME_INTERVAL}min Avg Anem 1 V Turbulent Component")
+    sns.lineplot(data=outDf, x='time', y='v2_turb', label=f"{TIME_INTERVAL}min Avg Anem 2 V Turbulent Component")
     plt.xlabel('time')
     plt.ylabel('Easterly Turbulent Component of Wind Speed (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)
@@ -621,8 +621,8 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    sns.lineplot(data=outDf, x='time', y='w1', label="Anem W Component")
-    sns.lineplot(data=outDf, x='time', y='w2', label="Anem W Component")
+    sns.lineplot(data=outDf, x='time', y='w1', label="Anem 1 W Component")
+    sns.lineplot(data=outDf, x='time', y='w2', label="Anem 2 W Component")
     plt.xlabel('time')
     plt.ylabel('Upward Component of Wind Speed (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)
@@ -632,8 +632,8 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
-    sns.lineplot(data=outDf, x='time', y='w1_turb', label=f"{TIME_INTERVAL}min Avg Anem U1 Turbulent Component")
-    sns.lineplot(data=outDf, x='time', y='w2_turb', label=f"{TIME_INTERVAL}min Avg Anem U2 Turbulent Component")
+    sns.lineplot(data=outDf, x='time', y='w1_turb', label=f"{TIME_INTERVAL}min Avg Anem 1 U Turbulent Component")
+    sns.lineplot(data=outDf, x='time', y='w2_turb', label=f"{TIME_INTERVAL}min Avg Anem 2 U Turbulent Component")
     plt.xlabel('time')
     plt.ylabel('Upward Turbulent Component of Wind Speed (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)

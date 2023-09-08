@@ -101,7 +101,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         write_message(f"{fileName}: MRU CORRECTION OFF", filename='cleanup_log.txt')
 
     # Pruning
-    for entry in [u1, u2, v1, v2, w1, w2]:
+    for entry in [u1, u2, v1, v2, w1, w2, t1, t2]:
         data.prune_or([data.gradient_cutoff(entry, 3)])
         data.prune_or([data.std_cutoff(entry, 5, sec_stepsize=5*60)])
     write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
