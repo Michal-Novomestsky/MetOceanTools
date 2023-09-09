@@ -67,7 +67,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_v2_turb = []
     collector_w2 = []
     collector_w2_turb = []
-    collector_t = []
+    collector_t2 = []
     collector_rho = []
     collector_t1_fluct = []
     collector_t1_rng = []
@@ -99,7 +99,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_v2_turb += output[16]
                 collector_w2 += output[17]
                 collector_w2_turb += output[18]
-                collector_t += output[19]
+                collector_t2 += output[19]
                 collector_rho += output[20]
                 collector_t1_fluct += output[21]
                 collector_t1_rng += output[22]
@@ -146,7 +146,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_v2_turb += outputElem[16]
                     collector_w2 += outputElem[17]
                     collector_w2_turb += outputElem[18]
-                    collector_t += outputElem[19]
+                    collector_t2 += outputElem[19]
                     collector_rho += outputElem[20]
                     collector_t1_fluct += outputElem[21]
                     collector_t1_rng += outputElem[22]
@@ -159,7 +159,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                             "Cd": collector_Cd, "U_10": collector_U_10, "HApprox": collector_HApprox, "HCoare": collector_HCoare, 
                             "u1": collector_u1, "u1_turb": collector_u1_turb, "v1": collector_v1, "v1_turb": collector_v1_turb, "w1": collector_w1, "w1_turb": collector_w1_turb,
                             "u2": collector_u2, "u2_turb": collector_u2_turb, "v2": collector_v2, "v2_turb": collector_v2_turb, "w2": collector_w2, "w2_turb": collector_w2_turb, 
-                            "ta": collector_t, "rho": collector_rho, "is_temp1_fluctuating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
+                            "ta_2": collector_t2, "rho": collector_rho, "is_temp1_fluctuating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
                             "is_temp2_fluctuating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng, "u_star_2": collector_u_star_2})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
@@ -206,7 +206,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     v2_turb_mean = []
     w2_mean = []
     w2_turb_mean = []
-    t_mean = []
+    t2_mean = []
     rho_mean = []
     is_temp1_fluctuating = []
     is_temp1_range_large = []
@@ -296,7 +296,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         v2_turb_mean.append(np.mean(get_turbulent(slice[v2])))
         w2_mean.append(np.mean(slice[w2]))
         w2_turb_mean.append(np.mean(w_turb))
-        t_mean.append(np.mean(slice[t2]))
+        t2_mean.append(np.mean(slice[t2]))
         rho_mean.append(np.mean(rho))
         is_temp1_fluctuating.append(slice.is_temp1_fluctuating.any())
         is_temp1_range_large.append(slice.is_temp1_range_large.any())
@@ -331,7 +331,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     return (tau_approx, tau_coare, C_d, U_10_mean, H_approx, H_coare, time_list, 
             u1_mean, u1_turb_mean, v1_mean, v1_turb_mean, w1_mean, w1_turb_mean, 
             u2_mean, u2_turb_mean, v2_mean, v2_turb_mean, w2_mean, w2_turb_mean, 
-            t_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
+            t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large, u_stars)
 
 def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tuple:
@@ -577,8 +577,8 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    sns.lineplot(data=outDf, x='time', y='u1', label="Anem U1 Component")
-    sns.lineplot(data=outDf, x='time', y='u2', label="Anem U2 Component")
+    sns.lineplot(data=outDf, x='time', y='u1', label="Anem 1 U Component")
+    sns.lineplot(data=outDf, x='time', y='u2', label="Anem 2 U Component")
     sns.lineplot(data=eraDf, x='timemet', y='v_10', label="ERA5 V Component (10m)")
     plt.xlabel('time')
     plt.ylabel('Northerly Component of Wind Speed (m/s)')
@@ -589,8 +589,12 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show() 
 
-    sns.lineplot(data=outDf, x='time', y='u1_turb', label=f"{TIME_INTERVAL}min Avg Anem U1 Turbulent Component")
-    sns.lineplot(data=outDf, x='time', y='u2_turb', label=f"{TIME_INTERVAL}min Avg Anem U2 Turbulent Component")
+    mean_u1_turb = apply_window_wise(outDf.u1_turb, WINDOW_WIDTH, np.mean)
+    mean_u2_turb = apply_window_wise(outDf.u2_turb, WINDOW_WIDTH, np.mean)
+    sns.scatterplot(data=outDf, x='time', y='u1_turb', marker='.', label=f"{TIME_INTERVAL}min Avg Anem 1 U Turbulent Component")
+    sns.scatterplot(data=outDf, x='time', y='u2_turb', marker='.', label=f"{TIME_INTERVAL}min Avg Anem 2 U Turbulent Component")
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_u1_turb, label='Anem 1')
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_u2_turb, label='Anem 2')
     plt.xlabel('time')
     plt.ylabel('Northerly Turbulent Component of Wind Speed (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)
@@ -611,8 +615,12 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
-    sns.lineplot(data=outDf, x='time', y='v1_turb', label=f"{TIME_INTERVAL}min Avg Anem 1 V Turbulent Component")
-    sns.lineplot(data=outDf, x='time', y='v2_turb', label=f"{TIME_INTERVAL}min Avg Anem 2 V Turbulent Component")
+    mean_v1_turb = apply_window_wise(outDf.v1_turb, WINDOW_WIDTH, np.mean)
+    mean_v2_turb = apply_window_wise(outDf.v2_turb, WINDOW_WIDTH, np.mean)
+    sns.scatterplot(data=outDf, x='time', y='v1_turb', marker='.', label=f"{TIME_INTERVAL}min Avg Anem 1 V Turbulent Component")
+    sns.scatterplot(data=outDf, x='time', y='v2_turb', marker='.', label=f"{TIME_INTERVAL}min Avg Anem 2 V Turbulent Component")
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_v1_turb, label='Anem 1')
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_v2_turb, label='Anem 2')
     plt.xlabel('time')
     plt.ylabel('Easterly Turbulent Component of Wind Speed (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)
@@ -632,8 +640,12 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
-    sns.lineplot(data=outDf, x='time', y='w1_turb', label=f"{TIME_INTERVAL}min Avg Anem 1 U Turbulent Component")
-    sns.lineplot(data=outDf, x='time', y='w2_turb', label=f"{TIME_INTERVAL}min Avg Anem 2 U Turbulent Component")
+    mean_w1_turb = apply_window_wise(outDf.w1_turb, WINDOW_WIDTH, np.mean)
+    mean_w2_turb = apply_window_wise(outDf.w2_turb, WINDOW_WIDTH, np.mean)
+    sns.scatterplot(data=outDf, x='time', y='w1_turb', marker='.', label=f"{TIME_INTERVAL}min Avg Anem 1 W Turbulent Component")
+    sns.scatterplot(data=outDf, x='time', y='w2_turb', marker='.', label=f"{TIME_INTERVAL}min Avg Anem 2 W Turbulent Component")
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_w1_turb, label='Anem 1')
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_w2_turb, label='Anem 2')
     plt.xlabel('time')
     plt.ylabel('Upward Turbulent Component of Wind Speed (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)
@@ -653,7 +665,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
-    sns.lineplot(data=outDf, x='time', y='ta', label="Anem")
+    sns.lineplot(data=outDf, x='time', y='ta_2', label="Anem 2")
     sns.lineplot(data=eraDf, x='timemet', y='ta', label="ERA5")
     plt.xlabel('time')
     plt.ylabel('Air Temperature (degC)')
@@ -711,6 +723,12 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.close()
     else:
         plt.show()   
+
+    sns.lineplot(data=outDf, x='time', y='u_star_2', label="Anem 2 u_star")
+    sns.scatterplot(data=outDf, x='time', y='u_star_2', label="Anem 2 u_star")
+    plt.xlabel('time')
+    plt.ylabel('u_star (m/s)')
+    plt.xticks(plt.xticks()[0], rotation=90)
 
     # Making a box for x [0, 25], y [-2, 5]
     left_wall = [[0, 0], [-2, 5]]
