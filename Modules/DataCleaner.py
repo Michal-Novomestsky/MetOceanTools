@@ -316,7 +316,7 @@ class DataCleaner:
             plt.loglog(ft_x, line, color='r')
             plt.legend(['FFT', f'm = {round(gradient, 2)}'])
 
-    def plot_hist(self, entry: str, fileName: str, diffCutOff: float, supervised=False, saveLoc=None, plotTitle="_HIST_", bins=50):
+    def plot_hist(self, entry: str, fileName: str, supervised=False, saveLoc=None, plotTitle="_HIST_", bins=50):
         """
         Plots a histogram of entry with the specified amount of bins. Refer to plot_comparison for other parameters.
         """

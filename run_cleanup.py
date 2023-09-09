@@ -101,7 +101,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         write_message(f"{fileName}: MRU CORRECTION OFF", filename='cleanup_log.txt')
 
     # Pruning
-    for entry in [u1, u2, v1, v2, w1, w2, t1, t2]:
+    for entry in [w1, w2, u1, u2, v1, v2, t1, t2]:
         data.prune_or([data.gradient_cutoff(entry, 3)])
         data.prune_or([data.std_cutoff(entry, 5, sec_stepsize=5*60)])
     write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
@@ -110,7 +110,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     # FFT plotting/checking
     saveLoc = os.path.join(writeDir, "FTs", "loglogs")
     rejectLog = False
-    for entry in [u1, u2, v1, v2, w1, w2]:
+    for entry in [w1, w2, u1, u2, v1, v2]:
         if rejectLog:
             break
         rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
@@ -122,7 +122,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         data.plot_ft_loglog(t, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
 
     # Hist checking
-    for entry in [u1, u2, v1, v2, w1, w2, t1, t2]:
+    for entry in [w1, w2, u1, u2, v1, v2, t1, t2]:
         if rejectLog:
             break
         rejectLog = rejectLog or data.reject_hist_outliers(entry, diffCutoff=8)
@@ -148,14 +148,14 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         if generate_plots:
             # Hists
             saveLoc = os.path.join(writeDir, "hists")
-            for entry in [u1, u2, v1, v2, w1, w2]:
-                data.plot_hist(entry, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=1000)
+            for entry in [w1, w2, u1, u2, v1, v2]:
+                data.plot_hist(entry, fileName, supervised=supervised, saveLoc=saveLoc, bins=1000)
             for t in [t1, t2]:
-                data.plot_hist(t, fileName, diffCutOff=8, supervised=supervised, saveLoc=saveLoc, bins=300)
+                data.plot_hist(t, fileName, supervised=supervised, saveLoc=saveLoc, bins=300)
 
             # Plotting original timeseries vs filtered ones
             saveLoc = os.path.join(writeDir, "comparisons")
-            for entry in [u1, u2, v1, v2, w1, w2]:
+            for entry in [w1, w2, u1, u2, v1, v2]:
                 data.plot_comparison(entry, fileName, supervised=supervised, saveLoc=saveLoc)
             for t in [t1, t2]:
                 data.plot_comparison(t, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])

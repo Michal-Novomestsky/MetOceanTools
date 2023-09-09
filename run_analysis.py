@@ -729,6 +729,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xlabel('time')
     plt.ylabel('u_star (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)
+    plt.show()
 
     # Making a box for x [0, 25], y [-2, 5]
     left_wall = [[0, 0], [-2, 5]]
