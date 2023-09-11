@@ -89,8 +89,16 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     mru_y = 'MRU Y Axis Velocity'
     
     # Interpolating points in comp and MRU to bring it up to the same resolution
-    for entry in [comp1, comp2, mru_pitch, mru_yaw, mru_roll, mru_p, mru_r, mru_y]:
-        data.remove_nans(entry, data.df, naive=True)
+    # for entry in [comp1, comp2, mru_pitch, mru_yaw, mru_roll, mru_p, mru_r, mru_y]:
+    #     data.remove_nans(entry, data.df, naive=True)
+    data.remove_nans(comp1, data.df, naive=True)
+    data.remove_nans(comp2, data.df, naive=True)
+    data.remove_nans(mru_pitch, data.df, naive=True)
+    data.remove_nans(mru_yaw, data.df, naive=True)
+    data.remove_nans(mru_roll, data.df, naive=True)
+    data.remove_nans(mru_p, data.df, naive=True)
+    data.remove_nans(mru_r, data.df, naive=True)
+    data.remove_nans(mru_y, data.df, naive=True)
     write_message(f"{fileName}: Interpolated", filename='cleanup_log.txt')
 
     # Motion correction
@@ -101,34 +109,93 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         write_message(f"{fileName}: MRU CORRECTION OFF", filename='cleanup_log.txt')
 
     # Pruning
-    for entry in [w1, w2, u1, u2, v1, v2, t1, t2]:
-        data.prune_or([data.gradient_cutoff(entry, 3)])
-        data.prune_or([data.std_cutoff(entry, 5, sec_stepsize=5*60)])
+    # for entry in [w1, w2, u1, u2, v1, v2, t1, t2]:
+    #     data.prune_or([data.gradient_cutoff(entry, 3)])
+    #     data.prune_or([data.std_cutoff(entry, 5, sec_stepsize=5*60)])
+    data.prune_or([data.gradient_cutoff(w1, 3)])
+    data.prune_or([data.std_cutoff(w1, 5, sec_stepsize=5*60)])
+
+    data.prune_or([data.gradient_cutoff(w2, 3)])
+    data.prune_or([data.std_cutoff(w2, 5, sec_stepsize=5*60)])
+
+    data.prune_or([data.gradient_cutoff(u1, 3)])
+    data.prune_or([data.std_cutoff(u1, 5, sec_stepsize=5*60)])
+
+    data.prune_or([data.gradient_cutoff(u2, 3)])
+    data.prune_or([data.std_cutoff(u2, 5, sec_stepsize=5*60)])
+
+    data.prune_or([data.gradient_cutoff(v1, 3)])
+    data.prune_or([data.std_cutoff(v1, 5, sec_stepsize=5*60)])
+
+    data.prune_or([data.gradient_cutoff(v2, 3)])
+    data.prune_or([data.std_cutoff(v2, 5, sec_stepsize=5*60)])
+
+    data.prune_and([data.gradient_cutoff(t1, 3)])
+    data.prune_and([data.std_cutoff(t1, 5, sec_stepsize=5*60)])
+
+    data.prune_and([data.gradient_cutoff(t2, 3)])
+    data.prune_and([data.std_cutoff(t2, 5, sec_stepsize=5*60)])
     write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
     
     # All subsequent analyses are skipped if an erroneous parameter is idenfied earlier with rejectLog
     # FFT plotting/checking
     saveLoc = os.path.join(writeDir, "FTs", "loglogs")
-    rejectLog = False
-    for entry in [w1, w2, u1, u2, v1, v2]:
-        if rejectLog:
-            break
-        rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
+    # rejectLog = False
+    # for entry in [w1, w2, u1, u2, v1, v2]:
+    #     if rejectLog:
+    #         break
+    #     rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
 
-    for t in [t1, t2]:
-        # Not filtering with temperature FTs since their regression is poorly studied
-        if rejectLog:
-            break
-        data.plot_ft_loglog(t, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
+    # for t in [t1, t2]:
+    #     # Not filtering with temperature FTs since their regression is poorly studied
+    #     if rejectLog:
+    #         break
+    #     data.plot_ft_loglog(t, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
+    rejectLog = data.plot_ft_loglog(w1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+    if not rejectLog:
+        rejectLog = rejectLog or data.plot_ft_loglog(w2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+    if not rejectLog:
+        rejectLog = rejectLog or data.plot_ft_loglog(u1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+    if not rejectLog:
+        rejectLog = rejectLog or data.plot_ft_loglog(u2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+    if not rejectLog:
+        rejectLog = rejectLog or data.plot_ft_loglog(v1, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+    if not rejectLog:
+        rejectLog = rejectLog or data.plot_ft_loglog(v2, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+    # Not filtering with temperature FTs since their regression is poorly studied
+    if not rejectLog:
+        data.plot_ft_loglog(t1, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
+    if not rejectLog:
+        data.plot_ft_loglog(t2, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2)
 
     # Hist checking
-    for entry in [w1, w2, u1, u2, v1, v2, t1, t2]:
-        if rejectLog:
-            break
-        rejectLog = rejectLog or data.reject_hist_outliers(entry, diffCutoff=8)
-        # Seperate if-statement to prevent printing from rejectLogs caused by prior filter passes (e.g. plot_ft_loglog)
-        if rejectLog:
-            print(f"Rejected {fileName}: Histogram has a spike")
+    # for entry in [w1, w2, u1, u2, v1, v2, t1, t2]:
+    #     if rejectLog:
+    #         break
+    #     rejectLog = rejectLog or data.reject_hist_outliers(entry, diffCutoff=8)
+    #     # Seperate if-statement to prevent printing from rejectLogs caused by prior filter passes (e.g. plot_ft_loglog)
+    #     if rejectLog:
+    #         print(f"Rejected {fileName}: Histogram has a spike")
+
+
+    # Hist plotting/checking
+    saveLoc = os.path.join(writeDir, "hists")
+    if not rejectLog:
+        rejectLog = rejectLog or data.reject_hist_outliers(w1, diffCutoff=8)
+    if not rejectLog:
+        rejectLog = rejectLog or data.reject_hist_outliers(w2, diffCutoff=8)
+    if not rejectLog:
+        rejectLog = rejectLog or data.reject_hist_outliers(u1, diffCutoff=8)
+    if not rejectLog:
+        rejectLog = rejectLog or data.reject_hist_outliers(u2, diffCutoff=8)
+    if not rejectLog:
+        rejectLog = rejectLog or data.reject_hist_outliers(v1, diffCutoff=8)
+    if not rejectLog:
+        rejectLog = rejectLog or data.reject_hist_outliers(v2, diffCutoff=8)
+    if not rejectLog:
+        rejectLog = rejectLog or data.reject_hist_outliers(t1, diffCutoff=8)
+    if not rejectLog:
+        rejectLog = rejectLog or data.reject_hist_outliers(t2, diffCutoff=8)
 
     if not rejectLog:
         # Checking if temperature has an unusually large range or is mean shifting
