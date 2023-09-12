@@ -315,8 +315,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
         try:
             blockPrint()
-            u = U_10_mag if type(U_10_mag) is float else np.mean(U_10_mag)
-            coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
+            coare_res = coare(Jd=jd, U=U_10_mag, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
                               Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
                               Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,
                               zrf_u=ZU, zrf_t=ZU, zrf_q=ZU)
@@ -324,8 +323,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             tau_coare.append(coare_res[0][1])
             H_coare.append(coare_res[0][2])
         except Exception as e:
-            tau_coare.append(-0.3)
-            H_coare.append(-10)
+            # tau_coare.append(-0.3)
+            # H_coare.append(-10)
+            tau_coare.append(np.nan)
+            H_coare.append(np.nan)
             write_message(f"ERROR IN {fileName}: {e} - SKIPPED FOR NOW", filename='analysis_log.txt')
 
         # Updating time
