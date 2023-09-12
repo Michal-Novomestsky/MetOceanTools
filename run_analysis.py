@@ -395,7 +395,9 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :return: (float) cov(u, v)
     '''
     # return np.cov(np.concatenate((u, v)))#[0][1]
-    print(np.cov(u, v)[0][1])
+    if pd.isna(np.cov(u, v)[0][1]):
+        print(f'{u=}')
+        print(f'{v=}')
     return np.cov(u, v)[0][1]
 
 def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True, time_lim=None) -> pd.DataFrame:
