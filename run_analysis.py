@@ -288,7 +288,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         #TODO: Assume U_10 ~= U_14.8 for now
         # C_d.append(np.mean(-U_10_turb*w_turb)/(np.mean(U_10_mag)**2))
-        C_d.append(u_star_1/(np.mean(U2_mag)**2))
+        C_d.append(u_star_1/(np.mean(U_10_mag)**2))
         u_star_1_list.append(u_star_1)
         U_10_mean.append(np.mean(U_10_mag))
         u1_mean.append(np.mean(slice[u1]))
