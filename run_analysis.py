@@ -256,8 +256,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
         #slice[t2] = slice[t2] - 5
         slice = slice[~slice.is_temp1_range_large] # Removing erroneous points
-        slice[u2] = -slice[u2]
-        slice[v2] = -slice[v2]
+        # slice[u2] = -slice[u2]
+        # slice[v2] = -slice[v2]
 
         # Getting parameters
         jd = time - datetime.datetime(2015, 1, 1)
