@@ -272,7 +272,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
-        U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w2, t1)
+        U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
         # U_10_vec_2, U_10_mag_2, U_10_turb_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2)
 
         # u_AirWat = u_Air - u_Wat
@@ -395,6 +395,7 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :return: (float) cov(u, v)
     '''
     # return np.cov(np.concatenate((u, v)))#[0][1]
+    print(np.cov(u, v)[0][1])
     return np.cov(u, v)[0][1]
 
 def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True, time_lim=None) -> pd.DataFrame:
