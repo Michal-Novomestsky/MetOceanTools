@@ -395,6 +395,9 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :return: (float) cov(u, v)
     '''
     # return np.cov(np.concatenate((u, v)))#[0][1]
+    logical = (pd.notna(u)) & (pd.notna(v))
+    u = u[logical]
+    v = v[logical]
     if pd.isna(np.cov(u, v)[0][1]):
         print(f'{u=}')
         print(f'{v=}')
