@@ -274,8 +274,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
-        U_10_vec, U_anem1_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w2, t1)
-        U_10_mag = ANEM1_TO_U10*U_anem1_mag
+        U_10_vec, U_anem1_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
+        # U_10_mag = ANEM1_TO_U10*U_anem1_mag
+        U_10_mag = U_anem1_mag
 
         # u_AirWat = u_Air - u_Wat
         #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
@@ -288,7 +289,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         #TODO: Assume U_10 ~= U_14.8 for now
         # C_d.append(np.mean(-U_10_turb*w_turb)/(np.mean(U_10_mag)**2))
-        C_d.append(u_star_1/(np.mean(U_10_mag)**2))
+        C_d.append(-u_star_1/(np.mean(U_10_mag)**2))
         u_star_1_list.append(u_star_1)
         U_10_mean.append(np.mean(U_10_mag))
         u1_mean.append(np.mean(slice[u1]))
@@ -314,14 +315,11 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
         try:
             blockPrint()
-            coare_res = coare(Jd=jd, U=np.mean(U_10_mag), Zu=10, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
+            u = U_10_mag if type(U_10_mag) is float else np.mean(U_10_mag)
+            coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
                               Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
                               Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,
                               zrf_u=ZU, zrf_t=ZU, zrf_q=ZU)
-            # coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
-            #                   Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
-            #                   Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,
-            #                   zrf_u=ZU, zrf_t=ZU, zrf_q=ZU)
             enablePrint()
             tau_coare.append(coare_res[0][1])
             H_coare.append(coare_res[0][2])
