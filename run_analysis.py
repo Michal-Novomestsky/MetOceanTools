@@ -27,6 +27,7 @@ SS = 35 # https://salinity.oceansciences.org/overview.htm
 CPD = hum.cpd # Isobaric specific heat of dry air at constant pressure [J/(kg K)]
 TIME_INTERVAL = 10
 WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
+ANEM1_TO_U10 = (10/ZU)**0.11 # Extrapolation scale factor
 
 # Default parameters
 LW_DN = 370
@@ -274,12 +275,13 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
         U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w2, t1)
-        # U_10_vec_2, U_10_mag_2, U_10_turb_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2)
+        U_10_vec *= ANEM1_TO_U10
+        U_10_mag *= ANEM1_TO_U10
 
         # u_AirWat = u_Air - u_Wat
         #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
-        u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
+        # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
         u_star_1 = get_covariance(U_10_turb, w_turb)
         tau_approx.append(-rho*u_star_1)
@@ -313,7 +315,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
         try:
             blockPrint()
-            coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
+            coare_res = coare(Jd=jd, U=U_10_mag, Zu=10, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
                               Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
                               Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,
                               zrf_u=ZU, zrf_t=ZU, zrf_q=ZU)
@@ -389,13 +391,12 @@ def get_turbulent(s: pd.Series) -> pd.Series:
 
 def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     '''
-    Calculates the covariances for two variables u and v.
+    Calculates the covariance for two variables u and v.
 
     :param u: (np.ndarray) Var 1.
     :param v: (np.ndarray) Var 2.
     :return: (float) cov(u, v)
     '''
-    # return np.cov(np.concatenate((u, v)))#[0][1]
     logical = (pd.notna(u)) & (pd.notna(v))
     return np.cov(u[logical], v[logical])[0][1]
 
