@@ -257,8 +257,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
         #slice[t2] = slice[t2] - 5
         slice = slice[~slice.is_temp1_range_large] # Removing erroneous points
-        # slice[u2] = -slice[u2]
-        # slice[v2] = -slice[v2]
+        slice[u2] = -slice[u2]
+        slice[v2] = -slice[v2]
 
         # Getting parameters
         jd = time - datetime.datetime(2015, 1, 1)
@@ -275,8 +275,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
         U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w2, t1)
-        U_10_vec *= ANEM1_TO_U10
-        U_10_mag *= ANEM1_TO_U10
+        # U_10_vec *= ANEM1_TO_U10
+        # U_10_mag *= ANEM1_TO_U10
 
         # u_AirWat = u_Air - u_Wat
         #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
