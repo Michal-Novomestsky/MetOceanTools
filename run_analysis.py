@@ -73,7 +73,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_t1_rng = []
     collector_t2_fluct = []
     collector_t2_rng = []
-    collector_u_star_2 = []
+    collector_u_star_1 = []
 
     # One-by-one
     if supervised:
@@ -105,7 +105,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_t1_rng += output[22]
                 collector_t2_fluct += output[23]
                 collector_t2_rng += output[24]
-                collector_u_star_2 += output[25]
+                collector_u_star_1 += output[25]
 
     # Enabling multiprocessing
     else:
@@ -152,7 +152,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_t1_rng += outputElem[22]
                     collector_t2_fluct += outputElem[23]
                     collector_t2_rng += outputElem[24]
-                    collector_u_star_2 += outputElem[25]
+                    collector_u_star_1 += outputElem[25]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox": collector_tauApprox, "tauCoare": collector_tauCoare,
@@ -160,7 +160,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                             "u1": collector_u1, "u1_turb": collector_u1_turb, "v1": collector_v1, "v1_turb": collector_v1_turb, "w1": collector_w1, "w1_turb": collector_w1_turb,
                             "u2": collector_u2, "u2_turb": collector_u2_turb, "v2": collector_v2, "v2_turb": collector_v2_turb, "w2": collector_w2, "w2_turb": collector_w2_turb, 
                             "ta_2": collector_t2, "rho": collector_rho, "is_temp1_fluctuating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
-                            "is_temp2_fluctuating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng, "u_star_2": collector_u_star_2})
+                            "is_temp2_fluctuating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng, "u_star_1": collector_u_star_1})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
@@ -267,23 +267,23 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #e = hum.hum2ea_modified(p, spechum)
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
-        # DERIVED FROM ANEM 2 (MRU CORRECTED ONE)
+        # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
         U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
-        #U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u2, v2, w2, t2)
+        # U_10_vec_2, U_10_mag_2, U_10_turb_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2)
 
         # u_AirWat = u_Air - u_Wat
         #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2)
 
-        u_star_2 = get_covariance(U_10_turb, w_turb)
-        tau_approx.append(-rho*u_star_2)
+        u_star_1 = get_covariance(U_10_turb, w_turb)
+        tau_approx.append(-rho*u_star_1)
         H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
 
         #TODO: Assume U_10 ~= U_14.8 for now
         C_d.append(np.mean(-U_10_turb*w_turb)/(np.mean(U_10_mag)**2))
-        #C_d.append(u_star_2/(np.mean(U2_mag)**2))
-        u_stars.append(u_star_2)
+        #C_d.append(u_star_1/(np.mean(U2_mag)**2))
+        u_star_1.append(u_star_1)
         U_10_mean.append(np.mean(U_10_mag))
         u1_mean.append(np.mean(slice[u1]))
         u1_turb_mean.append(np.mean(get_turbulent(slice[u1])))
@@ -296,7 +296,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         v2_mean.append(np.mean(slice[v2]))
         v2_turb_mean.append(np.mean(get_turbulent(slice[v2])))
         w2_mean.append(np.mean(slice[w2]))
-        w2_turb_mean.append(np.mean(w_turb))
+        w2_turb_mean.append(np.mean(get_turbulent(slice[w2])))
         t2_mean.append(np.mean(slice[t2]))
         rho_mean.append(np.mean(rho))
         is_temp1_fluctuating.append(slice.is_temp1_fluctuating.any())
@@ -333,7 +333,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             u1_mean, u1_turb_mean, v1_mean, v1_turb_mean, w1_mean, w1_turb_mean, 
             u2_mean, u2_turb_mean, v2_mean, v2_turb_mean, w2_mean, w2_turb_mean, 
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
-            is_temp2_fluctuating, is_temp2_range_large, u_stars)
+            is_temp2_fluctuating, is_temp2_range_large, u_star_1)
 
 def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tuple:
     w_turb = get_turbulent(slice[w])
@@ -725,8 +725,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    sns.lineplot(data=outDf, x='time', y='u_star_2', label="Anem 2 u_star")
-    sns.scatterplot(data=outDf, x='time', y='u_star_2', label="Anem 2 u_star")
+    sns.lineplot(data=outDf, x='time', y='u_star_1', label="Anem 1 u_star", marker='.')
     plt.xlabel('time')
     plt.ylabel('u_star (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)
