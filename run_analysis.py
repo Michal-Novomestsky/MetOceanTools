@@ -274,8 +274,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
-        U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w2, t1)
-        U_10_mag *= ANEM1_TO_U10
+        U_10_vec, U_anem1_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w2, t1)
+        U_10_mag = ANEM1_TO_U10*U_anem1_mag
 
         # u_AirWat = u_Air - u_Wat
         #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
