@@ -315,7 +315,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
         try:
             blockPrint()
-            coare_res = coare(Jd=jd, U=np.mean(U_10_mag), Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
+            coare_res = coare(Jd=jd, U=np.mean(U_10_mag), Zu=10, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
                               Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
                               Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,
                               zrf_u=ZU, zrf_t=ZU, zrf_q=ZU)
