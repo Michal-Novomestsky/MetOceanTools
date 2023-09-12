@@ -255,8 +255,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
         #slice[t2] = slice[t2] - 5
-        #slice[u2] = -slice[u2]
-        #slice[v2] = -slice[v2]
+        slice[u2] = -slice[u2]
+        slice[v2] = -slice[v2]
 
         # Getting parameters
         jd = time - datetime.datetime(2015, 1, 1)
@@ -278,7 +278,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # u_AirWat = u_Air - u_Wat
         #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
-        u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2)
+        u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
         u_star_1 = get_covariance(U_10_turb, w_turb)
         tau_approx.append(-rho*u_star_1)
@@ -312,7 +312,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
         try:
             blockPrint()
-            coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,zrf_u = ZU,zrf_t = ZU,zrf_q = ZU)
+            coare_res = coare(Jd=jd, U=u, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
+                              Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
+                              Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,
+                              zrf_u=ZU, zrf_t=ZU, zrf_q=ZU)
             enablePrint()
             tau_coare.append(coare_res[0][1])
             H_coare.append(coare_res[0][2])
