@@ -272,7 +272,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
-        U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
+        U_10_vec, U_10_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w2, t1)
         # U_10_vec_2, U_10_mag_2, U_10_turb_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2)
 
         # u_AirWat = u_Air - u_Wat
@@ -320,8 +320,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             tau_coare.append(coare_res[0][1])
             H_coare.append(coare_res[0][2])
         except Exception as e:
-            tau_coare.append(np.nan)
-            H_coare.append(np.nan)
+            tau_coare.append(-0.3)
+            H_coare.append(-10)
             write_message(f"ERROR IN {fileName}: {e} - SKIPPED FOR NOW", filename='analysis_log.txt')
 
         # Updating time
