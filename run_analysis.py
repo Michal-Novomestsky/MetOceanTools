@@ -61,6 +61,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_v1_turb = []
     collector_w1 = []
     collector_w1_turb = []
+    collector_t1 = []
     collector_u2 = []
     collector_u2_turb = []
     collector_v2 = []
@@ -93,19 +94,20 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_v1_turb += output[10]
                 collector_w1 += output[11]
                 collector_w1_turb += output[12]
-                collector_u2 += output[13]
-                collector_u2_turb += output[14]
-                collector_v2 += output[15]
-                collector_v2_turb += output[16]
-                collector_w2 += output[17]
-                collector_w2_turb += output[18]
-                collector_t2 += output[19]
-                collector_rho += output[20]
-                collector_t1_fluct += output[21]
-                collector_t1_rng += output[22]
-                collector_t2_fluct += output[23]
-                collector_t2_rng += output[24]
-                collector_u_star_1 += output[25]
+                collector_t1 += output[13]
+                collector_u2 += output[14]
+                collector_u2_turb += output[15]
+                collector_v2 += output[16]
+                collector_v2_turb += output[17]
+                collector_w2 += output[18]
+                collector_w2_turb += output[19]
+                collector_t2 += output[20]
+                collector_rho += output[21]
+                collector_t1_fluct += output[22]
+                collector_t1_rng += output[23]
+                collector_t2_fluct += output[24]
+                collector_t2_rng += output[25]
+                collector_u_star_1 += output[26]
 
     # Enabling multiprocessing
     else:
@@ -140,25 +142,26 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_v1_turb += outputElem[10]
                     collector_w1 += outputElem[11]
                     collector_w1_turb += outputElem[12]
-                    collector_u2 += outputElem[13]
-                    collector_u2_turb += outputElem[14]
-                    collector_v2 += outputElem[15]
-                    collector_v2_turb += outputElem[16]
-                    collector_w2 += outputElem[17]
-                    collector_w2_turb += outputElem[18]
-                    collector_t2 += outputElem[19]
-                    collector_rho += outputElem[20]
-                    collector_t1_fluct += outputElem[21]
-                    collector_t1_rng += outputElem[22]
-                    collector_t2_fluct += outputElem[23]
-                    collector_t2_rng += outputElem[24]
-                    collector_u_star_1 += outputElem[25]
+                    collector_t1 += outputElem[13]
+                    collector_u2 += outputElem[14]
+                    collector_u2_turb += outputElem[15]
+                    collector_v2 += outputElem[16]
+                    collector_v2_turb += outputElem[17]
+                    collector_w2 += outputElem[18]
+                    collector_w2_turb += outputElem[19]
+                    collector_t2 += outputElem[20]
+                    collector_rho += outputElem[21]
+                    collector_t1_fluct += outputElem[22]
+                    collector_t1_rng += outputElem[23]
+                    collector_t2_fluct += outputElem[24]
+                    collector_t2_rng += outputElem[25]
+                    collector_u_star_1 += outputElem[26]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox": collector_tauApprox, "tauCoare": collector_tauCoare,
                             "Cd": collector_Cd, "U_10": collector_U_10, "HApprox": collector_HApprox, "HCoare": collector_HCoare, 
                             "u1": collector_u1, "u1_turb": collector_u1_turb, "v1": collector_v1, "v1_turb": collector_v1_turb, "w1": collector_w1, "w1_turb": collector_w1_turb,
-                            "u2": collector_u2, "u2_turb": collector_u2_turb, "v2": collector_v2, "v2_turb": collector_v2_turb, "w2": collector_w2, "w2_turb": collector_w2_turb, 
+                            "ta_1": collector_t1, "u2": collector_u2, "u2_turb": collector_u2_turb, "v2": collector_v2, "v2_turb": collector_v2_turb, "w2": collector_w2, "w2_turb": collector_w2_turb, 
                             "ta_2": collector_t2, "rho": collector_rho, "is_temp1_fluctuating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
                             "is_temp2_fluctuating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng, "u_star_1": collector_u_star_1})
 
@@ -193,13 +196,14 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     H_coare = []
     C_d = []
     U_10_mean = [] # NOTE: "_mag" is to prevent it being const from all caps
-    u_stars = []
+    u_star_1_list = []
     u1_mean = []
     u1_turb_mean = []
     v1_mean = []
     v1_turb_mean = []
     w1_mean = []
     w1_turb_mean = []
+    t1_mean = []
     u2_mean = []
     u2_turb_mean = []
     v2_mean = []
@@ -283,7 +287,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #TODO: Assume U_10 ~= U_14.8 for now
         C_d.append(np.mean(-U_10_turb*w_turb)/(np.mean(U_10_mag)**2))
         #C_d.append(u_star_1/(np.mean(U2_mag)**2))
-        u_star_1.append(u_star_1)
+        u_star_1_list.append(u_star_1)
         U_10_mean.append(np.mean(U_10_mag))
         u1_mean.append(np.mean(slice[u1]))
         u1_turb_mean.append(np.mean(get_turbulent(slice[u1])))
@@ -291,6 +295,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         v1_turb_mean.append(np.mean(get_turbulent(slice[v1])))
         w1_mean.append(np.mean(slice[w1]))
         w1_turb_mean.append(np.mean(get_turbulent(slice[w1])))
+        t1_mean.append(np.mean(slice[t1]))
         u2_mean.append(np.mean(slice[u2]))
         u2_turb_mean.append(np.mean(get_turbulent(slice[u2])))
         v2_mean.append(np.mean(slice[v2]))
@@ -330,10 +335,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         write_message(f"Analysed {fileName} with ERA5", filename='analysis_log.txt')
 
     return (tau_approx, tau_coare, C_d, U_10_mean, H_approx, H_coare, time_list, 
-            u1_mean, u1_turb_mean, v1_mean, v1_turb_mean, w1_mean, w1_turb_mean, 
+            u1_mean, u1_turb_mean, v1_mean, v1_turb_mean, w1_mean, w1_turb_mean, t1_mean, 
             u2_mean, u2_turb_mean, v2_mean, v2_turb_mean, w2_mean, w2_turb_mean, 
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
-            is_temp2_fluctuating, is_temp2_range_large, u_star_1)
+            is_temp2_fluctuating, is_temp2_range_large, u_star_1_list)
 
 def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tuple:
     w_turb = get_turbulent(slice[w])
@@ -666,6 +671,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()
 
+    sns.lineplot(data=outDf, x='time', y='ta_1', label="Anem 1")
     sns.lineplot(data=outDf, x='time', y='ta_2', label="Anem 2")
     sns.lineplot(data=eraDf, x='timemet', y='ta', label="ERA5")
     plt.xlabel('time')
