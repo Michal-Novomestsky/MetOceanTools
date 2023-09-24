@@ -188,6 +188,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     # Getting TIME_INTERVAL minute long slices and using them to get turbulent avg data over that same time frame
     data = DataAnalyser(file)
 
+    w1 = "Anemometer #1 W Velocity (ms-1)"
+    t1 = "Anemometer #1 Temperature (degC)"
     w2 = "Anemometer #2 W Velocity (ms-1)"
     t2 = "Anemometer #2 Temperature (degC)"
     print(data.df)
