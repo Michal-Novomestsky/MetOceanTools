@@ -194,7 +194,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             print(fileName)
             print(data.df[pd.isna(data.df)])
     except:
-        pass
+        print('ISNA ERROR')
 
     # NOTE: FILL IN AS REQUIRED
     time_list = []
