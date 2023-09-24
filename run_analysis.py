@@ -189,6 +189,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     data = DataAnalyser(file)
     slices = get_time_slices(data.df, TIME_INTERVAL)
 
+    if pd.isna(data.df["Anemometer #2 Temperature (degC)"]).any():
+        print(fileName)
+        print(data.df[pd.isna(data.df)])
+
     # NOTE: FILL IN AS REQUIRED
     time_list = []
     tau_approx = []
@@ -381,12 +385,6 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute < (i + 1)*interval_min)].copy(deep=True).reset_index())
     #     else:
     #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute <= (i + 1)*interval_min)].copy(deep=True).reset_index())
-    print(pd.isna(df))
-    print(pd.isna(df).any())
-    if pd.isna(df).any():
-        print(df)
-        print(df[pd.isna(df)])
-
     window_width = round((interval_min*60)/(df.GlobalSecs[1] - df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
     slices = df.rolling(window=window_width, step=window_width)
 
