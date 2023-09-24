@@ -274,8 +274,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
-        if pd.isna(slice[u1]).any():
-            print(time)
         U_10_vec, U_anem1_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
         # U_10_mag = ANEM1_TO_U10*U_anem1_mag
         U_10_mag = U_anem1_mag
@@ -383,7 +381,8 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute < (i + 1)*interval_min)].copy(deep=True).reset_index())
     #     else:
     #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute <= (i + 1)*interval_min)].copy(deep=True).reset_index())
-    
+    print(df[pd.isna(df)])
+
     window_width = round((interval_min*60)/(df.GlobalSecs[1] - df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
     slices = df.rolling(window=window_width, step=window_width)
 
