@@ -190,9 +190,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     slices = get_time_slices(data.df, TIME_INTERVAL)
 
     try:
-        if pd.isna(data.df).any():
+        df = data.df
+        if pd.isna(df).any():
             print(fileName)
-            print(data.df[pd.isna(data.df)])
+            print(data.df[pd.isna(df)])
     except:
         print('ISNA ERROR')
 
