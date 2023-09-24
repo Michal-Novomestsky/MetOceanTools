@@ -189,9 +189,12 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     data = DataAnalyser(file)
     slices = get_time_slices(data.df, TIME_INTERVAL)
 
-    if pd.isna(data.df).any():
-        print(fileName)
-        print(data.df[pd.isna(data.df)])
+    try:
+        if pd.isna(data.df).any():
+            print(fileName)
+            print(data.df[pd.isna(data.df)])
+    except:
+        pass
 
     # NOTE: FILL IN AS REQUIRED
     time_list = []
