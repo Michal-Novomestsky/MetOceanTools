@@ -381,6 +381,8 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute < (i + 1)*interval_min)].copy(deep=True).reset_index())
     #     else:
     #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute <= (i + 1)*interval_min)].copy(deep=True).reset_index())
+    print(pd.isna(df))
+    print(pd.isna(df).any())
     if pd.isna(df).any():
         print(df)
         print(df[pd.isna(df)])
