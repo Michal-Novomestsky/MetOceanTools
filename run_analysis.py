@@ -195,7 +195,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     # logical = pd.isna(data.df.is_temp2_range_large)
     if logical.any():
         print(f'NAN IN {fileName}:')
-        print(data.df[w2:t2][logical])
+        print(data.df[logical][[w1,w2,t1,t2]])
 
     slices = get_time_slices(data.df, TIME_INTERVAL)
 
