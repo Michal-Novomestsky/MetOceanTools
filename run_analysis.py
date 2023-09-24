@@ -190,7 +190,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
     print(data.df)
     if pd.isna(data.df["Anemometer #2 Temperature (degC)"]).any():
-        print(f'NAN IN {fileName}')
+        print(f'NAN IN {fileName}:')
+        print(data.df[pd.isna(data.df["Anemometer #2 Temperature (degC)"])])
 
     slices = get_time_slices(data.df, TIME_INTERVAL)
 
