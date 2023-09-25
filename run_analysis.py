@@ -416,6 +416,10 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :param v: (np.ndarray) Var 2.
     :return: (float) cov(u, v)
     '''
+    if len(u) == 0 or len(v) == 0:
+        write_message(f'Covariance cannot be calculated on an empty input.', filename='analysis_log.txt')
+        return np.nan
+
     logical = ((pd.notna(u)) & (pd.notna(v)))
 
     if len(logical)/len(u) <= MIN_COV_SIZE:
