@@ -27,6 +27,7 @@ SS = 35 # https://salinity.oceansciences.org/overview.htm
 CPD = hum.cpd # Isobaric specific heat of dry air at constant pressure [J/(kg K)]
 TIME_INTERVAL = 10
 MIN_COV_SIZE = 0.99 # Minimum % of points retained for valid covariance calculation
+MIN_SLICE_SIZE = 10000 # Minimum slice size prior to chopping out data
 WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
 ANEM1_TO_U10 = (10/ZU)**0.11 # Extrapolation scale factor
 
@@ -270,9 +271,12 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
         #slice[t2] = slice[t2] - 5
         original_len = len(slice)
+        if original_len < MIN_SLICE_SIZE:
+            write_message(f'{fileName} too small {original_len}', filename='analysis_log.txt')
+            continue
         slice = slice[~slice.is_temp1_range_large] # Removing erroneous points
         if len(slice)/original_len <= MIN_COV_SIZE:
-            print(f'Too much cut out: {len(slice)}/{original_len}. {fileName} rejected.')
+            write_message(f'Too much cut out: {len(slice)}/{original_len}. {fileName} rejected.', filename='analysis_log.txt')
             continue
         slice[u2] = -slice[u2]
         slice[v2] = -slice[v2]
