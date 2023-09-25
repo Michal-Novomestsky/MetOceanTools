@@ -255,11 +255,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     else:
         raise ValueError("None of the analyses cases were triggered")  
 
-    print('POST FN TEST:')
-    for slice in slices:
-        if len(slice) == 0:
-            print(slice)
-
     for slice in slices:
         # Using ERA5 data
         if not era_and_rems:
@@ -275,6 +270,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
         #slice[t2] = slice[t2] - 5
         slice = slice[~slice.is_temp1_range_large] # Removing erroneous points
+        if len(slice) == 0:
+            continue
         slice[u2] = -slice[u2]
         slice[v2] = -slice[v2]
 
@@ -405,16 +402,12 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     window_width = round((interval_min*60)/(df.GlobalSecs[1] - df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
     slices = df.rolling(window=window_width, step=window_width)
 
-    res = []
-    for slice in slices:
-        if len(slice) != 0:
-            res.append(slice)
-
-    for slice in res:
-        if len(slice) == 0:
-            print(slice)
+    # res = []
+    # for slice in slices:
+    #     if len(slice) != 0:
+    #         res.append(slice)
     
-    return res
+    # return res
 
     return [slice for slice in slices if len(slice) != 0]
 
