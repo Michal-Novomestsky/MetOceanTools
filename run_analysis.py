@@ -255,7 +255,12 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     else:
         raise ValueError("None of the analyses cases were triggered")  
 
-    for _, slice in enumerate(slices):
+    print('POST FN TEST:')
+    for slice in slices:
+        if len(slice) == 0:
+            print(slice)
+
+    for slice in slices:
         # Using ERA5 data
         if not era_and_rems:
             dataSliceTemp = eraDf.loc[(time <= eraDf.timemet) & (eraDf.timemet <= time + datetime.timedelta(minutes=TIME_INTERVAL))]
@@ -404,6 +409,10 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     for slice in slices:
         if len(slice) != 0:
             res.append(slice)
+
+    for slice in res:
+        if len(slice) == 0:
+            print(slice)
     
     return res
 
