@@ -296,9 +296,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
-        if len(U_10_turb == 0):
+        if len(w_turb == 0):
             write_message(f'U_10_turb is empty in {fileName}', filename='analysis_log.txt')
-            print(slice[t1])
+            print(slice[w1])
+            print(w_turb)
             print(slice)
         u_star_1 = -get_covariance(U_10_turb, w_turb)
         tau_approx.append(rho*u_star_1)
