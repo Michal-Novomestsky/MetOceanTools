@@ -271,13 +271,13 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
         #slice[t2] = slice[t2] - 5
         original_len = len(slice)
-        if original_len < MIN_SLICE_SIZE:
-            write_message(f'{fileName} too small: {original_len}', filename='analysis_log.txt')
-            continue
+        # if original_len < MIN_SLICE_SIZE:
+        #     write_message(f'{fileName} too small: {original_len}', filename='analysis_log.txt')
+        #     continue
         # slice = slice[~slice.is_temp1_range_large] # Removing erroneous points
-        if len(slice)/original_len <= MIN_COV_SIZE:
-            write_message(f'Too much cut out: {len(slice)}/{original_len}. {fileName} rejected.', filename='analysis_log.txt')
-            continue
+        # if len(slice)/original_len <= MIN_COV_SIZE:
+        #     write_message(f'Too much cut out: {len(slice)}/{original_len}. {fileName} rejected.', filename='analysis_log.txt')
+        #     continue
         slice[u2] = -slice[u2]
         slice[v2] = -slice[v2]
 
