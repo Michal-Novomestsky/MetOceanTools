@@ -189,16 +189,16 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     # Getting TIME_INTERVAL minute long slices and using them to get turbulent avg data over that same time frame
     data = DataAnalyser(file)
 
-    w1 = "Anemometer #1 W Velocity (ms-1)"
-    t1 = "Anemometer #1 Temperature (degC)"
-    w2 = "Anemometer #2 W Velocity (ms-1)"
-    t2 = "Anemometer #2 Temperature (degC)"
-    print(data.df)
-    logical = pd.isna(data.df[t2])
-    # logical = pd.isna(data.df.is_temp2_range_large)
-    if logical.any():
-        print(f'NAN IN {fileName}:')
-        print(data.df[logical][[w1,w2,t1,t2]])
+    # w1 = "Anemometer #1 W Velocity (ms-1)"
+    # t1 = "Anemometer #1 Temperature (degC)"
+    # w2 = "Anemometer #2 W Velocity (ms-1)"
+    # t2 = "Anemometer #2 Temperature (degC)"
+    # print(data.df)
+    # logical = pd.isna(data.df[t2])
+    # # logical = pd.isna(data.df.is_temp2_range_large)
+    # if logical.any():
+    #     print(f'NAN IN {fileName}:')
+    #     print(data.df[logical][[w1,w2,t1,t2]])
 
     slices = get_time_slices(data.df, TIME_INTERVAL)
 
