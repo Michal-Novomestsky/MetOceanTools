@@ -9,6 +9,8 @@ from Modules.DataAnalyser import write_message
 from aggregate_files import run_aggregate_files
 from pathlib import Path
 
+TIME_INTERVAL = 20 # TODO Voermans et al. set to 15min
+
 def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1, file_selector_name=None, mru_correct=True, generate_plots=True) -> None:
     """
     Steps through each data file located in readDir and outputs a cleaned-up version in writeDir. Otherwise keeps track of all rejected files.
@@ -103,7 +105,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     # Pruning
     for entry in [u1, u2, v1, v2, w1, w2, t1, t2]:
         data.prune_or([data.gradient_cutoff(entry, 3)])
-        data.prune_or([data.std_cutoff(entry, 5, sec_stepsize=5*60)])
+        data.prune_or([data.std_cutoff(entry, 5, sec_stepsize=TIME_INTERVAL*60)])
     write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
     
     # All subsequent analyses are skipped if an erroneous parameter is idenfied earlier with rejectLog
@@ -113,7 +115,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     for entry in [u1, u2, v1, v2, w1, w2]:
         if rejectLog:
             break
-        rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
+        rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=TIME_INTERVAL, windowWidth=2, generate_plots=generate_plots)
 
     for t in [t1, t2]:
         # Not filtering with temperature FTs since their regression is poorly studied
