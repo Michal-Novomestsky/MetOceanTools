@@ -296,6 +296,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
+        if len(slice) == 0:
+            print(slice)
+
         u_star_1 = -get_covariance(U_10_turb, w_turb)
         tau_approx.append(rho*u_star_1)
         H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
@@ -396,6 +399,13 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute <= (i + 1)*interval_min)].copy(deep=True).reset_index())
     window_width = round((interval_min*60)/(df.GlobalSecs[1] - df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
     slices = df.rolling(window=window_width, step=window_width)
+
+    res = []
+    for slice in slices:
+        if len(slice) != 0:
+            res.append(slice)
+    
+    return res
 
     return [slice for slice in slices if len(slice) != 0]
 
