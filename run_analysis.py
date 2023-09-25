@@ -296,9 +296,13 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
+        if len(U_10_turb == 0):
+            write_message(f'U_10_turb is empty in {fileName}', filename='analysis_log.txt')
+        if len(w_turb == 0):
+            write_message(f'w_turb is empty in {fileName}', filename='analysis_log.txt')
+        if len(T_turb == 0):
+            write_message(f'T_turb is empty in {fileName}', filename='analysis_log.txt')
         u_star_1 = -get_covariance(U_10_turb, w_turb)
-        if pd.isna(u_star_1):
-            write_message(f'The above happened in {fileName}', filename='analysis_log.txt')
         tau_approx.append(rho*u_star_1)
         H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
 
