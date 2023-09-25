@@ -298,10 +298,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         if len(U_10_turb == 0):
             write_message(f'U_10_turb is empty in {fileName}', filename='analysis_log.txt')
-        if len(w_turb == 0):
-            write_message(f'w_turb is empty in {fileName}', filename='analysis_log.txt')
-        if len(T_turb == 0):
-            write_message(f'T_turb is empty in {fileName}', filename='analysis_log.txt')
+            print(slice[t1])
+            print(slice)
         u_star_1 = -get_covariance(U_10_turb, w_turb)
         tau_approx.append(rho*u_star_1)
         H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
