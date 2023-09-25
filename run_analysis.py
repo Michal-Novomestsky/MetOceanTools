@@ -26,7 +26,7 @@ LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
 CPD = hum.cpd # Isobaric specific heat of dry air at constant pressure [J/(kg K)]
 TIME_INTERVAL = 10
-MIN_COV_SIZE = 0.95 # Minimum % of points retained for valid covariance calculation
+MIN_COV_SIZE = 0.99 # Minimum % of points retained for valid covariance calculation
 WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
 ANEM1_TO_U10 = (10/ZU)**0.11 # Extrapolation scale factor
 
