@@ -272,7 +272,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         original_len = len(slice)
         slice = slice[~slice.is_temp1_range_large] # Removing erroneous points
         if len(slice)/original_len <= MIN_COV_SIZE:
-            print(f'Too much cut out: {len(slice)}/{original_len}')
+            print(f'Too much cut out: {len(slice)}/{original_len}. {fileName} rejected.')
             continue
         slice[u2] = -slice[u2]
         slice[v2] = -slice[v2]
@@ -291,6 +291,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
+        print(f'{len(slice[w1])=}')
         U_10_vec, U_anem1_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
         # U_10_mag = ANEM1_TO_U10*U_anem1_mag
         U_10_mag = U_anem1_mag
@@ -300,8 +301,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
-        if len(slice) == 0:
-            print(slice)
+        print(f'{len(w_turb)=}')
 
         u_star_1 = -get_covariance(U_10_turb, w_turb)
         tau_approx.append(rho*u_star_1)
