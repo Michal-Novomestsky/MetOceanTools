@@ -26,6 +26,7 @@ LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
 CPD = hum.cpd # Isobaric specific heat of dry air at constant pressure [J/(kg K)]
 TIME_INTERVAL = 10
+MIN_COV_SIZE = 0.95 # Minimum % of points retained for valid covariance calculation
 WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
 ANEM1_TO_U10 = (10/ZU)**0.11 # Extrapolation scale factor
 
@@ -295,13 +296,15 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
-        u_star_1 = get_covariance(U_10_turb, w_turb)
-        tau_approx.append(-rho*u_star_1)
+        u_star_1 = -get_covariance(U_10_turb, w_turb)
+        if pd.isna(u_star_1):
+            write_message(f'The above happened in {fileName}', filename='analysis_log.txt')
+        tau_approx.append(rho*u_star_1)
         H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
 
         #TODO: Assume U_10 ~= U_14.8 for now
         # C_d.append(np.mean(-U_10_turb*w_turb)/(np.mean(U_10_mag)**2))
-        C_d.append(-u_star_1/(np.mean(U_10_mag)**2))
+        C_d.append(u_star_1/(np.mean(U_10_mag)**2))
         u_star_1_list.append(u_star_1)
         U_10_mean.append(np.mean(U_10_mag))
         u1_mean.append(np.mean(slice[u1]))
@@ -345,9 +348,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         time_list.append(time)
         time += datetime.timedelta(minutes=TIME_INTERVAL)
 
-        # Investigating the streak
-        if tau_approx[-1]/tau_coare[-1] >= 2/0.5 and tau_approx[-1] >= 1.5:
-            write_message(f"tau spike in {fileName}", filename='analysis_log.txt')
+        # # Investigating the streak
+        # if tau_approx[-1]/tau_coare[-1] >= 2/0.5 and tau_approx[-1] >= 1.5:
+        #     write_message(f"tau spike in {fileName}", filename='analysis_log.txt')
     
     if era_and_rems:
         write_message(f"Analysed {fileName} with REMS", filename='analysis_log.txt')
@@ -414,10 +417,13 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :return: (float) cov(u, v)
     '''
     logical = ((pd.notna(u)) & (pd.notna(v)))
+
+    if len(logical)/len(u) <= MIN_COV_SIZE:
+        write_message(f'Timeseries too short for reasonable covariance calc: {round(100*len(logical)/len(u),2)}%', filename='analysis_log.txt')
+        return np.nan
+    
     u = u[logical]
     v = v[logical]
-    if len(u) <= 1 or len(v) <= 1:
-        return np.nan
     return np.cov(u, v)[0][1]
 
 def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True, time_lim=None) -> pd.DataFrame:
