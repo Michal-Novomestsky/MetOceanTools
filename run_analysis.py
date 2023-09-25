@@ -426,8 +426,8 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :param v: (np.ndarray) Var 2.
     :return: (float) cov(u, v)
     '''
-    if len(u) == 0 or len(v) == 0:
-        write_message(f'Covariance cannot be calculated on an empty input.', filename='analysis_log.txt')
+    if len(u) <= 1 or len(v) <= 1:
+        write_message(f'Covariance cannot be calculated on an input shorter than length 2.', filename='analysis_log.txt')
         return np.nan
 
     logical = ((pd.notna(u)) & (pd.notna(v)))
@@ -438,6 +438,11 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     
     u = u[logical]
     v = v[logical]
+
+    if len(u) != len(v):
+        write_message(f'Both inputs must be the same length for covariance.', filename='analysis_log.txt')
+        return np.nan
+
     return np.cov(u, v)[0][1]
 
 def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True, time_lim=None) -> pd.DataFrame:
