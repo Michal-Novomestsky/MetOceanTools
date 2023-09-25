@@ -545,7 +545,6 @@ class DataCleaner:
         self.df[v2] = -self.df[v2] # Flipping so that v points east in anem 2 as well
         
         comp1_copy = np.deg2rad(comp1_copy - 180)
-        # \ indicates we're continuing on the next line
         self.df[u1] = u1_temp*np.cos(comp1_copy)*np.cos(np.deg2rad(self.df[mru_pitch])) \
                     + v1_temp*(-np.sin(comp1_copy)*np.cos(np.deg2rad(self.df[mru_roll])) + np.cos(comp1_copy)*np.sin(np.deg2rad(self.df[mru_pitch]))*np.sin(np.deg2rad(self.df[mru_roll]))) \
                     + w1_temp*(np.sin(comp1_copy)*np.sin(np.deg2rad(self.df[mru_roll])) + np.cos(comp1_copy)*np.sin(np.deg2rad(self.df[mru_pitch]))*np.cos(np.deg2rad(self.df[mru_roll])))
