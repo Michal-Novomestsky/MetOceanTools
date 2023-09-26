@@ -294,11 +294,11 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
         u_star_1 = np.sqrt(-get_covariance(U_10_turb, w_turb))
-        tau_approx.append(rho*u_star_1)
+        tau_approx.append(rho*(u_star_1**2))
         H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
 
         #TODO: Assume U_10 ~= U_14.8 for now
-        C_d.append((u_star_1/(np.mean(U_10_mag)))**2)
+        C_d.append((u_star_1/np.mean(U_10_mag))**2)
         # C_d.append((u_star_1**2)/(np.mean(U_10_mag**2)))
         u_star_1_list.append(u_star_1)
         U_10_mean.append(np.mean(U_10_mag))
@@ -411,22 +411,22 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :param v: (np.ndarray) Var 2.
     :return: (float) cov(u, v)
     '''
-    # if len(u) <= 1 or len(v) <= 1:
-    #     write_message(f'Covariance cannot be calculated on an input shorter than length 2.', filename='analysis_log.txt')
-    #     return np.nan
+    if len(u) <= 1 or len(v) <= 1:
+        write_message(f'Covariance cannot be calculated on an input shorter than length 2.', filename='analysis_log.txt')
+        return np.nan
 
-    # logical = ((pd.notna(u)) & (pd.notna(v)))
+    logical = ((pd.notna(u)) & (pd.notna(v)))
 
-    # if len(logical)/len(u) <= MIN_COV_SIZE:
-    #     write_message(f'Timeseries too short for reasonable covariance calc: {round(100*len(logical)/len(u),2)}%', filename='analysis_log.txt')
-    #     return np.nan
+    if len(logical)/len(u) <= MIN_COV_SIZE:
+        write_message(f'Timeseries too short for reasonable covariance calc: {round(100*len(logical)/len(u),2)}%', filename='analysis_log.txt')
+        return np.nan
     
-    # u = u[logical]
-    # v = v[logical]
+    u = u[logical]
+    v = v[logical]
 
-    # if len(u) != len(v):
-    #     write_message(f'Both inputs must be the same length for covariance.', filename='analysis_log.txt')
-    #     return np.nan
+    if len(u) != len(v):
+        write_message(f'Both inputs must be the same length for covariance.', filename='analysis_log.txt')
+        return np.nan
 
     return np.cov(u, v)[0][1]
 
