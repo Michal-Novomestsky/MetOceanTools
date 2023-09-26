@@ -378,23 +378,27 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     """
     Breaks df up into interval_min minute long intervals which are compiled in a list
     """
-    amount_of_slices = df.Minute[len(df) - 1]//interval_min
-    slices = []
-    for i in range(amount_of_slices):
-        # Only applying a nonstrict inequality when it is at the end to stop overlap of endpoints. May cause length issues??
-        if i != amount_of_slices - 1:
-            slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute < (i + 1)*interval_min)].copy(deep=True).reset_index())
-        else:
-            slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute <= (i + 1)*interval_min)].copy(deep=True).reset_index())
+    # amount_of_slices = df.Minute[len(df) - 1]//interval_min
+    # slices = []
+    # for i in range(amount_of_slices):
+    #     # Only applying a nonstrict inequality when it is at the end to stop overlap of endpoints. May cause length issues??
+    #     if i != amount_of_slices - 1:
+    #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute < (i + 1)*interval_min)].copy(deep=True).reset_index())
+    #     else:
+    #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute <= (i + 1)*interval_min)].copy(deep=True).reset_index())
     
+    # for slice in slices:
+    #     print(f'{len(slice)=}')
+    
+    # return slices
+    window_width = round((interval_min*60)/(df.GlobalSecs[1] - df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
+    slices = df.rolling(window=window_width, step=window_width)
+
+    slices = [slice for slice in slices if len(slice) >= MIN_SLICE_SIZE]
     for slice in slices:
         print(f'{len(slice)=}')
-    
-    return slices
-    # window_width = round((interval_min*60)/(df.GlobalSecs[1] - df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
-    # slices = df.rolling(window=window_width, step=window_width)
 
-    # return [slice for slice in slices if len(slice) >= MIN_SLICE_SIZE]
+    return [slice for slice in slices if len(slice) >= MIN_SLICE_SIZE]
 
 def get_turbulent(s: pd.Series) -> pd.Series:
     """
