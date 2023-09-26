@@ -378,7 +378,6 @@ def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tupl
     T_turb = get_turbulent(slice[t])
     # T_turb = T_turb/(1 + 0.378*e/p)
 
-
     return U_vec, U_mag, U_turb, w_vel, w_turb, T_turb
 
 def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
