@@ -356,18 +356,25 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             is_temp2_fluctuating, is_temp2_range_large, u_star_1_list)
 
 def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tuple:
-    w_turb = get_turbulent(slice[w])
+    # Getting current-corrected windspeed
+    U_mag = np.sqrt(slice[u]**2 + slice[v]**2)
+    w_vel = slice[w]
+    # Easterly -> +ive x axis, Northerly -> +ive y. Note that anem v+ is west so east is -v
+    U_vec = pd.DataFrame({'East': slice[v], 'North': slice[u]}) # NOTE LOCALLY MRU UNCORRECTED
+    U_vec = U_vec.mean() #Taking TIME_INTERVAL min avg
+
+    # Locally MRU correcting
+    theta = np.arctan2(np.mean(w_vel), np.mean(U_mag))
+    U_mag = w_vel*np.sin(theta) + U_mag*np.cos(theta)
+    w_vel = w_vel*np.cos(theta) - U_mag*np.sin(theta)
+
+    # Getting magnitude of turbulent horizontal velocity vector
+    U_turb = get_turbulent(U_mag)
+    
+    w_turb = get_turbulent(w_vel)
     T_turb = get_turbulent(slice[t])
     #T_turb = T_turb/(1 + 0.378*e/p)
 
-    # Getting magnitude of turbulent horizontal velocity vector
-    U_turb = get_turbulent(np.sqrt(slice[u]**2 + slice[v]**2))
-
-    # Getting current-corrected windspeed
-    U_mag = np.sqrt(slice[u]**2 + slice[v]**2)
-    # Easterly -> +ive x axis, Northerly -> +ive y. Note that anem v+ is west so east is -v
-    U_vec = pd.DataFrame({'East': slice[v], 'North': slice[u]})
-    U_vec = U_vec.mean() #Taking TIME_INTERVAL min avg
 
     return U_vec, U_mag, U_turb, w_turb, T_turb
 
