@@ -277,11 +277,11 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         sw_dn = dataSlice.solrad
         if not era_and_rems: lw_dn = dataSlice.thermrad # Only available with ERA5
         spechum = dataSlice.spech
-        #e = hum.hum2ea_modified(p, spechum)
+        e = hum.hum2ea_modified(p, spechum)
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
-        U_10_vec, U_anem1_mag, U_10_turb, w_vel_1, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
+        U_10_vec, U_anem1_mag, U_10_turb, w_vel_1, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1, e, p)
         # U_10_mag = ANEM1_TO_U10*U_anem1_mag
         U_10_mag = U_anem1_mag
 
@@ -355,7 +355,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large, u_star_1_list)
 
-def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tuple:
+def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str, e: float, p: float) -> tuple:
     # Getting current-corrected windspeed
     U_mag = np.sqrt(slice[u]**2 + slice[v]**2)
     w_vel = slice[w]
@@ -376,7 +376,7 @@ def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tupl
     
     w_turb = get_turbulent(w_vel)
     T_turb = get_turbulent(slice[t])
-    #T_turb = T_turb/(1 + 0.378*e/p)
+    T_turb = T_turb/(1 + 0.378*e/p)
 
 
     return U_vec, U_mag, U_turb, w_vel, w_turb, T_turb
