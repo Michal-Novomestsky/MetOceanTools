@@ -298,7 +298,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
 
         #TODO: Assume U_10 ~= U_14.8 for now
-        C_d.append(u_star_1/(np.mean(U_10_mag)**2))
+        C_d.append((u_star_1/(np.mean(U_10_mag)))**2)
         u_star_1_list.append(u_star_1)
         U_10_mean.append(np.mean(U_10_mag))
         u1_mean.append(np.mean(slice[u1]))
