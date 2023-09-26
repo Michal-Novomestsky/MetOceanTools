@@ -190,17 +190,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     # Getting TIME_INTERVAL minute long slices and using them to get turbulent avg data over that same time frame
     data = DataAnalyser(file)
 
-    # w1 = "Anemometer #1 W Velocity (ms-1)"
-    # t1 = "Anemometer #1 Temperature (degC)"
-    # w2 = "Anemometer #2 W Velocity (ms-1)"
-    # t2 = "Anemometer #2 Temperature (degC)"
-    # print(data.df)
-    # logical = pd.isna(data.df[t2])
-    # # logical = pd.isna(data.df.is_temp2_range_large)
-    # if logical.any():
-    #     print(f'NAN IN {fileName}:')
-    #     print(data.df[logical][[w1,w2,t1,t2]])
-
     slices = get_time_slices(data.df, TIME_INTERVAL)
 
     # NOTE: FILL IN AS REQUIRED
@@ -295,7 +284,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
-        print(f'{len(slice[w1])=}')
         U_10_vec, U_anem1_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
         # U_10_mag = ANEM1_TO_U10*U_anem1_mag
         U_10_mag = U_anem1_mag
@@ -305,14 +293,11 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
-        print(f'{len(w_turb)=}')
-
         u_star_1 = -get_covariance(U_10_turb, w_turb)
         tau_approx.append(rho*u_star_1)
         H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
 
         #TODO: Assume U_10 ~= U_14.8 for now
-        # C_d.append(np.mean(-U_10_turb*w_turb)/(np.mean(U_10_mag)**2))
         C_d.append(u_star_1/(np.mean(U_10_mag)**2))
         u_star_1_list.append(u_star_1)
         U_10_mean.append(np.mean(U_10_mag))
@@ -408,13 +393,6 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     window_width = round((interval_min*60)/(df.GlobalSecs[1] - df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
     slices = df.rolling(window=window_width, step=window_width)
 
-    # res = []
-    # for slice in slices:
-    #     if len(slice) != 0:
-    #         res.append(slice)
-    
-    # return res
-
     return [slice for slice in slices if len(slice) != 0]
 
 def get_turbulent(s: pd.Series) -> pd.Series:
@@ -432,22 +410,22 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :param v: (np.ndarray) Var 2.
     :return: (float) cov(u, v)
     '''
-    if len(u) <= 1 or len(v) <= 1:
-        write_message(f'Covariance cannot be calculated on an input shorter than length 2.', filename='analysis_log.txt')
-        return np.nan
+    # if len(u) <= 1 or len(v) <= 1:
+    #     write_message(f'Covariance cannot be calculated on an input shorter than length 2.', filename='analysis_log.txt')
+    #     return np.nan
 
-    logical = ((pd.notna(u)) & (pd.notna(v)))
+    # logical = ((pd.notna(u)) & (pd.notna(v)))
 
-    if len(logical)/len(u) <= MIN_COV_SIZE:
-        write_message(f'Timeseries too short for reasonable covariance calc: {round(100*len(logical)/len(u),2)}%', filename='analysis_log.txt')
-        return np.nan
+    # if len(logical)/len(u) <= MIN_COV_SIZE:
+    #     write_message(f'Timeseries too short for reasonable covariance calc: {round(100*len(logical)/len(u),2)}%', filename='analysis_log.txt')
+    #     return np.nan
     
-    u = u[logical]
-    v = v[logical]
+    # u = u[logical]
+    # v = v[logical]
 
-    if len(u) != len(v):
-        write_message(f'Both inputs must be the same length for covariance.', filename='analysis_log.txt')
-        return np.nan
+    # if len(u) != len(v):
+    #     write_message(f'Both inputs must be the same length for covariance.', filename='analysis_log.txt')
+    #     return np.nan
 
     return np.cov(u, v)[0][1]
 
