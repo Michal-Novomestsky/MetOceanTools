@@ -747,7 +747,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
-    plt.title('Sensible Heat Flux')
+    plt.title('Sensible Heat Flux (Wm^-2)')
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_xy.png'))
         plt.close()
@@ -759,7 +759,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
-    plt.title('Sensible Heat Flux')
+    plt.title('Sensible Heat Flux (Wm^-2)')
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_xy.png'))
         plt.close()
@@ -810,7 +810,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
     sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
     plt.xlabel('time')
-    plt.ylabel('Sensible Heat Flux')
+    plt.ylabel('Sensible Heat Flux (Wm^-2)')
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
