@@ -368,7 +368,7 @@ def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tupl
     U_mag_corr = w_vel*np.sin(theta) + U_mag*np.cos(theta)
     w_vel_corr = w_vel*np.cos(theta) - U_mag*np.sin(theta)
 
-    U_mag = U_mag_corr
+    # U_mag = U_mag_corr
     w_vel = w_vel_corr
 
     # Getting magnitude of turbulent horizontal velocity vector
