@@ -293,7 +293,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         #U_vec.North = U_vec.North - remsSlice.cur_n_comp
         # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
 
-        u_star_1 = -get_covariance(U_10_turb, w_turb)
+        u_star_1 = np.sqrt(-get_covariance(U_10_turb, w_turb))
         tau_approx.append(rho*u_star_1)
         H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
 
