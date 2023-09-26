@@ -260,9 +260,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
         #slice[t2] = slice[t2] - 5
         original_len = len(slice)
-        # if original_len < MIN_SLICE_SIZE:
-        #     write_message(f'{fileName} too small: {original_len}', filename='analysis_log.txt')
-        #     continue
         slice = slice[~slice.is_temp1_range_large] # Removing erroneous points
         if len(slice)/original_len <= MIN_COV_SIZE:
             write_message(f'Too much cut out: {len(slice)}/{original_len}. {fileName} rejected.', filename='analysis_log.txt')
@@ -378,25 +375,8 @@ def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     """
     Breaks df up into interval_min minute long intervals which are compiled in a list
     """
-    # amount_of_slices = df.Minute[len(df) - 1]//interval_min
-    # slices = []
-    # for i in range(amount_of_slices):
-    #     # Only applying a nonstrict inequality when it is at the end to stop overlap of endpoints. May cause length issues??
-    #     if i != amount_of_slices - 1:
-    #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute < (i + 1)*interval_min)].copy(deep=True).reset_index())
-    #     else:
-    #         slices.append(df.loc[(i*interval_min <= df.Minute) & (df.Minute <= (i + 1)*interval_min)].copy(deep=True).reset_index())
-    
-    # for slice in slices:
-    #     print(f'{len(slice)=}')
-    
-    # return slices
     window_width = round((interval_min*60)/(df.GlobalSecs[1] - df.GlobalSecs[0])) # Amount of indicies to consider = wanted_stepsize/data_stepsize
     slices = df.rolling(window=window_width, step=window_width)
-
-    slices = [slice for slice in slices if len(slice) >= MIN_SLICE_SIZE]
-    for slice in slices:
-        print(f'{len(slice)=}')
 
     return [slice for slice in slices if len(slice) >= MIN_SLICE_SIZE]
 
