@@ -281,7 +281,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
-        U_10_vec, U_anem1_mag, U_10_turb, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
+        U_10_vec, U_anem1_mag, U_10_turb, w_vel_1, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1)
         # U_10_mag = ANEM1_TO_U10*U_anem1_mag
         U_10_mag = U_anem1_mag
 
@@ -303,8 +303,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         u1_turb_mean.append(np.mean(get_turbulent(slice[u1])))
         v1_mean.append(np.mean(slice[v1]))
         v1_turb_mean.append(np.mean(get_turbulent(slice[v1])))
-        w1_mean.append(np.mean(slice[w1]))
-        w1_turb_mean.append(np.mean(get_turbulent(slice[w1])))
+        w1_mean.append(np.mean(w_vel_1))
+        w1_turb_mean.append(np.mean(w_turb))
         t1_mean.append(np.mean(slice[t1]))
         u2_mean.append(np.mean(slice[u2]))
         u2_turb_mean.append(np.mean(get_turbulent(slice[u2])))
@@ -376,7 +376,7 @@ def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tupl
     #T_turb = T_turb/(1 + 0.378*e/p)
 
 
-    return U_vec, U_mag, U_turb, w_turb, T_turb
+    return U_vec, U_mag, U_turb, w_vel, w_turb, T_turb
 
 def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     """
