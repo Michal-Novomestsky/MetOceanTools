@@ -364,9 +364,9 @@ def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tupl
     U_vec = U_vec.mean() #Taking TIME_INTERVAL min avg
 
     # Locally MRU correcting
-    theta = np.arctan2(np.mean(w_vel), np.mean(U_mag))
-    U_mag_corr = w_vel*np.sin(theta) + U_mag*np.cos(theta)
-    w_vel_corr = w_vel*np.cos(theta) - U_mag*np.sin(theta)
+    # theta = np.arctan2(np.mean(w_vel), np.mean(U_mag))
+    # U_mag_corr = w_vel*np.sin(theta) + U_mag*np.cos(theta)
+    # w_vel_corr = w_vel*np.cos(theta) - U_mag*np.sin(theta)
 
     U_mag = U_mag_corr
     w_vel = w_vel_corr
