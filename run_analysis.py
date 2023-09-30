@@ -376,7 +376,7 @@ def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str) -> tupl
     
     w_turb = get_turbulent(w_vel)
     T_turb = get_turbulent(slice[t])
-    # T_turb = T_turb/(1 + 0.378*e/p)
+    T_turb = T_turb/(1 + 0.378*e/p)
 
     return U_vec, U_mag, U_turb, w_vel, w_turb, T_turb
 
@@ -404,22 +404,22 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
     :param v: (np.ndarray) Var 2.
     :return: (float) cov(u, v)
     '''
-    # if len(u) <= 1 or len(v) <= 1:
-    #     write_message(f'Covariance cannot be calculated on an input shorter than length 2.', filename='analysis_log.txt')
-    #     return np.nan
+    if len(u) <= 1 or len(v) <= 1:
+        write_message(f'Covariance cannot be calculated on an input shorter than length 2.', filename='analysis_log.txt')
+        return np.nan
 
-    # logical = ((pd.notna(u)) & (pd.notna(v)))
+    logical = ((pd.notna(u)) & (pd.notna(v)))
 
-    # if len(logical)/len(u) <= MIN_COV_SIZE:
-    #     write_message(f'Timeseries too short for reasonable covariance calc: {round(100*len(logical)/len(u),2)}%', filename='analysis_log.txt')
-    #     return np.nan
+    if len(logical)/len(u) <= MIN_COV_SIZE:
+        write_message(f'Timeseries too short for reasonable covariance calc: {round(100*len(logical)/len(u),2)}%', filename='analysis_log.txt')
+        return np.nan
     
-    # u = u[logical]
-    # v = v[logical]
+    u = u[logical]
+    v = v[logical]
 
-    # if len(u) != len(v):
-    #     write_message(f'Both inputs must be the same length for covariance.', filename='analysis_log.txt')
-    #     return np.nan
+    if len(u) != len(v):
+        write_message(f'Both inputs must be the same length for covariance.', filename='analysis_log.txt')
+        return np.nan
 
     return np.cov(u, v)[0][1]
 
