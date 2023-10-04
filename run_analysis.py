@@ -375,8 +375,8 @@ def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str, e, p) -
     U_turb = get_turbulent(U_mag)
     
     w_turb = get_turbulent(w_vel)
-    # T_turb = get_turbulent(slice[t])
-    T_turb = get_turbulent(slice[t]/(1 + 0.378*e/p))
+    T_turb = get_turbulent(slice[t])
+    # T_turb = get_turbulent(slice[t]/(1 + 0.378*e/p))
 
     return U_vec, U_mag, U_turb, w_vel, w_turb, T_turb
 
