@@ -339,10 +339,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # Updating time
         time_list.append(time)
         time += datetime.timedelta(minutes=TIME_INTERVAL)
-
-        # # Investigating the streak
-        # if tau_approx[-1]/tau_coare[-1] >= 2/0.5 and tau_approx[-1] >= 1.5:
-        #     write_message(f"tau spike in {fileName}", filename='analysis_log.txt')
     
     if era_and_rems:
         write_message(f"Analysed {fileName} with REMS", filename='analysis_log.txt')
