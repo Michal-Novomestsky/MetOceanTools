@@ -386,9 +386,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     else:
         write_message(f"Analysed {fileName} with ERA5", filename='analysis_log.txt')
 
-    return (tau_approx_1, tau_coare_1, C_d_1, U1_mean, H_approx_1, H_coare_1, time_list, 
+    return (tau_approx_1, tau_coare_1, C_d_1, U_anem_1_mean, H_approx_1, H_coare_1, time_list, 
             u1_mean, u1_turb_mean, v1_mean, v1_turb_mean, w1_mean, w1_turb_mean, t1_mean,
-            tau_approx_2, tau_coare_2, H_approx_2, H_coare_2, C_d_2, U2_mean, u_star_2_list,
+            tau_approx_2, tau_coare_2, H_approx_2, H_coare_2, C_d_2, U_anem_2_mean, u_star_2_list,
             u2_mean, u2_turb_mean, v2_mean, v2_turb_mean, w2_mean, w2_turb_mean, 
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large, u_star_1_list)
