@@ -315,7 +315,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         # Calculating EC data (anem 1 is motion corrected)
         U_anem_1, U_anem_1_turb, w_vel_1, w_turb_1, T_turb_1 = get_windspeed_data(slice, u1, v1, w1, t1)
-        U_anem_2, U_anem_2_turb, w_vel_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2, mru_correct=False)
+        U_anem_2, U_anem_2_turb, w_vel_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2)#, mru_correct=False)
         # U_10_1 = ANEM1_TO_U10*U_anem_1
         # U_10_2 = ANEM2_TO_U10*U_anem_2
 
