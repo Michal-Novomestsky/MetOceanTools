@@ -30,7 +30,8 @@ TIME_INTERVAL = 10
 MIN_COV_SIZE = 0.99 # Minimum % of points retained for valid covariance calculation
 MIN_SLICE_SIZE = 1000 # Minimum slice size prior to chopping out data
 WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
-ANEM1_TO_U10 = (10/ZU)**0.11 # Extrapolation scale factor
+ANEM1_TO_U10 = (10/ZU_1)**0.11 # Extrapolation scale factor
+ANEM2_TO_U10 = (10/ZU_2)**0.11
 
 # Default parameters
 LW_DN = 370
