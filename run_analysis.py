@@ -112,8 +112,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_HApprox_2 += output[16]
                 collector_HCoare_2 += output[17]
                 collector_Cd_2 += output[18]
-                collector_u_star_2 += output[19]
-                collector_U_anem_2 += output[20]
+                collector_U_anem_2 += output[19]
+                collector_u_star_2 += output[20]
                 collector_u2 += output[21]
                 collector_u2_turb += output[22]
                 collector_v2 += output[23]
@@ -167,8 +167,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_HApprox_2 += outputElem[16]
                     collector_HCoare_2 += outputElem[17]
                     collector_Cd_2 += outputElem[18]
-                    collector_u_star_2 += outputElem[19]
-                    collector_U_anem_2 += outputElem[20]
+                    collector_U_anem_2 += outputElem[19]
+                    collector_u_star_2 += outputElem[20]
                     collector_u2 += outputElem[21]
                     collector_u2_turb += outputElem[22]
                     collector_v2 += outputElem[23]
@@ -315,7 +315,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         # Calculating EC data (anem 1 is motion corrected)
         U_anem_1, U_anem_1_turb, w_vel_1, w_turb_1, T_turb_1 = get_windspeed_data(slice, u1, v1, w1, t1)
-        U_anem_2, U_anem_2_turb, w_vel_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2)#, mru_correct=False)
+        U_anem_2, U_anem_2_turb, w_vel_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2, mru_correct=False)
         # U_10_1 = ANEM1_TO_U10*U_anem_1
         # U_10_2 = ANEM2_TO_U10*U_anem_2
 
