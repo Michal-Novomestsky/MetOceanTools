@@ -18,7 +18,8 @@ from COARE.COARE3_6.coare36vnWarm_et import coare36vnWarm_et as coare
 
 # Defining constants
 KELVIN_TO_CELSIUS = 273.15
-ZU = 14.8 # Height of anemometer #1 (the higher one)
+ZU_1 = 14.8 # Height of anemometer #1 (MRU available)
+ZU_2 = 8.8 # Height of anemometer #2 (no MRU)
 ZT = 28 # Approx. height of flare bridge AMSL
 ZQ = 28 # Approx. height of flare bridge AMSL
 LAT = -19.5856 # 19.5856S (Babanin et al.)
@@ -359,7 +360,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         is_temp2_range_large.append(slice.is_temp2_range_large.any())
 
         # Getting COARE's predictions
-        coare_res = get_coare_data(U1_mean, jd, tair, rh, p, tsea, sw_dn, TS_DEPTH)
+        coare_res = get_coare_data(U1_mean, jd, ZU_1, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 1 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
             tau_coare_1.append(np.nan)
@@ -368,7 +369,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             tau_coare_1.append(coare_res[1])
             H_coare_1.append(coare_res[2])
 
-        coare_res = get_coare_data(U2_mean, jd, tair, rh, p, tsea, sw_dn, TS_DEPTH)
+        coare_res = get_coare_data(U2_mean, jd, ZU_2, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 2 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
             tau_coare_2.append(np.nan)
@@ -393,15 +394,15 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large, u_star_1_list)
 
-def get_coare_data(U_mean: float, jd: float, tair: float, rh: float, p: float, tsea: float, sw_dn: float, 
+def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, p: float, tsea: float, sw_dn: float, 
                    ts_depth: float) -> np.ndarray:
     # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
     try:
         blockPrint()
-        coare_res = coare(Jd=jd, U=U_mean, Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
+        coare_res = coare(Jd=jd, U=U_mean, Zu=zu, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
                             Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
                             Rainrate=RAINRATE, Ts_depth=ts_depth, Ss=SS, cp=None, sigH=None,
-                            zrf_u=ZU, zrf_t=ZU, zrf_q=ZU)
+                            zrf_u=zu, zrf_t=zu, zrf_q=zu)
         enablePrint()
     except Exception as e:
         return None
