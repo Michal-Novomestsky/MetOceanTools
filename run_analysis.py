@@ -325,26 +325,24 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
         # Calculating EC data (anem 1 is motion corrected)
-        U_anem_1, U_anem_1_turb, w_vel_1, w_turb_1, T_turb_1 = get_windspeed_data(slice, u1, v1, w1, t1)
+        U_anem_1, U_anem_1_turb, w_vel_1, w_turb_1, T_turb_1 = get_windspeed_data(slice, u1, v1, w1, t1, mru_correct=False)
         U_anem_2, U_anem_2_turb, w_vel_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2, mru_correct=False)
         # U_10_1 = ANEM1_TO_U10*U_anem_1
         # U_10_2 = ANEM2_TO_U10*U_anem_2
 
         u_star_1 = np.sqrt(-get_covariance(U_anem_1_turb, w_turb_1))
         tau_approx_1.append(rho*(u_star_1**2))
-
-        H_anem_1 = get_covariance(w_turb_1, T_turb_1)
-        H_correction_1 = get_H_err_coeffs(slice, u1, t1, tair)*get_covariance(U_anem_1_turb, w_turb_1)
-        H_approx_1.append(rho*CPD*np.mean(H_anem_1*np.ones(len(H_correction_1)) - H_correction_1))
-        # H_approx_1.append(rho*CPD*get_covariance(w_turb_1, T_turb_1))
+        # H_anem_1 = get_covariance(w_turb_1, T_turb_1)
+        # H_correction_1 = get_H_err_coeffs(slice, u1, t1, tair)*get_covariance(U_anem_1_turb, w_turb_1)
+        # H_approx_1.append(rho*CPD*np.mean(H_anem_1*np.ones(len(H_correction_1)) - H_correction_1))
+        H_approx_1.append(rho*CPD*get_covariance(w_turb_1, T_turb_1))
 
         u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
         tau_approx_2.append(rho*(u_star_2**2))
-
-        H_anem_2 = get_covariance(w_turb_2, T_turb_2)
-        H_correction_2 = get_H_err_coeffs(slice, u2, t2, tair)*get_covariance(U_anem_2_turb, w_turb_2)
-        H_approx_2.append(rho*CPD*np.mean(H_anem_2*np.ones(len(H_correction_2)) - H_correction_2))
-        # H_approx_2.append(rho*CPD*get_covariance(w_turb_2, T_turb_2))
+        # H_anem_2 = get_covariance(w_turb_2, T_turb_2)
+        # H_correction_2 = get_H_err_coeffs(slice, u2, t2, tair)*get_covariance(U_anem_2_turb, w_turb_2)
+        # H_approx_2.append(rho*CPD*np.mean(H_anem_2*np.ones(len(H_correction_2)) - H_correction_2))
+        H_approx_2.append(rho*CPD*get_covariance(w_turb_2, T_turb_2))
 
         # Logging values
         u_star_1_list.append(u_star_1)
