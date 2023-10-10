@@ -335,7 +335,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         H_anem_1 = get_covariance(w_turb_1, T_turb_1)
         H_correction_1 = get_H_err_coeffs(slice, u1, t1, tair)*get_covariance(U_anem_1_turb, w_turb_1)
-        H_approx_1.append(rho*CPD*(H_anem_1 - H_correction_1))
+        H_approx_1.append(rho*CPD*np.mean(H_anem_1*np.ones(len(H_correction_1)) - H_correction_1))
         # H_approx_1.append(rho*CPD*get_covariance(w_turb_1, T_turb_1))
 
         u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
@@ -343,7 +343,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         H_anem_2 = get_covariance(w_turb_2, T_turb_2)
         H_correction_2 = get_H_err_coeffs(slice, u2, t2, tair)*get_covariance(U_anem_2_turb, w_turb_2)
-        H_approx_2.append(rho*CPD*(H_anem_2 - H_correction_2))
+        H_approx_2.append(rho*CPD*np.mean(H_anem_2*np.ones(len(H_correction_2)) - H_correction_2))
         # H_approx_2.append(rho*CPD*get_covariance(w_turb_2, T_turb_2))
 
         # Logging values
