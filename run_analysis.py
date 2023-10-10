@@ -865,10 +865,11 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     # sns.lineplot(x=bottom_wall[0], y=bottom_wall[1], color='black')
     # sns.lineplot(x=top_wall[0], y=top_wall[1], color='black')
     sns.scatterplot(x=outDf.U_anem_1, y=1000*outDf.Cd_1, label='Anem 1')
-    sns.lineplot(x=outDf.U_anem_1, y=1000*outDf.Cd_coare_1, label='COARE')
+    sns.lineplot(x=outDf.U_anem_1, y=1000*outDf.Cd_coare_1, label='COARE', color='black')
     plt.xlabel('U_10 (Approx) (m/s)')
     plt.ylabel('Cd*10^3')
     plt.ylim([-2,5]) # Limits as per box dimensions
+    plt.xlim([0, 25])
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'Cd_spread.png'))
         plt.close()
@@ -876,9 +877,10 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.show()   
 
     sns.scatterplot(x=outDf.U_anem_2, y=1000*outDf.Cd_2, label='Anem 2')
-    sns.lineplot(x=outDf.U_anem_2, y=1000*outDf.Cd_coare_2, label='COARE')
+    sns.lineplot(x=outDf.U_anem_2, y=1000*outDf.Cd_coare_2, label='COARE', color='black')
     plt.xlabel('U_10 (Approx) (m/s)')
     plt.ylabel('Cd*10^3')
+    plt.xlim([0, 25])
     plt.ylim([-2,5]) # Limits as per box dimensions
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'Cd_spread.png'))
@@ -900,6 +902,20 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()  
 
+    mean_ec = apply_window_wise(outDf.tauApprox_2, WINDOW_WIDTH, np.mean)
+    sns.scatterplot(data=outDf, x='time', y='tauApprox_2', marker='.', color='blue', label='EC')
+    sns.lineplot(data=outDf, x='time', y='tauCoare_2', color='orange', label='COARE')
+    sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
+    plt.xlabel('time')
+    plt.ylabel('Anem 2 Shear Stress (Nm^-2)')
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
+        plt.close()
+    else:
+        plt.show()
+
     mean_ec = apply_window_wise(outDf.HApprox_1, WINDOW_WIDTH, np.mean)
     sns.scatterplot(data=outDf, x='time', y='HApprox_1', marker='.', color='blue', label='EC')
     sns.lineplot(data=outDf, x='time', y='HCoare_1', color='orange', label='COARE')
@@ -912,7 +928,21 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
         plt.close()
     else:
-        plt.show()     
+        plt.show()  
+
+    mean_ec = apply_window_wise(outDf.HApprox_2, WINDOW_WIDTH, np.mean)
+    sns.scatterplot(data=outDf, x='time', y='HApprox_2', marker='.', color='blue', label='EC')
+    sns.lineplot(data=outDf, x='time', y='HCoare_2', color='orange', label='COARE')
+    sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
+    plt.xlabel('time')
+    plt.ylabel('Anem 2 Sensible Heat Flux (Wm^-2)')
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
+        plt.close()
+    else:
+        plt.show()    
 
     # fig, ax = plt.subplots()
     # lns1 = ax.plot(outDf.time, outDf.HApprox, "-o", label='EC')
