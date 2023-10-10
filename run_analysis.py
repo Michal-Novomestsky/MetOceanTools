@@ -65,6 +65,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_HApprox_1 = []
     collector_HCoare_1 = []
     collector_Cd_1 = []
+    collector_Cd_coare_1 = []
     collector_u_star_1 = []
     collector_U_anem_1 = []
     collector_u1 = []
@@ -80,6 +81,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_HApprox_2 = []
     collector_HCoare_2 = []
     collector_Cd_2 = []
+    collector_Cd_coare_2 = []
     collector_u_star_2 = []
     collector_U_anem_2 = []
     collector_u2 = []
@@ -129,6 +131,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_t2_fluct += output[31]
                 collector_t2_rng += output[32]
                 collector_u_star_1 += output[33]
+                collector_Cd_coare_1 += output[34]
+                collector_Cd_coare_2 += output[35]
 
     # Enabling multiprocessing
     else:
@@ -184,6 +188,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_t2_fluct += outputElem[31]
                     collector_t2_rng += outputElem[32]
                     collector_u_star_1 += outputElem[33]
+                    collector_Cd_coare_1 += outputElem[34]
+                    collector_Cd_coare_2 += outputElem[35]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox_1": collector_tauApprox_1, "tauCoare_1": collector_tauCoare_1,
@@ -193,7 +199,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                             "ta_2": collector_t2, "rho": collector_rho, "is_temp1_fluctuating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
                             "is_temp2_fluctuating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng, "u_star_1": collector_u_star_1,
                             "tauApprox_2": collector_tauApprox_2, "tauCoare_2": collector_tauCoare_2, "Cd_2": collector_Cd_2, 
-                            "U_anem_2": collector_U_anem_2, "HApprox_2": collector_HApprox_2, "HCoare_2": collector_HCoare_2, "u_star_2": collector_u_star_2})
+                            "U_anem_2": collector_U_anem_2, "HApprox_2": collector_HApprox_2, "HCoare_2": collector_HCoare_2, "u_star_2": collector_u_star_2,
+                            "Cd_coare_1": collector_Cd_coare_1, "Cd_coare_2": collector_Cd_coare_2})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
@@ -231,6 +238,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     H_approx_1 = []
     H_coare_1 = []
     C_d_1 = []
+    C_d_coare_1 = []
     U_anem_1_mean = []
     u_star_1_list = []
     u1_mean = []
@@ -246,6 +254,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     H_approx_2 = []
     H_coare_2 = []
     C_d_2 = []
+    C_d_coare_2 = []
     U_anem_2_mean = []
     u_star_2_list = []
     u2_mean = []
@@ -366,18 +375,22 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             write_message(f"ANEM 1 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
             tau_coare_1.append(np.nan)
             H_coare_1.append(np.nan)
+            C_d_coare_1.append(np.nan)
         else:
             tau_coare_1.append(coare_res[1])
             H_coare_1.append(coare_res[2])
+            C_d_coare_1.append(coare_res[12])
 
         coare_res = get_coare_data(U2_mean, jd, ZU_2, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 2 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
             tau_coare_2.append(np.nan)
             H_coare_2.append(np.nan)
+            C_d_coare_2.append(np.nan)
         else:
             tau_coare_2.append(coare_res[1])
             H_coare_2.append(coare_res[2])
+            C_d_coare_2.append(coare_res[12])
 
         # Updating time
         time_list.append(time)
@@ -393,7 +406,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             tau_approx_2, tau_coare_2, H_approx_2, H_coare_2, C_d_2, U_anem_2_mean, u_star_2_list,
             u2_mean, u2_turb_mean, v2_mean, v2_turb_mean, w2_mean, w2_turb_mean, 
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
-            is_temp2_fluctuating, is_temp2_range_large, u_star_1_list)
+            is_temp2_fluctuating, is_temp2_range_large, u_star_1_list, C_d_coare_1, C_d_coare_2)
 
 def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, p: float, tsea: float, sw_dn: float, 
                    ts_depth: float) -> np.ndarray:
@@ -843,16 +856,16 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.show()
 
     # Making a box for x [0, 25], y [-2, 5]
-    left_wall = [[0, 0], [-2, 5]]
-    right_wall = [[25, 25], [-2, 5]]
-    bottom_wall = [[0, 25], [-2, -2]]
-    top_wall = [[0, 25], [5, 5]]
-    sns.lineplot(x=left_wall[0], y=left_wall[1], color='black')
-    sns.lineplot(x=right_wall[0], y=right_wall[1], color='black')
-    sns.lineplot(x=bottom_wall[0], y=bottom_wall[1], color='black')
-    sns.lineplot(x=top_wall[0], y=top_wall[1], color='black')
+    # left_wall = [[0, 0], [-2, 5]]
+    # right_wall = [[25, 25], [-2, 5]]
+    # bottom_wall = [[0, 25], [-2, -2]]
+    # top_wall = [[0, 25], [5, 5]]
+    # sns.lineplot(x=left_wall[0], y=left_wall[1], color='black')
+    # sns.lineplot(x=right_wall[0], y=right_wall[1], color='black')
+    # sns.lineplot(x=bottom_wall[0], y=bottom_wall[1], color='black')
+    # sns.lineplot(x=top_wall[0], y=top_wall[1], color='black')
     sns.scatterplot(x=outDf.U_anem_1, y=1000*outDf.Cd_1, label='Anem 1')
-    sns.scatterplot(x=outDf.U_anem_2, y=1000*outDf.Cd_2, label='Anem 2')
+    sns.lineplot(x=outDf.U_anem_1, y=1000*outDf.Cd_coare_1, label='COARE')
     plt.xlabel('U_10 (Approx) (m/s)')
     plt.ylabel('Cd*10^3')
     if save_plots:
@@ -860,6 +873,16 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.close()
     else:
         plt.show()   
+
+    sns.scatterplot(x=outDf.U_anem_2, y=1000*outDf.Cd_2, label='Anem 2')
+    sns.lineplot(x=outDf.U_anem_2, y=1000*outDf.Cd_coare_2, label='COARE')
+    plt.xlabel('U_10 (Approx) (m/s)')
+    plt.ylabel('Cd*10^3')
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'Cd_spread.png'))
+        plt.close()
+    else:
+        plt.show()  
 
     mean_ec = apply_window_wise(outDf.tauApprox_1, WINDOW_WIDTH, np.mean)
     sns.scatterplot(data=outDf, x='time', y='tauApprox_1', marker='.', color='blue', label='EC')
