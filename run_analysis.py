@@ -868,6 +868,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(x=outDf.U_anem_1, y=1000*outDf.Cd_coare_1, label='COARE')
     plt.xlabel('U_10 (Approx) (m/s)')
     plt.ylabel('Cd*10^3')
+    plt.ylim([-2,5]) # Limits as per box dimensions
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'Cd_spread.png'))
         plt.close()
@@ -878,6 +879,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(x=outDf.U_anem_2, y=1000*outDf.Cd_coare_2, label='COARE')
     plt.xlabel('U_10 (Approx) (m/s)')
     plt.ylabel('Cd*10^3')
+    plt.ylim([-2,5]) # Limits as per box dimensions
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'Cd_spread.png'))
         plt.close()
