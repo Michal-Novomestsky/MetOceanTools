@@ -434,7 +434,10 @@ def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, 
 def get_H_err_coeffs(slice: pd.DataFrame, u: str, t: str, tair: float) -> np.ndarray:
     u_anem = slice[u]
     temp_diff = tair - slice[t]
-    p = np.polyfit(u_anem, temp_diff, deg=3)
+    try:
+        p = np.polyfit(u_anem, temp_diff, deg=3)
+    except np.linalg.LinAlgError:
+        return np.nan
     return 3*p[0]*u_anem**2 + 2*p[1]*u_anem + p[2]
 
 def get_windspeed_data(slice: pd.DataFrame, u: str, v: str, w: str, t: str, mru_correct=True) -> tuple:
