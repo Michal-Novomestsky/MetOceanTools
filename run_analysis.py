@@ -811,17 +811,17 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show() 
 
-    # lin_lims = [min([min(outDf.tauCoare_2), min(outDf.tauApprox_2)]), max([max(outDf.tauCoare_2), max(outDf.tauApprox_2])]
-    # sns.kdeplot(data=outDf, x='tauCoare_2', y='tauApprox_2', fill=True, levels=100, cmap='mako', thresh=0)
-    # sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
-    # plt.xlabel('COARE')
-    # plt.ylabel('EC')
-    # plt.title('Anem 2 Shear Stress')
-    # if save_plots:
-    #     plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_xy.png'))
-    #     plt.close()
-    # else:
-    #     plt.show()   
+    lin_lims = [min([min(outDf.tauCoare_2), min(outDf.tauApprox_2)]), max([max(outDf.tauCoare_2), max(outDf.tauApprox_2)])]
+    sns.kdeplot(data=outDf, x='tauCoare_2', y='tauApprox_2', fill=True, levels=100, cmap='mako', thresh=0)
+    sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
+    plt.xlabel('COARE')
+    plt.ylabel('EC')
+    plt.title('Anem 2 Shear Stress')
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_xy.png'))
+        plt.close()
+    else:
+        plt.show() 
 
     lin_lims = [min([min(outDf.HCoare_1), min(outDf.HApprox_1)]), max([max(outDf.HCoare_1), max(outDf.HApprox_1)])]
     sns.regplot(data=outDf, x='HCoare_1', y='HApprox_1', label='Anem 1 Best fit with 95% CI')
@@ -842,6 +842,18 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xlabel('COARE')
     plt.ylabel('EC')
     plt.title('Anem 1 Sensible Heat Flux (Wm^-2)')
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_xy.png'))
+        plt.close()
+    else:
+        plt.show()  
+
+    lin_lims = [min([min(outDf.HCoare_2), min(outDf.HApprox_2)]), max([max(outDf.HCoare_2), max(outDf.HApprox_2)])]
+    sns.kdeplot(data=outDf, x='HCoare_2', y='HApprox_2', fill=True, levels=100, cmap='mako', thresh=0)
+    sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
+    plt.xlabel('COARE')
+    plt.ylabel('EC')
+    plt.title('Anem 2 Sensible Heat Flux (Wm^-2)')
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_xy.png'))
         plt.close()
