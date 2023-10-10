@@ -892,7 +892,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
     sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
     plt.xlabel('time')
-    plt.ylabel('Anem 1 Shear Stress')
+    plt.ylabel('Anem 1 Shear Stress (Nm^-2)')
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
