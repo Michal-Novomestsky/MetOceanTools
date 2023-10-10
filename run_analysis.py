@@ -332,11 +332,19 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         u_star_1 = np.sqrt(-get_covariance(U_anem_1_turb, w_turb_1))
         tau_approx_1.append(rho*(u_star_1**2))
-        H_approx_1.append(rho*CPD*get_covariance(w_turb_1, T_turb_1))
+
+        H_anem_1 = get_covariance(w_turb_1, T_turb_1)
+        H_correction_1 = get_H_err_coeffs(slice, u1, t1, tair)*get_covariance(U_anem_1_turb, w_turb_1)
+        H_approx_1.append(rho*CPD*(H_anem_1 - H_correction_1))
+        # H_approx_1.append(rho*CPD*get_covariance(w_turb_1, T_turb_1))
 
         u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
         tau_approx_2.append(rho*(u_star_2**2))
-        H_approx_2.append(rho*CPD*get_covariance(w_turb_2, T_turb_2))
+
+        H_anem_2 = get_covariance(w_turb_2, T_turb_2)
+        H_correction_2 = get_H_err_coeffs(slice, u2, t2, tair)*get_covariance(U_anem_2_turb, w_turb_2)
+        H_approx_2.append(rho*CPD*(H_anem_2 - H_correction_2))
+        # H_approx_2.append(rho*CPD*get_covariance(w_turb_2, T_turb_2))
 
         # Logging values
         u_star_1_list.append(u_star_1)
@@ -423,7 +431,13 @@ def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, 
 
     return coare_res[0]
 
-def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str, mru_correct=True) -> tuple:
+def get_H_err_coeffs(slice: pd.DataFrame, u: str, t: str, tair: float) -> np.ndarray:
+    u_anem = slice[u]
+    temp_diff = tair - slice[t]
+    p = np.polyfit(u_anem, temp_diff, deg=3)
+    return 3*p[0]*u_anem**2 + 2*p[1]*u_anem + p[2]
+
+def get_windspeed_data(slice: pd.DataFrame, u: str, v: str, w: str, t: str, mru_correct=True) -> tuple:
     # Getting current-corrected windspeed
     U_mag = np.sqrt(slice[u]**2 + slice[v]**2)
     w_vel = slice[w]
