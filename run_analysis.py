@@ -438,7 +438,7 @@ def get_H_err_coeffs(slice: pd.DataFrame, u: str, t: str, tair: float) -> np.nda
         p = np.polyfit(u_anem, temp_diff, deg=3)
     except np.linalg.LinAlgError:
         return np.nan*np.ones(len(u_anem))
-    return 3*p[0]*u_anem**2 + 2*p[1]*u_anem + p[2]
+    return np.zeros(len(u_anem)) #3*p[0]*u_anem**2 + 2*p[1]*u_anem + p[2]
 
 def get_windspeed_data(slice: pd.DataFrame, u: str, v: str, w: str, t: str, mru_correct=True) -> tuple:
     # Getting current-corrected windspeed
