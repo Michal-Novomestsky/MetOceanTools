@@ -204,6 +204,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_u_star_1 += outputElem[33]
                     collector_Cd_coare_1 += outputElem[34]
                     collector_Cd_coare_2 += outputElem[35]
+                    print(output[36])
                     collector_zu1 += output[36]
                     collector_zu2 += output[37]
                     collector_laser1 += outputElem[38]
@@ -405,9 +406,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         is_temp2_range_large.append(slice.is_temp2_range_large.any())
 
         # Getting COARE's predictions
-        print(slice[laser1])
         zu_1 = np.mean(slice[laser1] - LASER_TO_ANEM_1)
-        print(zu_1)
         zu1_mean.append(zu_1)
         coare_res = get_coare_data(U1_mean, jd, zu_1, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
