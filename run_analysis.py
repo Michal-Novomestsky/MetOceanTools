@@ -204,9 +204,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_u_star_1 += outputElem[33]
                     collector_Cd_coare_1 += outputElem[34]
                     collector_Cd_coare_2 += outputElem[35]
-                    print(output[36])
-                    collector_zu1 += output[36]
-                    collector_zu2 += output[37]
+                    collector_zu1 += outputElem[36]
+                    collector_zu2 += outputElem[37]
                     collector_laser1 += outputElem[38]
                     collector_laser2 += outputElem[39]
                     collector_laser3 += outputElem[40]
