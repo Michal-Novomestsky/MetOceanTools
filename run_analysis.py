@@ -18,12 +18,12 @@ from COARE.COARE3_6.coare36vnWarm_et import coare36vnWarm_et as coare
 
 # Defining constants
 KELVIN_TO_CELSIUS = 273.15
-# ZU_1 = 14.8 # Height of anemometer #1 (MRU available)
-# ZU_2 = 8.8 # Height of anemometer #2 (no MRU)
-LASER_TO_ANEM_1 = 4.4
-LASER_TO_ANEM_2 = 19.2
+ZU_1 = 14.8 # Height of anemometer #1 (MRU available)
+ZU_2 = 8.8 # Height of anemometer #2 (no MRU)
 ZT = 28 # Approx. height of flare bridge AMSL
 ZQ = 28 # Approx. height of flare bridge AMSL
+LASER_TO_ANEM_1 = ZT - ZU_1
+LASER_TO_ANEM_2 = ZT - ZU_2
 LAT = -19.5856 # 19.5856S (Babanin et al.)
 LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
@@ -407,6 +407,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # Getting COARE's predictions
         zu_1 = np.mean(slice[laser1] - LASER_TO_ANEM_1)
         zu1_mean.append(zu_1)
+        zu_1 = ZU_1
         coare_res = get_coare_data(U1_mean, jd, zu_1, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 1 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
@@ -420,6 +421,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         zu_2 =  np.mean(slice[laser1] - LASER_TO_ANEM_2)
         zu2_mean.append(zu_2)
+        zu_2 = ZU_2
         coare_res = get_coare_data(U2_mean, jd, zu_2, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 2 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
@@ -740,6 +742,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     sns.lineplot(data=outDf, x='time', y='laser4', label='laser 4')
     plt.xlabel('time')
     plt.ylabel('Sea Level from Lasers (m) (28m AMSL)')
+    plt.ylim([20, 30])
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'laser.png'))
