@@ -9,6 +9,9 @@ from Modules.DataAnalyser import write_message
 from aggregate_files import run_aggregate_files
 from pathlib import Path
 
+import seaborn as sns
+from matplotlib import pyplot as plt
+
 TIME_INTERVAL = 20 # TODO Voermans et al. set to 15min
 
 def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1, file_selector_name=None, mru_correct=True, generate_plots=True) -> None:
@@ -89,9 +92,13 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     mru_p = 'MRU P Axis Velocity'
     mru_r = 'MRU R Axis Velocity'
     mru_y = 'MRU Y Axis Velocity'
+    laser1 = 'Laser #1 Range (m)'
+    laser2 = 'Laser #2 Range (m)'
+    laser3 = 'Laser #3 Range (m)'
+    laser4 = 'Laser #4 Range (m)'
     
     # Interpolating points in comp and MRU to bring it up to the same resolution
-    for entry in [comp1, comp2, mru_pitch, mru_yaw, mru_roll, mru_p, mru_r, mru_y]:
+    for entry in [comp1, comp2, mru_pitch, mru_yaw, mru_roll, mru_p, mru_r, mru_y, laser1, laser2, laser3, laser4]:
         data.remove_nans(entry, data.df, naive=True)
     write_message(f"{fileName}: Interpolated", filename='cleanup_log.txt')
 
@@ -103,11 +110,11 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
         write_message(f"{fileName}: MRU CORRECTION OFF", filename='cleanup_log.txt')
 
     # Pruning
-    for entry in [u1, u2, v1, v2, w1, w2, t1, t2]:
+    for entry in [u1, u2, v1, v2, w1, w2, t1, t2, laser1]:
         data.prune_or([data.gradient_cutoff(entry, 3)])
         data.prune_or([data.std_cutoff(entry, 5, sec_stepsize=TIME_INTERVAL*60)])
     write_message(f"{fileName}: Pruned", filename='cleanup_log.txt')
-    
+
     # All subsequent analyses are skipped if an erroneous parameter is idenfied earlier with rejectLog
     # FFT plotting/checking
     saveLoc = os.path.join(writeDir, "FTs", "loglogs")
@@ -157,7 +164,7 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
 
             # Plotting original timeseries vs filtered ones
             saveLoc = os.path.join(writeDir, "comparisons")
-            for entry in [u1, u2, v1, v2, w1, w2]:
+            for entry in [u1, u2, v1, v2, w1, w2, laser1, laser2, laser3, laser4]:
                 data.plot_comparison(entry, fileName, supervised=supervised, saveLoc=saveLoc)
             for t in [t1, t2]:
                 data.plot_comparison(t, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])

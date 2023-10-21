@@ -413,7 +413,7 @@ class DataCleaner:
 
         return False
     
-    def std_cutoff(self, entry: str, stdMargain: float, sec_stepsize: float) -> pd.Series:
+    def std_cutoff(self, entry: str, stdMargain: float, sec_stepsize=3600) -> pd.Series:
         """
         Returns logicals set to True for data of type entry that lies beyond +-stdMargain standard deviations from the mean of the dataset over sec_stepsize seconds (Over the entire dataset if None).
         """
