@@ -167,8 +167,8 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
             # for entry in [u1, u2, v1, v2, w1, w2, laser1, laser2, laser3, laser4]:
             for entry in [laser1, laser2, laser3, laser4]:
                 data.plot_comparison(entry, fileName, supervised=supervised, saveLoc=saveLoc)
-            for t in [t1, t2]:
-                data.plot_comparison(t, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
+            # for t in [t1, t2]:
+            #     data.plot_comparison(t, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
 
     write_message(f"{fileName}: Plotting/Sanity Checking Complete", filename='cleanup_log.txt')
 
