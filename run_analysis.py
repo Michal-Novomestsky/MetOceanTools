@@ -407,7 +407,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # Getting COARE's predictions
         zu_1 = np.mean(slice[laser1] - LASER_TO_ANEM_1)
         zu1_mean.append(zu_1)
-        zu_1 = ZU_1
         coare_res = get_coare_data(U1_mean, jd, zu_1, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 1 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
@@ -421,7 +420,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         zu_2 =  np.mean(slice[laser1] - LASER_TO_ANEM_2)
         zu2_mean.append(zu_2)
-        zu_2 = ZU_2
         coare_res = get_coare_data(U2_mean, jd, zu_2, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 2 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
