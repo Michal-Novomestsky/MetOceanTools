@@ -396,17 +396,26 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         t2_mean.append(np.mean(slice[t2]))
 
         rho_mean.append(np.mean(rho))
-        laser1_mean.append(np.mean(slice[laser1]))
-        laser2_mean.append(np.mean(slice[laser2]))
-        laser3_mean.append(np.mean(slice[laser3]))
-        laser4_mean.append(np.mean(slice[laser4]))
         is_temp1_fluctuating.append(slice.is_temp1_fluctuating.any())
         is_temp1_range_large.append(slice.is_temp1_range_large.any())
         is_temp2_fluctuating.append(slice.is_temp2_fluctuating.any())
         is_temp2_range_large.append(slice.is_temp2_range_large.any())
 
+        if slice[laser1] is None:
+            l1 = l2 = l3 = l4 = ZT
+        else:
+            l1 = np.mean(slice[laser1])
+            l2 = np.mean(slice[laser2])
+            l3 = np.mean(slice[laser3])
+            l4 = np.mean(slice[laser4])
+
+        laser1_mean.append(l1)
+        laser2_mean.append(l2)
+        laser3_mean.append(l3)
+        laser4_mean.append(l4)
+
         # Getting COARE's predictions
-        zu_1 = np.mean(slice[laser1] - LASER_TO_ANEM_1)
+        zu_1 = l1 - LASER_TO_ANEM_1
         zu1_mean.append(zu_1)
         coare_res = get_coare_data(U1_mean, jd, zu_1, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
@@ -419,7 +428,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             H_coare_1.append(coare_res[2])
             C_d_coare_1.append(coare_res[12])
 
-        zu_2 =  np.mean(slice[laser1] - LASER_TO_ANEM_2)
+        zu_2 = l1 - LASER_TO_ANEM_2
         zu2_mean.append(zu_2)
         coare_res = get_coare_data(U2_mean, jd, zu_2, tair, rh, p, tsea, sw_dn, TS_DEPTH)
         if coare_res is None:
@@ -1046,7 +1055,7 @@ if __name__=='__main__':
     np_load_modified = lambda *a,**k: np.load(*a, allow_pickle=True, **k)
 
     # Grabbing REMS stuff
-    for cyclone in ['quang']:
+    for cyclone in ['olywn']:
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}.npz')) as metFile:
             timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             press = metFile['press.npy'] # Barometric Pressure (hPa=mbar)
@@ -1055,7 +1064,6 @@ if __name__=='__main__':
             ta = metFile['ta.npy'] # Air Temperature (C)
             solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
-            #timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
             tsea = metFile['tsea.npy'] # Water temperature (degC)
