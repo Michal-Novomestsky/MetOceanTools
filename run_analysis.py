@@ -340,8 +340,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             continue
 
         # # Flipping direction in anem 2 (TODO REMOVE AFTER NEXT FULLSWEEP)
-        # slice[u2] = -slice[u2]
-        # slice[v2] = -slice[v2]
+        slice[u2] = -slice[u2]
+        slice[v2] = -slice[v2]
 
         # Getting parameters
         jd = time - datetime.datetime(2015, 1, 1)
@@ -882,7 +882,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.show()   
 
     lin_lims = [min([min(outDf.tauCoare_1), min(outDf.tauApprox_1)]), max([max(outDf.tauCoare_1), max(outDf.tauApprox_1)])]
-    sns.kdeplot(data=outDf, x='tauCoare_1', y='tauApprox_1', fill=True, levels=100, cmap='mako', thresh=0)
+    # sns.kdeplot(data=outDf, x='tauCoare_1', y='tauApprox_1', fill=True, levels=100, cmap='mako', thresh=0)
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
@@ -894,7 +894,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.show() 
 
     lin_lims = [min([min(outDf.tauCoare_2), min(outDf.tauApprox_2)]), max([max(outDf.tauCoare_2), max(outDf.tauApprox_2)])]
-    sns.kdeplot(data=outDf, x='tauCoare_2', y='tauApprox_2', fill=True, levels=100, cmap='mako', thresh=0)
+    # sns.kdeplot(data=outDf, x='tauCoare_2', y='tauApprox_2', fill=True, levels=100, cmap='mako', thresh=0)
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
@@ -919,7 +919,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.show()   
 
     lin_lims = [min([min(outDf.HCoare_1), min(outDf.HApprox_1)]), max([max(outDf.HCoare_1), max(outDf.HApprox_1)])]
-    sns.kdeplot(data=outDf, x='HCoare_1', y='HApprox_1', fill=True, levels=100, cmap='mako', thresh=0)
+    # sns.kdeplot(data=outDf, x='HCoare_1', y='HApprox_1', fill=True, levels=100, cmap='mako', thresh=0)
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
@@ -931,7 +931,7 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.show()  
 
     lin_lims = [min([min(outDf.HCoare_2), min(outDf.HApprox_2)]), max([max(outDf.HCoare_2), max(outDf.HApprox_2)])]
-    sns.kdeplot(data=outDf, x='HCoare_2', y='HApprox_2', fill=True, levels=100, cmap='mako', thresh=0)
+    # sns.kdeplot(data=outDf, x='HCoare_2', y='HApprox_2', fill=True, levels=100, cmap='mako', thresh=0)
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
