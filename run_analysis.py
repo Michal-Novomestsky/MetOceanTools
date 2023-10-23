@@ -350,7 +350,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rh = dataSlice.rh
         p = dataSlice.press
         tsea = dataSlice.tsea
-        sw_dn = dataSlice.solrad
+        sw_dn = dataSlice.solrad if dataSlice.solrad is not None else 0
         if not era_and_rems: lw_dn = dataSlice.thermrad # Only available with ERA5
         spechum = dataSlice.spech
         e = hum.hum2ea_modified(p, spechum)
@@ -679,8 +679,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
         plt.close()
     else:
         plt.show()    
-
-    # NOTE: Missing plots: water current speeds
 
     sns.lineplot(data=remsDf, x='timemet', y='rh', label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='rh', label='ERA5')
@@ -1062,7 +1060,7 @@ if __name__=='__main__':
             rh = metFile['rh.npy'] # Relative Humidity (%)
             spech = metFile['spech.npy'] # Specific humidity (rh: ratio, p: Pa; T: Kelvin)
             ta = metFile['ta.npy'] # Air Temperature (C)
-            solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
+            # solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
             cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
