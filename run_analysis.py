@@ -231,15 +231,16 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     date = fileName[7:15]
     day = date[0:2]
     month = date[2:4]
+    year = date[4:8]
     hour = fileName[16:18]
     
     # Defining constants
     TS_DEPTH = remsDf.depth[0] # Note that depth has to be extracted before we select the corresponding day as sometimes REMS may not exist on that day
 
     # Getting the corresponding day in the REMS data
-    remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month))]
+    remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month)) & (remsDf.timemet.map(lambda x: x.year) == int(year))]
     remsDf = remsDf.reset_index()
-    eraDf = eraDf.loc[(eraDf.timemet.map(lambda x: x.day) == int(day)) & (eraDf.timemet.map(lambda x: x.hour) == int(hour)) & (eraDf.timemet.map(lambda x: x.month) == int(month))]
+    eraDf = eraDf.loc[(eraDf.timemet.map(lambda x: x.day) == int(day)) & (eraDf.timemet.map(lambda x: x.hour) == int(hour)) & (eraDf.timemet.map(lambda x: x.month) == int(month)) & (eraDf.timemet.map(lambda x: x.year) == int(year))]
     eraDf = eraDf.reset_index()
 
     # Getting TIME_INTERVAL minute long slices and using them to get turbulent avg data over that same time frame
@@ -1038,6 +1039,7 @@ if __name__=='__main__':
     parser.add_argument('--run_supervised', action='store_true', help='Run one-by-one analysis', default=False)
     parser.add_argument('--era_only', action='store_true', help='If True, always use ERA5 and never use REMS for relevant parameters. If False, will use REMS when available and ERA5 otherwise.', default=False)
     parser.add_argument('--no_era', action='store_true', help='If True, will never use ERA5 - only REMS (skips unavailable times).', default=False)
+    parser.add_argument('--era_filename', type=str, help='Name of ERA5 npz file (e.g. era2015.npz)')
     args = parser.parse_args()
 
     # Using a modified version of np.load to read data with allow_pickle turned off in the .npz file
@@ -1063,7 +1065,7 @@ if __name__=='__main__':
                             "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
     # Grabbing ERA5 data
-    with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', 'era2015.npz')) as eraFile:
+    with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', args.era_filename)) as eraFile:
         timemet = eraFile['timemet.npy']
         u_10 = eraFile['u_10.npy'] # 10 metre U wind component (m/s)
         v_10 = eraFile['v_10.npy'] # 10 metre V wind component (m/s)
