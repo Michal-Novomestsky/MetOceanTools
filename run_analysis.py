@@ -1108,11 +1108,11 @@ if __name__=='__main__':
 
         outDf = outDf.sort_values(by='time') # Sorting outDf since it may be jumbled due to multiprocessing
 
-        postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
-
         eraDf.to_csv(os.path.join(writeDir, 'eraDf.csv'))
         remsDf.to_csv(os.path.join(writeDir, 'remsDf.csv'))
         outDf.to_csv(os.path.join(writeDir, 'outDf.csv'))
+
+        postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
 
     t1 = time.perf_counter()
     
