@@ -18,9 +18,12 @@ from COARE.COARE3_6.coare36vnWarm_et import coare36vnWarm_et as coare
 
 # Defining constants
 KELVIN_TO_CELSIUS = 273.15
-ZU = 14.8 # Height of anemometer #1 (the higher one)
+ZU_1 = 14.8 # Height of anemometer #1 (MRU available)
+ZU_2 = 8.8 # Height of anemometer #2 (no MRU)
 ZT = 28 # Approx. height of flare bridge AMSL
 ZQ = 28 # Approx. height of flare bridge AMSL
+LASER_TO_ANEM_1 = ZT - ZU_1
+LASER_TO_ANEM_2 = ZT - ZU_2
 LAT = -19.5856 # 19.5856S (Babanin et al.)
 LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
@@ -29,7 +32,8 @@ TIME_INTERVAL = 10
 MIN_COV_SIZE = 0.99 # Minimum % of points retained for valid covariance calculation
 MIN_SLICE_SIZE = 1000 # Minimum slice size prior to chopping out data
 WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
-ANEM1_TO_U10 = (10/ZU)**0.11 # Extrapolation scale factor
+# ANEM1_TO_U10 = (10/ZU_1)**0.11 # Extrapolation scale factor
+# ANEM2_TO_U10 = (10/ZU_2)**0.11
 
 # Default parameters
 LW_DN = 370
@@ -52,12 +56,24 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
 
     # TODO: Maybe make more efficient with smth like array. For now list is ok since we're passing in floats
     collector_time = []
-    collector_tauApprox = []
-    collector_tauCoare = []
-    collector_HApprox = []
-    collector_HCoare = []
-    collector_Cd = []
-    collector_U_10 = []
+    collector_rho = []
+    collector_t1_fluct = []
+    collector_t1_rng = []
+    collector_t2_fluct = []
+    collector_t2_rng = []
+    collector_laser1 = []
+    collector_laser2 = []
+    collector_laser3 = []
+    collector_laser4 = []
+
+    collector_tauApprox_1 = []
+    collector_tauCoare_1 = []
+    collector_HApprox_1 = []
+    collector_HCoare_1 = []
+    collector_Cd_1 = []
+    collector_Cd_coare_1 = []
+    collector_u_star_1 = []
+    collector_U_anem_1 = []
     collector_u1 = []
     collector_u1_turb = []
     collector_v1 = []
@@ -65,6 +81,16 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_w1 = []
     collector_w1_turb = []
     collector_t1 = []
+    collector_zu1 = []
+
+    collector_tauApprox_2 = []
+    collector_tauCoare_2 = []
+    collector_HApprox_2 = []
+    collector_HCoare_2 = []
+    collector_Cd_2 = []
+    collector_Cd_coare_2 = []
+    collector_u_star_2 = []
+    collector_U_anem_2 = []
     collector_u2 = []
     collector_u2_turb = []
     collector_v2 = []
@@ -72,24 +98,19 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_w2 = []
     collector_w2_turb = []
     collector_t2 = []
-    collector_rho = []
-    collector_t1_fluct = []
-    collector_t1_rng = []
-    collector_t2_fluct = []
-    collector_t2_rng = []
-    collector_u_star_1 = []
+    collector_zu2 = []
 
     # One-by-one
     if supervised:
         for file in files:
             output = _analysis_iteration(file, eraDf, remsDf, era_only, no_era)
             if output is not None:
-                collector_tauApprox += output[0]
-                collector_tauCoare += output[1]
-                collector_Cd += output[2]
-                collector_U_10 += output[3]
-                collector_HApprox += output[4]
-                collector_HCoare += output[5]
+                collector_tauApprox_1 += output[0]
+                collector_tauCoare_1 += output[1]
+                collector_Cd_1 += output[2]
+                collector_U_anem_1 += output[3]
+                collector_HApprox_1 += output[4]
+                collector_HCoare_1 += output[5]
                 collector_time += output[6]
                 collector_u1 += output[7]
                 collector_u1_turb += output[8]
@@ -98,19 +119,34 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_w1 += output[11]
                 collector_w1_turb += output[12]
                 collector_t1 += output[13]
-                collector_u2 += output[14]
-                collector_u2_turb += output[15]
-                collector_v2 += output[16]
-                collector_v2_turb += output[17]
-                collector_w2 += output[18]
-                collector_w2_turb += output[19]
-                collector_t2 += output[20]
-                collector_rho += output[21]
-                collector_t1_fluct += output[22]
-                collector_t1_rng += output[23]
-                collector_t2_fluct += output[24]
-                collector_t2_rng += output[25]
-                collector_u_star_1 += output[26]
+                collector_tauApprox_2 += output[14]
+                collector_tauCoare_2 += output[15]
+                collector_HApprox_2 += output[16]
+                collector_HCoare_2 += output[17]
+                collector_Cd_2 += output[18]
+                collector_U_anem_2 += output[19]
+                collector_u_star_2 += output[20]
+                collector_u2 += output[21]
+                collector_u2_turb += output[22]
+                collector_v2 += output[23]
+                collector_v2_turb += output[24]
+                collector_w2 += output[25]
+                collector_w2_turb += output[26]
+                collector_t2 += output[27]
+                collector_rho += output[28]
+                collector_t1_fluct += output[29]
+                collector_t1_rng += output[30]
+                collector_t2_fluct += output[31]
+                collector_t2_rng += output[32]
+                collector_u_star_1 += output[33]
+                collector_Cd_coare_1 += output[34]
+                collector_Cd_coare_2 += output[35]
+                collector_zu1 += output[36]
+                collector_zu2 += output[37]
+                collector_laser1 += output[38]
+                collector_laser2 += output[39]
+                collector_laser3 += output[40]
+                collector_laser4 += output[41]
 
     # Enabling multiprocessing
     else:
@@ -132,12 +168,12 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
             output = p.starmap(_analysis_iteration, iterable=args)
             for outputElem in output:
                 if outputElem is not None:
-                    collector_tauApprox += outputElem[0]
-                    collector_tauCoare += outputElem[1]
-                    collector_Cd += outputElem[2]
-                    collector_U_10 += outputElem[3]
-                    collector_HApprox += outputElem[4]
-                    collector_HCoare += outputElem[5]
+                    collector_tauApprox_1 += outputElem[0]
+                    collector_tauCoare_1 += outputElem[1]
+                    collector_Cd_1 += outputElem[2]
+                    collector_U_anem_1 += outputElem[3]
+                    collector_HApprox_1 += outputElem[4]
+                    collector_HCoare_1 += outputElem[5]
                     collector_time += outputElem[6]
                     collector_u1 += outputElem[7]
                     collector_u1_turb += outputElem[8]
@@ -146,27 +182,46 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_w1 += outputElem[11]
                     collector_w1_turb += outputElem[12]
                     collector_t1 += outputElem[13]
-                    collector_u2 += outputElem[14]
-                    collector_u2_turb += outputElem[15]
-                    collector_v2 += outputElem[16]
-                    collector_v2_turb += outputElem[17]
-                    collector_w2 += outputElem[18]
-                    collector_w2_turb += outputElem[19]
-                    collector_t2 += outputElem[20]
-                    collector_rho += outputElem[21]
-                    collector_t1_fluct += outputElem[22]
-                    collector_t1_rng += outputElem[23]
-                    collector_t2_fluct += outputElem[24]
-                    collector_t2_rng += outputElem[25]
-                    collector_u_star_1 += outputElem[26]
+                    collector_tauApprox_2 += outputElem[14]
+                    collector_tauCoare_2 += outputElem[15]
+                    collector_HApprox_2 += outputElem[16]
+                    collector_HCoare_2 += outputElem[17]
+                    collector_Cd_2 += outputElem[18]
+                    collector_U_anem_2 += outputElem[19]
+                    collector_u_star_2 += outputElem[20]
+                    collector_u2 += outputElem[21]
+                    collector_u2_turb += outputElem[22]
+                    collector_v2 += outputElem[23]
+                    collector_v2_turb += outputElem[24]
+                    collector_w2 += outputElem[25]
+                    collector_w2_turb += outputElem[26]
+                    collector_t2 += outputElem[27]
+                    collector_rho += outputElem[28]
+                    collector_t1_fluct += outputElem[29]
+                    collector_t1_rng += outputElem[30]
+                    collector_t2_fluct += outputElem[31]
+                    collector_t2_rng += outputElem[32]
+                    collector_u_star_1 += outputElem[33]
+                    collector_Cd_coare_1 += outputElem[34]
+                    collector_Cd_coare_2 += outputElem[35]
+                    collector_zu1 += outputElem[36]
+                    collector_zu2 += outputElem[37]
+                    collector_laser1 += outputElem[38]
+                    collector_laser2 += outputElem[39]
+                    collector_laser3 += outputElem[40]
+                    collector_laser4 += outputElem[41]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
-    return pd.DataFrame({"time": collector_time, "tauApprox": collector_tauApprox, "tauCoare": collector_tauCoare,
-                            "Cd": collector_Cd, "U_10": collector_U_10, "HApprox": collector_HApprox, "HCoare": collector_HCoare, 
+    return pd.DataFrame({"time": collector_time, "tauApprox_1": collector_tauApprox_1, "tauCoare_1": collector_tauCoare_1,
+                            "Cd_1": collector_Cd_1, "U_anem_1": collector_U_anem_1, "HApprox_1": collector_HApprox_1, "HCoare_1": collector_HCoare_1, 
                             "u1": collector_u1, "u1_turb": collector_u1_turb, "v1": collector_v1, "v1_turb": collector_v1_turb, "w1": collector_w1, "w1_turb": collector_w1_turb,
                             "ta_1": collector_t1, "u2": collector_u2, "u2_turb": collector_u2_turb, "v2": collector_v2, "v2_turb": collector_v2_turb, "w2": collector_w2, "w2_turb": collector_w2_turb, 
                             "ta_2": collector_t2, "rho": collector_rho, "is_temp1_fluctuating": collector_t1_fluct, "is_temp1_range_large": collector_t1_rng, 
-                            "is_temp2_fluctuating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng, "u_star_1": collector_u_star_1})
+                            "is_temp2_fluctuating": collector_t2_fluct, "is_temp2_range_large": collector_t2_rng, "u_star_1": collector_u_star_1,
+                            "tauApprox_2": collector_tauApprox_2, "tauCoare_2": collector_tauCoare_2, "Cd_2": collector_Cd_2, 
+                            "U_anem_2": collector_U_anem_2, "HApprox_2": collector_HApprox_2, "HCoare_2": collector_HCoare_2, "u_star_2": collector_u_star_2,
+                            "Cd_coare_1": collector_Cd_coare_1, "Cd_coare_2": collector_Cd_coare_2, "laser1": collector_laser1, "laser2": collector_laser2,
+                            "laser3": collector_laser3, "laser4": collector_laser4, "zu_1": collector_zu1, "zu_2": collector_zu2})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
@@ -176,15 +231,16 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     date = fileName[7:15]
     day = date[0:2]
     month = date[2:4]
+    year = date[4:8]
     hour = fileName[16:18]
     
     # Defining constants
     TS_DEPTH = remsDf.depth[0] # Note that depth has to be extracted before we select the corresponding day as sometimes REMS may not exist on that day
 
     # Getting the corresponding day in the REMS data
-    remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month))]
+    remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month)) & (remsDf.timemet.map(lambda x: x.year) == int(year))]
     remsDf = remsDf.reset_index()
-    eraDf = eraDf.loc[(eraDf.timemet.map(lambda x: x.day) == int(day)) & (eraDf.timemet.map(lambda x: x.hour) == int(hour)) & (eraDf.timemet.map(lambda x: x.month) == int(month))]
+    eraDf = eraDf.loc[(eraDf.timemet.map(lambda x: x.day) == int(day)) & (eraDf.timemet.map(lambda x: x.hour) == int(hour)) & (eraDf.timemet.map(lambda x: x.month) == int(month)) & (eraDf.timemet.map(lambda x: x.year) == int(year))]
     eraDf = eraDf.reset_index()
 
     # Getting TIME_INTERVAL minute long slices and using them to get turbulent avg data over that same time frame
@@ -192,14 +248,24 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
     slices = get_time_slices(data.df, TIME_INTERVAL)
 
-    # NOTE: FILL IN AS REQUIRED
     time_list = []
-    tau_approx = []
-    tau_coare = []
-    H_approx = []
-    H_coare = []
-    C_d = []
-    U_10_mean = [] # NOTE: "_mag" is to prevent it being const from all caps
+    rho_mean = []
+    is_temp1_fluctuating = []
+    is_temp1_range_large = []
+    is_temp2_fluctuating = []
+    is_temp2_range_large = []
+    laser1_mean = []
+    laser2_mean = []
+    laser3_mean = []
+    laser4_mean = []
+
+    tau_approx_1 = []
+    tau_coare_1 = []
+    H_approx_1 = []
+    H_coare_1 = []
+    C_d_1 = []
+    C_d_coare_1 = []
+    U_anem_1_mean = []
     u_star_1_list = []
     u1_mean = []
     u1_turb_mean = []
@@ -208,6 +274,16 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     w1_mean = []
     w1_turb_mean = []
     t1_mean = []
+    zu1_mean = []
+
+    tau_approx_2 = []
+    tau_coare_2 = []
+    H_approx_2 = []
+    H_coare_2 = []
+    C_d_2 = []
+    C_d_coare_2 = []
+    U_anem_2_mean = []
+    u_star_2_list = []
     u2_mean = []
     u2_turb_mean = []
     v2_mean = []
@@ -215,11 +291,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     w2_mean = []
     w2_turb_mean = []
     t2_mean = []
-    rho_mean = []
-    is_temp1_fluctuating = []
-    is_temp1_range_large = []
-    is_temp2_fluctuating = []
-    is_temp2_range_large = []
+    zu2_mean = []
 
     u1 = "Anemometer #1 U Velocity (ms-1)"
     v1 = "Anemometer #1 V Velocity (ms-1)"
@@ -231,6 +303,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     w2 = "Anemometer #2 W Velocity (ms-1)"
     t2 = "Anemometer #2 Temperature (degC)"
     comp2 = "Compass #2 (deg)"
+    laser1 = 'Laser #1 Range (m)'
+    laser2 = 'Laser #2 Range (m)'
+    laser3 = 'Laser #3 Range (m)'
+    laser4 = 'Laser #4 Range (m)'
 
     if (era_only or len(remsDf) == 0) and not no_era:
         time = eraDf.timemet[0]
@@ -257,20 +333,20 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             dataSlice = remsDf.loc[(time <= remsDf.timemet) & (remsDf.timemet <= time + datetime.timedelta(minutes=TIME_INTERVAL))]
             dataSlice = dataSlice.mean(numeric_only=True)
 
-        # TODO: Correcting for POSSIBLE error in anem temp (10degC hotter than REMS)
-        #slice[t2] = slice[t2] - 5
         original_len = len(slice)
         slice = slice[~slice.is_temp1_range_large] # Removing erroneous points
         if len(slice)/original_len <= MIN_COV_SIZE:
             write_message(f'Too much cut out: {len(slice)}/{original_len}. {fileName} rejected.', filename='analysis_log.txt')
             continue
+
+        # # Flipping direction in anem 2 (TODO REMOVE AFTER NEXT FULLSWEEP)
         slice[u2] = -slice[u2]
         slice[v2] = -slice[v2]
 
         # Getting parameters
         jd = time - datetime.datetime(2015, 1, 1)
         jd = float(jd.days)
-        tair = dataSlice.ta
+        tair = dataSlice.ta # NOTE COARE uses REMS temp (which is higher up)
         rh = dataSlice.rh
         p = dataSlice.press
         tsea = dataSlice.tsea
@@ -280,61 +356,90 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         e = hum.hum2ea_modified(p, spechum)
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
-        # DERIVED FROM ANEM 1 (MRU CORRECTED ONE)
-        U_10_vec, U_anem1_mag, U_10_turb, w_vel_1, w_turb, T_turb = get_windspeed_data(slice, u1, v1, w1, t1, e, p)
-        # U_10_mag = ANEM1_TO_U10*U_anem1_mag
-        U_10_mag = U_anem1_mag
+        # Calculating EC data (anem 1 is motion corrected)
+        U_anem_1, U_anem_1_turb, w_vel_1, w_turb_1, T_turb_1 = get_windspeed_data(slice, u1, v1, w1, t1, mru_correct=True)
+        U_anem_2, U_anem_2_turb, w_vel_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2, mru_correct=True)
+        # U_10_1 = ANEM1_TO_U10*U_anem_1
+        # U_10_2 = ANEM2_TO_U10*U_anem_2
 
-        # u_AirWat = u_Air - u_Wat
-        #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
-        #U_vec.North = U_vec.North - remsSlice.cur_n_comp
-        # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
+        u_star_1 = np.sqrt(-get_covariance(U_anem_1_turb, w_turb_1))
+        tau_approx_1.append(rho*(u_star_1**2))
+        H_approx_1.append(rho*CPD*get_covariance(w_turb_1, T_turb_1))
 
-        u_star_1 = np.sqrt(-get_covariance(U_10_turb, w_turb))
-        tau_approx.append(rho*(u_star_1**2))
-        H_approx.append(rho*CPD*get_covariance(w_turb, T_turb))
+        u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
+        tau_approx_2.append(rho*(u_star_2**2))
+        H_approx_2.append(rho*CPD*get_covariance(w_turb_2, T_turb_2))
 
-        #TODO: Assume U_10 ~= U_14.8 for now
-        C_d.append((u_star_1/np.mean(U_10_mag))**2)
-        # C_d.append((u_star_1**2)/(np.mean(U_10_mag**2)))
+        # Logging values
         u_star_1_list.append(u_star_1)
-        U_10_mean.append(np.mean(U_10_mag))
+        U1_mean = np.mean(U_anem_1)
+        C_d_1.append((u_star_1/U1_mean)**2)
+        U_anem_1_mean.append(U1_mean)
         u1_mean.append(np.mean(slice[u1]))
         u1_turb_mean.append(np.mean(get_turbulent(slice[u1])))
         v1_mean.append(np.mean(slice[v1]))
         v1_turb_mean.append(np.mean(get_turbulent(slice[v1])))
         w1_mean.append(np.mean(w_vel_1))
-        w1_turb_mean.append(np.mean(w_turb))
+        w1_turb_mean.append(np.mean(w_turb_1))
         t1_mean.append(np.mean(slice[t1]))
+
+        u_star_2_list.append(u_star_2)
+        U2_mean = np.mean(U_anem_2)
+        C_d_2.append((u_star_2/U2_mean)**2)
+        U_anem_2_mean.append(U2_mean)
         u2_mean.append(np.mean(slice[u2]))
         u2_turb_mean.append(np.mean(get_turbulent(slice[u2])))
         v2_mean.append(np.mean(slice[v2]))
         v2_turb_mean.append(np.mean(get_turbulent(slice[v2])))
-        w2_mean.append(np.mean(slice[w2]))
-        w2_turb_mean.append(np.mean(get_turbulent(slice[w2])))
+        w2_mean.append(np.mean(w_vel_2))
+        w2_turb_mean.append(np.mean(w_turb_2))
         t2_mean.append(np.mean(slice[t2]))
+
         rho_mean.append(np.mean(rho))
         is_temp1_fluctuating.append(slice.is_temp1_fluctuating.any())
         is_temp1_range_large.append(slice.is_temp1_range_large.any())
         is_temp2_fluctuating.append(slice.is_temp2_fluctuating.any())
         is_temp2_range_large.append(slice.is_temp2_range_large.any())
 
-        # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
-        try:
-            blockPrint()
-            coare_res = coare(Jd=jd, U=np.mean(U_10_mag), Zu=ZU, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
-                              Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
-                              Rainrate=RAINRATE, Ts_depth=TS_DEPTH, Ss=SS, cp=None, sigH=None,
-                              zrf_u=ZU, zrf_t=ZU, zrf_q=ZU)
-            enablePrint()
-            tau_coare.append(coare_res[0][1])
-            H_coare.append(coare_res[0][2])
-        except Exception as e:
-            # tau_coare.append(-0.3)
-            # H_coare.append(-10)
-            tau_coare.append(np.nan)
-            H_coare.append(np.nan)
-            write_message(f"ERROR IN {fileName}: {e} - SKIPPED FOR NOW", filename='analysis_log.txt')
+        if slice[laser1] is None:
+            l1 = l2 = l3 = l4 = ZT
+        else:
+            l1 = np.mean(slice[laser1])
+            l2 = np.mean(slice[laser2])
+            l3 = np.mean(slice[laser3])
+            l4 = np.mean(slice[laser4])
+
+        laser1_mean.append(l1)
+        laser2_mean.append(l2)
+        laser3_mean.append(l3)
+        laser4_mean.append(l4)
+
+        # Getting COARE's predictions
+        zu_1 = l1 - LASER_TO_ANEM_1
+        zu1_mean.append(zu_1)
+        coare_res = get_coare_data(U1_mean, jd, zu_1, tair, rh, p, tsea, sw_dn, TS_DEPTH)
+        if coare_res is None:
+            write_message(f"ANEM 1 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
+            tau_coare_1.append(np.nan)
+            H_coare_1.append(np.nan)
+            C_d_coare_1.append(np.nan)
+        else:
+            tau_coare_1.append(coare_res[1])
+            H_coare_1.append(coare_res[2])
+            C_d_coare_1.append(coare_res[12])
+
+        zu_2 = l1 - LASER_TO_ANEM_2
+        zu2_mean.append(zu_2)
+        coare_res = get_coare_data(U2_mean, jd, zu_2, tair, rh, p, tsea, sw_dn, TS_DEPTH)
+        if coare_res is None:
+            write_message(f"ANEM 2 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
+            tau_coare_2.append(np.nan)
+            H_coare_2.append(np.nan)
+            C_d_coare_2.append(np.nan)
+        else:
+            tau_coare_2.append(coare_res[1])
+            H_coare_2.append(coare_res[2])
+            C_d_coare_2.append(coare_res[12])
 
         # Updating time
         time_list.append(time)
@@ -345,27 +450,58 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     else:
         write_message(f"Analysed {fileName} with ERA5", filename='analysis_log.txt')
 
-    return (tau_approx, tau_coare, C_d, U_10_mean, H_approx, H_coare, time_list, 
-            u1_mean, u1_turb_mean, v1_mean, v1_turb_mean, w1_mean, w1_turb_mean, t1_mean, 
+    return (tau_approx_1, tau_coare_1, C_d_1, U_anem_1_mean, H_approx_1, H_coare_1, time_list, 
+            u1_mean, u1_turb_mean, v1_mean, v1_turb_mean, w1_mean, w1_turb_mean, t1_mean,
+            tau_approx_2, tau_coare_2, H_approx_2, H_coare_2, C_d_2, U_anem_2_mean, u_star_2_list,
             u2_mean, u2_turb_mean, v2_mean, v2_turb_mean, w2_mean, w2_turb_mean, 
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
-            is_temp2_fluctuating, is_temp2_range_large, u_star_1_list)
+            is_temp2_fluctuating, is_temp2_range_large, u_star_1_list, C_d_coare_1, C_d_coare_2, zu1_mean,
+            zu2_mean, laser1_mean, laser2_mean, laser3_mean, laser4_mean)
 
-def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str, e, p) -> tuple:
+def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, p: float, tsea: float, sw_dn: float, 
+                   ts_depth: float) -> np.ndarray:
+    # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
+    try:
+        blockPrint()
+        coare_res = coare(Jd=jd, U=U_mean, Zu=zu, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
+                            Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
+                            Rainrate=RAINRATE, Ts_depth=ts_depth, Ss=SS, cp=None, sigH=None,
+                            zrf_u=zu, zrf_t=zu, zrf_q=zu)
+        enablePrint()
+    except Exception as e:
+        return None
+
+    return coare_res[0]
+
+def get_H_err_coeffs(slice: pd.DataFrame, u: str, t: str, tair: float) -> np.ndarray:
+    u_anem = slice[u]
+    temp_diff = tair - slice[t]
+    try:
+        p = np.polyfit(u_anem, temp_diff, deg=3)
+    except np.linalg.LinAlgError:
+        return np.nan*np.ones(len(u_anem))
+    return np.zeros(len(u_anem)) #3*p[0]*u_anem**2 + 2*p[1]*u_anem + p[2]
+
+def get_windspeed_data(slice: pd.DataFrame, u: str, v: str, w: str, t: str, mru_correct=True) -> tuple:
     # Getting current-corrected windspeed
     U_mag = np.sqrt(slice[u]**2 + slice[v]**2)
     w_vel = slice[w]
     # Easterly -> +ive x axis, Northerly -> +ive y. Note that anem v+ is west so east is -v
-    U_vec = pd.DataFrame({'East': slice[v], 'North': slice[u]}) # NOTE LOCALLY MRU UNCORRECTED
-    U_vec = U_vec.mean() #Taking TIME_INTERVAL min avg
+    # u_AirWat = u_Air - u_Wat
+    #U_vec.East = U_vec.East - remsSlice.cur_e_comp # Seem to be negligible compared to wind speed
+    #U_vec.North = U_vec.North - remsSlice.cur_n_comp
+    # u = np.sqrt(U_10_vec.North**2 + U_10_vec.East**2) #TODO CHANGE TO U_10_mag
+    # U_vec = pd.DataFrame({'East': slice[v], 'North': slice[u]}) # NOTE LOCALLY MRU UNCORRECTED
+    # U_vec = U_vec.mean() #Taking TIME_INTERVAL min avg
 
     # Locally MRU correcting
-    theta = np.arctan2(np.mean(w_vel), np.mean(U_mag))
-    U_mag_corr = w_vel*np.sin(theta) + U_mag*np.cos(theta)
-    w_vel_corr = w_vel*np.cos(theta) - U_mag*np.sin(theta)
+    if mru_correct:
+        theta = np.arctan2(np.mean(w_vel), np.mean(U_mag))
+        U_mag_corr = w_vel*np.sin(theta) + U_mag*np.cos(theta)
+        w_vel_corr = w_vel*np.cos(theta) - U_mag*np.sin(theta)
 
-    U_mag = U_mag_corr
-    w_vel = w_vel_corr
+        U_mag = U_mag_corr
+        w_vel = w_vel_corr
 
     # Getting magnitude of turbulent horizontal velocity vector
     U_turb = get_turbulent(U_mag)
@@ -374,7 +510,7 @@ def get_windspeed_data(slice: pd.Series, u: str, v: str, w: str, t: str, e, p) -
     T_turb = get_turbulent(slice[t])
     # T_turb = get_turbulent(slice[t]/(1 + 0.378*e/p))
 
-    return U_vec, U_mag, U_turb, w_vel, w_turb, T_turb
+    return U_mag, U_turb, w_vel, w_turb, T_turb
 
 def get_time_slices(df: pd.DataFrame, interval_min: float) -> list:
     """
@@ -544,8 +680,6 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     else:
         plt.show()    
 
-    # NOTE: Missing plots: water current speeds
-
     sns.lineplot(data=remsDf, x='timemet', y='rh', label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='rh', label='ERA5')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
@@ -604,6 +738,31 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'air_dens.png'))
+        plt.close()
+    else:
+        plt.show()   
+
+    sns.lineplot(data=outDf, x='time', y='laser1', label='laser 1')
+    sns.lineplot(data=outDf, x='time', y='laser2', label='laser 2')
+    sns.lineplot(data=outDf, x='time', y='laser3', label='laser 3')
+    sns.lineplot(data=outDf, x='time', y='laser4', label='laser 4')
+    plt.xlabel('time')
+    plt.ylabel('Sea Level from Lasers (m) (28m AMSL)')
+    plt.ylim([20, 30])
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'laser.png'))
+        plt.close()
+    else:
+        plt.show()   
+
+    sns.lineplot(data=outDf, x='time', y='zu_1', label='Anem 1')
+    sns.lineplot(data=outDf, x='time', y='zu_2', label='Anem 2')
+    plt.xlabel('time')
+    plt.ylabel('Anemometer Height Above Sea Level (m)')
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'zu.png'))
         plt.close()
     else:
         plt.show()   
@@ -685,7 +844,8 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    sns.lineplot(data=outDf, x='time', y='U_10', label='Anem')
+    sns.lineplot(data=outDf, x='time', y='U_anem_1', label='Anem 1')
+    sns.lineplot(data=outDf, x='time', y='U_anem_2', label='Anem 2')
     sns.lineplot(x=eraDf.timemet, y=np.linalg.norm(eraDf[['v_10', 'u_10']].values,axis=1), label='ERA5')
     plt.xlabel('time')
     plt.ylabel('Magnitude of Horizontal Wind Speed at 10m (m/s)')
@@ -708,8 +868,9 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    lin_lims = [min([min(outDf.tauCoare), min(outDf.tauApprox)]), max([max(outDf.tauCoare), max(outDf.tauApprox)])]
-    sns.regplot(data=outDf, x='tauCoare', y='tauApprox', label='Best fit with 95% CI')
+    lin_lims = [min([min(outDf.tauCoare_1), min(outDf.tauApprox_1)]), max([max(outDf.tauCoare_1), max(outDf.tauApprox_1)])]
+    sns.regplot(data=outDf, x='tauCoare_1', y='tauApprox_1', label='Anem 1 Best fit with 95% CI')
+    sns.regplot(data=outDf, x='tauCoare_2', y='tauApprox_2', label='Anem 2 Best fit with 95% CI')
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
@@ -720,20 +881,33 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    lin_lims = [min([min(outDf.tauCoare), min(outDf.tauApprox)]), max([max(outDf.tauCoare), max(outDf.tauApprox)])]
-    sns.kdeplot(data=outDf, x='tauCoare', y='tauApprox', fill=True, levels=100, cmap='mako', thresh=0)
+    lin_lims = [min([min(outDf.tauCoare_1), min(outDf.tauApprox_1)]), max([max(outDf.tauCoare_1), max(outDf.tauApprox_1)])]
+    # sns.kdeplot(data=outDf, x='tauCoare_1', y='tauApprox_1', fill=True, levels=100, cmap='mako', thresh=0)
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
-    plt.title('Shear Stress')
+    plt.title('Anem 1 Shear Stress')
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_xy.png'))
         plt.close()
     else:
-        plt.show()   
+        plt.show() 
 
-    lin_lims = [min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])]
-    sns.regplot(data=outDf, x='HCoare', y='HApprox', label='Best fit with 95% CI')
+    lin_lims = [min([min(outDf.tauCoare_2), min(outDf.tauApprox_2)]), max([max(outDf.tauCoare_2), max(outDf.tauApprox_2)])]
+    # sns.kdeplot(data=outDf, x='tauCoare_2', y='tauApprox_2', fill=True, levels=100, cmap='mako', thresh=0)
+    sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
+    plt.xlabel('COARE')
+    plt.ylabel('EC')
+    plt.title('Anem 2 Shear Stress')
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_xy.png'))
+        plt.close()
+    else:
+        plt.show() 
+
+    lin_lims = [min([min(outDf.HCoare_1), min(outDf.HApprox_1)]), max([max(outDf.HCoare_1), max(outDf.HApprox_1)])]
+    sns.regplot(data=outDf, x='HCoare_1', y='HApprox_1', label='Anem 1 Best fit with 95% CI')
+    sns.regplot(data=outDf, x='HCoare_2', y='HApprox_2', label='Anem 2 Best fit with 95% CI')
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
@@ -744,12 +918,24 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()   
 
-    lin_lims = [min([min(outDf.HCoare), min(outDf.HApprox)]), max([max(outDf.HCoare), max(outDf.HApprox)])]
-    sns.kdeplot(data=outDf, x='HCoare', y='HApprox', fill=True, levels=100, cmap='mako', thresh=0)
+    lin_lims = [min([min(outDf.HCoare_1), min(outDf.HApprox_1)]), max([max(outDf.HCoare_1), max(outDf.HApprox_1)])]
+    # sns.kdeplot(data=outDf, x='HCoare_1', y='HApprox_1', fill=True, levels=100, cmap='mako', thresh=0)
     sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
     plt.xlabel('COARE')
     plt.ylabel('EC')
-    plt.title('Sensible Heat Flux (Wm^-2)')
+    plt.title('Anem 1 Sensible Heat Flux (Wm^-2)')
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_xy.png'))
+        plt.close()
+    else:
+        plt.show()  
+
+    lin_lims = [min([min(outDf.HCoare_2), min(outDf.HApprox_2)]), max([max(outDf.HCoare_2), max(outDf.HApprox_2)])]
+    # sns.kdeplot(data=outDf, x='HCoare_2', y='HApprox_2', fill=True, levels=100, cmap='mako', thresh=0)
+    sns.lineplot(x=lin_lims, y=lin_lims, label='1:1 Fit')
+    plt.xlabel('COARE')
+    plt.ylabel('EC')
+    plt.title('Anem 2 Sensible Heat Flux (Wm^-2)')
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_xy.png'))
         plt.close()
@@ -757,36 +943,52 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
         plt.show()   
 
     sns.lineplot(data=outDf, x='time', y='u_star_1', label="Anem 1 u_star", marker='.')
+    sns.lineplot(data=outDf, x='time', y='u_star_2', label="Anem 2 u_star", marker='.')
     plt.xlabel('time')
     plt.ylabel('u_star (m/s)')
     plt.xticks(plt.xticks()[0], rotation=90)
     plt.show()
 
     # Making a box for x [0, 25], y [-2, 5]
-    left_wall = [[0, 0], [-2, 5]]
-    right_wall = [[25, 25], [-2, 5]]
-    bottom_wall = [[0, 25], [-2, -2]]
-    top_wall = [[0, 25], [5, 5]]
-    sns.lineplot(x=left_wall[0], y=left_wall[1], color='black')
-    sns.lineplot(x=right_wall[0], y=right_wall[1], color='black')
-    sns.lineplot(x=bottom_wall[0], y=bottom_wall[1], color='black')
-    sns.lineplot(x=top_wall[0], y=top_wall[1], color='black')
-    sns.scatterplot(x=outDf.U_10, y=1000*outDf.Cd)
-    plt.xlabel('U_10 (m/s)')
-    plt.ylabel('1000*Cd')
+    # left_wall = [[0, 0], [-2, 5]]
+    # right_wall = [[25, 25], [-2, 5]]
+    # bottom_wall = [[0, 25], [-2, -2]]
+    # top_wall = [[0, 25], [5, 5]]
+    # sns.lineplot(x=left_wall[0], y=left_wall[1], color='black')
+    # sns.lineplot(x=right_wall[0], y=right_wall[1], color='black')
+    # sns.lineplot(x=bottom_wall[0], y=bottom_wall[1], color='black')
+    # sns.lineplot(x=top_wall[0], y=top_wall[1], color='black')
+    sns.scatterplot(x=outDf.U_anem_1, y=1000*outDf.Cd_1, label='Anem 1')
+    sns.lineplot(x=outDf.U_anem_1, y=1000*outDf.Cd_coare_1, label='COARE', color='black')
+    plt.xlabel('U_10 (Approx) (m/s)')
+    plt.ylabel('Cd*10^3')
+    plt.ylim([-2,5]) # Limits as per box dimensions
+    plt.xlim([0, 25])
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'Cd_spread.png'))
         plt.close()
     else:
         plt.show()   
 
-    mean_ec = apply_window_wise(outDf.tauApprox, WINDOW_WIDTH, np.mean)
-    sns.scatterplot(data=outDf, x='time', y='tauApprox', marker='.', color='blue', label='EC')
-    sns.lineplot(data=outDf, x='time', y='tauCoare', color='orange', label='COARE')
+    sns.scatterplot(x=outDf.U_anem_2, y=1000*outDf.Cd_2, label='Anem 2')
+    sns.lineplot(x=outDf.U_anem_2, y=1000*outDf.Cd_coare_2, label='COARE', color='black')
+    plt.xlabel('U_10 (Approx) (m/s)')
+    plt.ylabel('Cd*10^3')
+    plt.xlim([0, 25])
+    plt.ylim([-2,5]) # Limits as per box dimensions
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'Cd_spread.png'))
+        plt.close()
+    else:
+        plt.show()  
+
+    mean_ec = apply_window_wise(outDf.tauApprox_1, WINDOW_WIDTH, np.mean)
+    sns.scatterplot(data=outDf, x='time', y='tauApprox_1', marker='.', color='blue', label='EC')
+    sns.lineplot(data=outDf, x='time', y='tauCoare_1', color='orange', label='COARE')
     sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
     sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
     plt.xlabel('time')
-    plt.ylabel('Shear Stress')
+    plt.ylabel('Anem 1 Shear Stress (Nm^-2)')
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
@@ -794,34 +996,47 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()  
 
-    mean_ec = apply_window_wise(outDf.HApprox, WINDOW_WIDTH, np.mean)
-    sns.scatterplot(data=outDf, x='time', y='HApprox', marker='.', color='blue', label='EC')
-    sns.lineplot(data=outDf, x='time', y='HCoare', color='orange', label='COARE')
+    mean_ec = apply_window_wise(outDf.tauApprox_2, WINDOW_WIDTH, np.mean)
+    sns.scatterplot(data=outDf, x='time', y='tauApprox_2', marker='.', color='blue', label='EC')
+    sns.lineplot(data=outDf, x='time', y='tauCoare_2', color='orange', label='COARE')
     sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
     sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
     plt.xlabel('time')
-    plt.ylabel('Sensible Heat Flux (Wm^-2)')
+    plt.ylabel('Anem 2 Shear Stress (Nm^-2)')
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'tau_timeseries.png'))
+        plt.close()
+    else:
+        plt.show()
+
+    mean_ec = apply_window_wise(outDf.HApprox_1, WINDOW_WIDTH, np.mean)
+    sns.scatterplot(data=outDf, x='time', y='HApprox_1', marker='.', color='blue', label='EC')
+    sns.lineplot(data=outDf, x='time', y='HCoare_1', color='orange', label='COARE')
+    sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
+    plt.xlabel('time')
+    plt.ylabel('Anem 1 Sensible Heat Flux (Wm^-2)')
     plt.xticks(plt.xticks()[0], rotation=90)
     if save_plots:
         plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
         plt.close()
     else:
-        plt.show()     
+        plt.show()  
 
-    # fig, ax = plt.subplots()
-    # lns1 = ax.plot(outDf.time, outDf.HApprox, "-o", label='EC')
-    # lns2 = ax.plot(outDf.time, outDf.HCoare, "-o", label='COARE')
-    # ax.set_xlabel('Time')
-    # ax.set_ylabel('Sensible Heat Flux')
-    # ax2 = ax.twinx()
-    # lns3 = ax2.plot(outDf.time, outDf.U_10, "-o", color='r', label='U_10')
-    # ax2.set_ylim([0,20])
-    # ax2.set_ylabel('U_10 (m/s)')
-    # lns = lns1+lns2+lns3
-    # labs = [l.get_label() for l in lns]
-    # ax.legend(lns, labs, loc=0)
-    # plt.savefig(os.path.join(writeDir, f"{title}.png"))
-    # plt.close()
+    mean_ec = apply_window_wise(outDf.HApprox_2, WINDOW_WIDTH, np.mean)
+    sns.scatterplot(data=outDf, x='time', y='HApprox_2', marker='.', color='blue', label='EC')
+    sns.lineplot(data=outDf, x='time', y='HCoare_2', color='orange', label='COARE')
+    sns.scatterplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green', label='Mean EC')
+    sns.lineplot(x=outDf.time[::WINDOW_WIDTH], y=mean_ec, color='green')
+    plt.xlabel('time')
+    plt.ylabel('Anem 2 Sensible Heat Flux (Wm^-2)')
+    plt.xticks(plt.xticks()[0], rotation=90)
+    if save_plots:
+        plt.savefig(os.path.join(writeDir, 'Postprocess', 'H_timeseries.png'))
+        plt.close()
+    else:
+        plt.show()    
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
@@ -831,6 +1046,7 @@ if __name__=='__main__':
     parser.add_argument('--run_supervised', action='store_true', help='Run one-by-one analysis', default=False)
     parser.add_argument('--era_only', action='store_true', help='If True, always use ERA5 and never use REMS for relevant parameters. If False, will use REMS when available and ERA5 otherwise.', default=False)
     parser.add_argument('--no_era', action='store_true', help='If True, will never use ERA5 - only REMS (skips unavailable times).', default=False)
+    parser.add_argument('--era_filename', type=str, help='Name of ERA5 npz file (e.g. era2015.npz)')
     args = parser.parse_args()
 
     # Using a modified version of np.load to read data with allow_pickle turned off in the .npz file
@@ -846,7 +1062,6 @@ if __name__=='__main__':
             ta = metFile['ta.npy'] # Air Temperature (C)
             solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
-            #timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
             tsea = metFile['tsea.npy'] # Water temperature (degC)
@@ -856,7 +1071,7 @@ if __name__=='__main__':
                             "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
     # Grabbing ERA5 data
-    with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', 'era2015.npz')) as eraFile:
+    with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', args.era_filename)) as eraFile:
         timemet = eraFile['timemet.npy']
         u_10 = eraFile['u_10.npy'] # 10 metre U wind component (m/s)
         v_10 = eraFile['v_10.npy'] # 10 metre V wind component (m/s)
@@ -893,11 +1108,11 @@ if __name__=='__main__':
 
         outDf = outDf.sort_values(by='time') # Sorting outDf since it may be jumbled due to multiprocessing
 
-        postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
-
         eraDf.to_csv(os.path.join(writeDir, 'eraDf.csv'))
         remsDf.to_csv(os.path.join(writeDir, 'remsDf.csv'))
         outDf.to_csv(os.path.join(writeDir, 'outDf.csv'))
+
+        postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
 
     t1 = time.perf_counter()
     
