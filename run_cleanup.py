@@ -9,10 +9,8 @@ from Modules.DataAnalyser import write_message
 from aggregate_files import run_aggregate_files
 from pathlib import Path
 
-import seaborn as sns
-from matplotlib import pyplot as plt
 
-TIME_INTERVAL = 20 # TODO Voermans et al. set to 15min
+TIME_INTERVAL = 15 # TODO Voermans et al. set to 15min
 
 def cleanup_loop(readDir: Path, writeDir: Path, supervised=False, cpuFraction=1, file_selector_name=None, mru_correct=True, generate_plots=True) -> None:
     """
@@ -98,7 +96,8 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     laser4 = 'Laser #4 Range (m)'
     
     # Interpolating points in comp and MRU to bring it up to the same resolution
-    for entry in [comp1, comp2, mru_pitch, mru_yaw, mru_roll, mru_p, mru_r, mru_y, laser1, laser2, laser3, laser4]:
+    for entry in [comp1, comp2, mru_pitch, mru_yaw, mru_roll, mru_p, mru_r, mru_y, 
+                  laser1, laser2, laser3, laser4]:
         data.remove_nans(entry, data.df, naive=True)
     write_message(f"{fileName}: Interpolated", filename='cleanup_log.txt')
 
@@ -122,20 +121,26 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
     for entry in [u1, u2, v1, v2, w1, w2]:
         if rejectLog:
             break
-        rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=TIME_INTERVAL, windowWidth=2, generate_plots=generate_plots)
+        rejectLog = rejectLog or data.plot_ft_loglog(entry, fileName, gradient=-5/3, gradient_cutoff=0.5, 
+                                                     pearson_cutoff=0.8, supervised=supervised, saveLoc=saveLoc, 
+                                                     plotType="-", turbSampleMins=TIME_INTERVAL, windowWidth=2, 
+                                                     generate_plots=generate_plots)
 
     for t in [t1, t2]:
         # Not filtering with temperature FTs since their regression is poorly studied
         if rejectLog:
             break
-        data.plot_ft_loglog(t, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, windowWidth=2, generate_plots=generate_plots)
+        data.plot_ft_loglog(t, fileName, gradient=-1, gradient_cutoff=100, pearson_cutoff=0, 
+                            supervised=supervised, saveLoc=saveLoc, plotType="-", turbSampleMins=20, 
+                            windowWidth=2, generate_plots=generate_plots)
 
     # Hist checking
     for entry in [u1, u2, v1, v2, w1, w2, t1, t2]:
         if rejectLog:
             break
         rejectLog = rejectLog or data.reject_hist_outliers(entry, diffCutoff=8)
-        # Seperate if-statement to prevent printing from rejectLogs caused by prior filter passes (e.g. plot_ft_loglog)
+        # Seperate if-statement to prevent printing from rejectLogs caused by prior filter passes 
+        # (e.g. plot_ft_loglog)
         if rejectLog:
             print(f"Rejected {fileName}: Histogram has a spike")
 
@@ -164,11 +169,10 @@ def _cleanup_iteration(file: Path, writeDir: Path, supervised=True, mru_correct=
 
             # Plotting original timeseries vs filtered ones
             saveLoc = os.path.join(writeDir, "comparisons")
-            # for entry in [u1, u2, v1, v2, w1, w2, laser1, laser2, laser3, laser4]:
-            for entry in [laser1, laser2, laser3, laser4]:
+            for entry in [u1, u2, v1, v2, w1, w2, laser1, laser2, laser3, laser4]:
                 data.plot_comparison(entry, fileName, supervised=supervised, saveLoc=saveLoc)
-            # for t in [t1, t2]:
-            #     data.plot_comparison(t, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
+            for t in [t1, t2]:
+                data.plot_comparison(t, fileName, supervised=supervised, saveLoc=saveLoc, y_lim=[15, 40])
 
     write_message(f"{fileName}: Plotting/Sanity Checking Complete", filename='cleanup_log.txt')
 
