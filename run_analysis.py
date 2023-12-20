@@ -355,8 +355,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rh = dataSlice.rh
         p = dataSlice.press
         tsea = dataSlice.tsea
-        # sw_dn = dataSlice.solrad
-        sw_dn = eraSlice.solrad
+        sw_dn = dataSlice.solrad
+        # sw_dn = eraSlice.solrad
         if not era_and_rems: lw_dn = dataSlice.thermrad # Only available with ERA5
         spechum = dataSlice.spech
         e = hum.hum2ea_modified(p, spechum)
@@ -1067,17 +1067,17 @@ if __name__=='__main__':
             rh = metFile['rh.npy'] # Relative Humidity (%)
             spech = metFile['spech.npy'] # Specific humidity (rh: ratio, p: Pa; T: Kelvin)
             ta = metFile['ta.npy'] # Air Temperature (C)
-    #         solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
-    #     with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
-    #         cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
-    #         cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
-    #         tsea = metFile['tsea.npy'] # Water temperature (degC)
-    #         depth = metFile['depth.npy'] # Approx. distance from surface (m), Babanin et al.
+            solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
+        with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
+            cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
+            cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
+            tsea = metFile['tsea.npy'] # Water temperature (degC)
+            depth = metFile['depth.npy'] # Approx. distance from surface (m), Babanin et al.
 
-    # remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
-    #                         "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
+    remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
+                            "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
     
-    remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta})
+    # remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta})
 
     # Grabbing ERA5 data
     with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', args.era_filename)) as eraFile:
