@@ -474,6 +474,7 @@ def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, 
     return coare_res[0]
 
 def get_H_err_coeffs(slice: pd.DataFrame, u: str, t: str, tair: float) -> np.ndarray:
+    # Burns et. al
     u_anem = slice[u]
     temp_diff = tair - slice[t]
     try:
@@ -1060,7 +1061,7 @@ if __name__=='__main__':
             rh = metFile['rh.npy'] # Relative Humidity (%)
             spech = metFile['spech.npy'] # Specific humidity (rh: ratio, p: Pa; T: Kelvin)
             ta = metFile['ta.npy'] # Air Temperature (C)
-            solrad = -metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
+            solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
             cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
