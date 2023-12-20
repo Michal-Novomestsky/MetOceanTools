@@ -1053,7 +1053,7 @@ if __name__=='__main__':
     np_load_modified = lambda *a,**k: np.load(*a, allow_pickle=True, **k)
 
     # Grabbing REMS stuff
-    for cyclone in ['quang']:
+    for cyclone in ['olwyn']:
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}.npz')) as metFile:
             timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             press = metFile['press.npy'] # Barometric Pressure (hPa=mbar)
@@ -1112,7 +1112,7 @@ if __name__=='__main__':
         remsDf.to_csv(os.path.join(writeDir, 'remsDf.csv'))
         outDf.to_csv(os.path.join(writeDir, 'outDf.csv'))
 
-        postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
+        # postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
 
     t1 = time.perf_counter()
     
