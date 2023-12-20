@@ -1053,14 +1053,14 @@ if __name__=='__main__':
     np_load_modified = lambda *a,**k: np.load(*a, allow_pickle=True, **k)
 
     # Grabbing REMS stuff
-    for cyclone in ['olwyn']:
+    for cyclone in ['quang']:
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}.npz')) as metFile:
             timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             press = metFile['press.npy'] # Barometric Pressure (hPa=mbar)
             rh = metFile['rh.npy'] # Relative Humidity (%)
             spech = metFile['spech.npy'] # Specific humidity (rh: ratio, p: Pa; T: Kelvin)
             ta = metFile['ta.npy'] # Air Temperature (C)
-            solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
+            solrad = -metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
             cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
