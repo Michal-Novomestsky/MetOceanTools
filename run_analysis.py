@@ -669,9 +669,9 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
             plt.savefig(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA', 'downward_IR_rad_int.png'))
             plt.close()
         else:
-            plt.show()    
+            plt.show()
 
-        # TODO: PATCH FIX
+        # Very rudimentary "derivative"
         eraDf.solrad = eraDf.solrad/3600
         eraDf.thermrad = eraDf.thermrad/3600
 
@@ -1076,8 +1076,6 @@ if __name__=='__main__':
 
     remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
                             "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
-    
-    # remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta})
 
     # Grabbing ERA5 data
     with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', args.era_filename)) as eraFile:
