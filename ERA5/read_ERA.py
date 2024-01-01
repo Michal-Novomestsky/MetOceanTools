@@ -10,7 +10,6 @@ from scipy.interpolate import LinearNDInterpolator
 
 def read_era(nc_file: os.PathLike, output_file: os.PathLike):
     metnc = netCDF4.Dataset(nc_file,'r')
-    #print(metnc.variables['swh'])
     time = np.array( metnc.variables['time'][:])        # Hours since 1900-01-01 00:00:00.0
     lat = np.array(metnc.variables['latitude'][:])      # Latitude deg North
     lon = np.array(metnc.variables['longitude'][:])     # Longitude deg East

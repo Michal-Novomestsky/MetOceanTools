@@ -344,9 +344,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             write_message(f'Too much cut out: {len(slice)}/{original_len}. {fileName} rejected.', filename='analysis_log.txt')
             continue
 
-        # # Flipping direction in anem 2 (TODO REMOVE AFTER NEXT FULLSWEEP)
-        slice[u2] = -slice[u2]
-        slice[v2] = -slice[v2]
+        # Flipping direction in anem 2 (TODO REMOVE AFTER NEXT FULLSWEEP)
+        # slice[u2] = -slice[u2]
+        # slice[v2] = -slice[v2]
 
         # Getting parameters
         jd = time - datetime.datetime(2015, 1, 1)
@@ -356,7 +356,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         p = dataSlice.press
         tsea = dataSlice.tsea
         sw_dn = dataSlice.solrad
-        # sw_dn = eraSlice.solrad
         if not era_and_rems: lw_dn = dataSlice.thermrad # Only available with ERA5
         spechum = dataSlice.spech
         e = hum.hum2ea_modified(p, spechum)
@@ -365,8 +364,6 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # Calculating EC data (anem 1 is motion corrected)
         U_anem_1, U_anem_1_turb, w_vel_1, w_turb_1, T_turb_1 = get_windspeed_data(slice, u1, v1, w1, t1, mru_correct=True)
         U_anem_2, U_anem_2_turb, w_vel_2, w_turb_2, T_turb_2 = get_windspeed_data(slice, u2, v2, w2, t2, mru_correct=True)
-        # U_10_1 = ANEM1_TO_U10*U_anem_1
-        # U_10_2 = ANEM2_TO_U10*U_anem_2
 
         u_star_1 = np.sqrt(-get_covariance(U_anem_1_turb, w_turb_1))
         tau_approx_1.append(rho*(u_star_1**2))
