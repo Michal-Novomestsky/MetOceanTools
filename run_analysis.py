@@ -1082,13 +1082,30 @@ if __name__=='__main__':
             ta = metFile['ta.npy'] # Air Temperature (C)
             solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
+            timemet_currents = metFile['timemet.npy']
             cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
             tsea = metFile['tsea.npy'] # Water temperature (degC)
             depth = metFile['depth.npy'] # Approx. distance from surface (m), Babanin et al.
 
-    remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
-                            "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
+    # The current and meteo arrays may not be of the same length
+    master_len = len(timemet) + len(timemet_currents)
+    master_arr = np.zeros(master_len, 10)
+    master_arr[:len(timemet)] = np.concatenate((timemet, press, rh, spech, ta, solrad), axis=1)
+    i = j = 0
+    while i < len(master_arr) and j < len(timemet_currents):
+        if master_arr[i, 0] == timemet_currents[j] or master_arr[i, 0] == 0:
+            master_arr[i, :] = np.array((cur_n_comp[j], cur_e_comp[j], tsea[j], depth[j]))
+            j += 1
+        i += 1
+    master_arr = master_arr[master_arr[:, 0] != 0]
+
+remsDf = pd.DataFrame({"timemet": master_arr[:, 0], "press": master_arr[:, 1], "rh": master_arr[:, 2], 
+                       "spech": master_arr[:, 3], "ta": master_arr[:, 4], "solrad": master_arr[:, 5], 
+                       "cur_n_comp": master_arr[:, 6], "cur_e_comp": master_arr[:, 7], 
+                       "tsea": master_arr[:, 8], "depth": master_arr[:, 9]})
+    # remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
+    #                         "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
     # Grabbing ERA5 data
     with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', args.era_filename)) as eraFile:
