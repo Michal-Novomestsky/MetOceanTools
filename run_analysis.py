@@ -1047,7 +1047,7 @@ def aggregate_dfs(dir: Path, keyword: str):
     for file in dir.iterdir():
         if keyword in file.stem and 'csv' in file.suffix:
             df_to_cat = pd.read_csv(file)
-            pd.concat([df, df_to_cat])
+            df = pd.concat([df, df_to_cat])
             os.remove(file)
 
     print(df)
