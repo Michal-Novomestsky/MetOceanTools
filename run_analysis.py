@@ -345,8 +345,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             continue
 
         # Flipping direction in anem 2 (TODO REMOVE AFTER NEXT FULLSWEEP)
-        # slice[u2] = -slice[u2]
-        # slice[v2] = -slice[v2]
+        slice[u2] = -slice[u2]
+        slice[v2] = -slice[v2]
 
         # Getting parameters
         jd = time - datetime.datetime(2015, 1, 1)
@@ -1057,7 +1057,7 @@ if __name__=='__main__':
     np_load_modified = lambda *a,**k: np.load(*a, allow_pickle=True, **k)
 
     # Grabbing REMS stuff
-    for cyclone in ['quang']:
+    for cyclone in ['2015']:
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}.npz')) as metFile:
             timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             press = metFile['press.npy'] # Barometric Pressure (hPa=mbar)
