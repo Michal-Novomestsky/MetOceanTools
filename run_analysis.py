@@ -1114,14 +1114,15 @@ if __name__=='__main__':
 
     t0 = time.perf_counter()
     write_message(f"Starting Analysis Run", filename='analysis_log.txt', writemode='w')
+
+    # Making folders
     writeDir = Path(args.write_dir)
+    os.mkdir(os.path.join(writeDir, 'Preprocess'))
+    os.mkdir(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA'))
+    os.mkdir(os.path.join(writeDir, 'Postprocess'))
+
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
-
-        # Making folders
-        os.mkdir(os.path.join(writeDir, 'Preprocess'))
-        os.mkdir(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA'))
-        os.mkdir(os.path.join(writeDir, 'Postprocess'))
 
         eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
         outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
