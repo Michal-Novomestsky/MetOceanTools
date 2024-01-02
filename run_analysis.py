@@ -1097,7 +1097,7 @@ if __name__=='__main__':
     master_arr[:len(timemet), :5] = np.dstack((press, rh, spech, ta, solrad))[0]
     i = j = 0
     while i < len(master_time) and j < len(timemet_currents):
-        if master_time[i] == timemet_currents[j] or master_time[i] == 0:
+        if master_time[i] == timemet_currents[j] or type(master_time[i]) is np.float64:
             master_arr[i, 5:] = np.array((cur_n_comp[j], cur_e_comp[j], tsea[j], depth[j]))
             master_time[i] = timemet_currents[j]
             j += 1
