@@ -1090,15 +1090,15 @@ if __name__=='__main__':
 
     # The current and meteo arrays may not be of the same length
     master_len = len(timemet) + len(timemet_currents)
-    master_time = np.full(master_len, fill_value=None, dtype=np.datetime64)
+    master_time = np.full(master_len, fill_value=timemet[0], dtype=np.datetime64)
     master_arr = np.zeros((master_len, 9))
     print(timemet)
     master_time[:len(timemet)] = timemet
     print(master_time)
     master_arr[:len(timemet), :5] = np.dstack((press, rh, spech, ta, solrad))[0]
-    i = j = 0
+    i = j = 1
     while i < len(master_time) and j < len(timemet_currents):
-        if master_time[i] == timemet_currents[j] or master_time[i] is None:
+        if master_time[i] == timemet_currents[j] or master_time[i] == timemet[0]:
             master_arr[i, 5:] = np.array((cur_n_comp[j], cur_e_comp[j], tsea[j], depth[j]))
             master_time[i] = timemet_currents[j]
             j += 1
