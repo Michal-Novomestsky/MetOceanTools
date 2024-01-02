@@ -1050,8 +1050,9 @@ def aggregate_dfs(dir: Path, keyword: str):
             pd.concat([df, df_to_cat])
             os.remove(file)
 
+    print(df)
     val = 'time' if 'time' in list(df.columns) else 'timemet'
-    df.sort_values(by=val)
+    df.sort_values(by=val, inplace=True)
 
     df.to_csv(dir / f'{keyword}_aggregated.csv')
 
@@ -1125,7 +1126,7 @@ if __name__=='__main__':
         eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
         outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
 
-        outDf = outDf.sort_values(by='time') # Sorting outDf since it may be jumbled due to multiprocessing
+        outDf.sort_values(by='time', inplace=True) # Sorting outDf since it may be jumbled due to multiprocessing
 
         eraDf.to_csv(os.path.join(writeDir, f'eraDf_{readDir.stem}.csv'))
         remsDf.to_csv(os.path.join(writeDir, f'remsDf_{readDir.stem}.csv'))
