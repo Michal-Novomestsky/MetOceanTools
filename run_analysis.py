@@ -238,10 +238,14 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     TS_DEPTH = remsDf.depth[0] # Note that depth has to be extracted before we select the corresponding day as sometimes REMS may not exist on that day
 
     # Getting the corresponding day in the REMS data
-    remsDf = remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & (remsDf.timemet.map(lambda x: x.month) == int(month)) & (remsDf.timemet.map(lambda x: x.year) == int(year))]
-    remsDf = remsDf.reset_index()
-    eraDf = eraDf.loc[(eraDf.timemet.map(lambda x: x.day) == int(day)) & (eraDf.timemet.map(lambda x: x.hour) == int(hour)) & (eraDf.timemet.map(lambda x: x.month) == int(month)) & (eraDf.timemet.map(lambda x: x.year) == int(year))]
-    eraDf = eraDf.reset_index()
+    remsDf = (remsDf.loc[(remsDf.timemet.map(lambda x: x.day) == int(day)) & 
+                        (remsDf.timemet.map(lambda x: x.hour) == int(hour)) & 
+                        (remsDf.timemet.map(lambda x: x.month) == int(month)) & 
+                        (remsDf.timemet.map(lambda x: x.year) == int(year))]).reset_index()
+    eraDf = (eraDf.loc[(eraDf.timemet.map(lambda x: x.day) == int(day)) 
+                      & (eraDf.timemet.map(lambda x: x.hour) == int(hour)) 
+                      & (eraDf.timemet.map(lambda x: x.month) == int(month)) 
+                      & (eraDf.timemet.map(lambda x: x.year) == int(year))]).reset_index()
 
     # Getting TIME_INTERVAL minute long slices and using them to get turbulent avg data over that same time frame
     data = DataAnalyser(file)
@@ -309,7 +313,11 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     laser4 = 'Laser #4 Range (m)'
 
     if (era_only or len(remsDf) == 0) and not no_era:
-        time = eraDf.timemet[0]
+        try:
+            time = eraDf.timemet[0]
+        except KeyError:
+            print(eraDf)
+            print(fileName)
         era_and_rems = False
     elif len(remsDf) != 0:
         time = remsDf.timemet[0]
