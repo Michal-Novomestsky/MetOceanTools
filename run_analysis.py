@@ -1073,7 +1073,7 @@ if __name__=='__main__':
     np_load_modified = lambda *a,**k: np.load(*a, allow_pickle=True, **k)
 
     # Grabbing REMS stuff
-    for cyclone in ['2015']:
+    for cyclone in ['quang']:
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}.npz')) as metFile:
             timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             press = metFile['press.npy'] # Barometric Pressure (hPa=mbar)
@@ -1082,37 +1082,13 @@ if __name__=='__main__':
             ta = metFile['ta.npy'] # Air Temperature (C)
             solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
         with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
-            timemet_currents = metFile['timemet.npy']
             cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
             tsea = metFile['tsea.npy'] # Water temperature (degC)
             depth = metFile['depth.npy'] # Approx. distance from surface (m), Babanin et al.
 
-    # The current and meteo arrays may not be of the same length
-    master_len = len(timemet) + len(timemet_currents)
-    master_time = [None]*master_len
-    master_arr = np.full((master_len, 9), fill_value=np.nan)
-    for i, time_val in enumerate(timemet):
-        master_time[i] = time_val
-    master_arr[:len(timemet), :5] = np.dstack((press, rh, spech, ta, solrad))[0]
-    i = j = 0
-    while i < len(master_time) and j < len(timemet_currents):
-        if master_time[i] == timemet_currents[j] or master_time[i] == None:
-            master_arr[i, 5:] = np.array((cur_n_comp[j], cur_e_comp[j], tsea[j], depth[j]))
-            master_time[i] = timemet_currents[j]
-            j += 1
-        i += 1
-    master_time = master_time[:i]
-    master_arr = master_arr[:i]
-
-    remsDf = pd.DataFrame({"timemet": master_time, "press": master_arr[:, 0], "rh": master_arr[:, 1], 
-                        "spech": master_arr[:, 2], "ta": master_arr[:, 3], "solrad": master_arr[:, 4], 
-                        "cur_n_comp": master_arr[:, 5], "cur_e_comp": master_arr[:, 6], 
-                        "tsea": master_arr[:, 7], "depth": master_arr[:, 8]})
-    remsDf.sort_values(by='timemet')
-    print(remsDf)
-    # remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
-    #                         "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
+    remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
+                            "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
     # Grabbing ERA5 data
     with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', args.era_filename)) as eraFile:
