@@ -1092,7 +1092,7 @@ if __name__=='__main__':
     master_len = len(timemet) + len(timemet_currents)
     master_time = np.zeros(master_len)
     master_arr = np.zeros((master_len, 9))
-    print(np.concatenate((press.T, rh.T, spech.T, ta.T, solrad.T), axis=1))
+    print(np.concatenate((press.T, rh.T, spech.T, ta.T, solrad.T), axis=0))
     master_time[:len(timemet)] = timemet
     master_arr[:len(timemet), :5] = np.concatenate((press, rh, spech, ta, solrad), axis=0)
     i = j = 0
