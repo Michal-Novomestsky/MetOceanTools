@@ -1092,9 +1092,9 @@ if __name__=='__main__':
     master_len = len(timemet) + len(timemet_currents)
     master_time = np.zeros(master_len)
     master_arr = np.zeros((master_len, 9))
-    print(np.hstack((press.T, rh.T, spech.T, ta.T, solrad.T)))
+    print(np.dstack((press, rh, spech, ta, solrad))[0])
     master_time[:len(timemet)] = timemet
-    master_arr[:len(timemet), :5] = np.concatenate((press, rh, spech, ta, solrad), axis=0)
+    master_arr[:len(timemet), :5] = np.dstack((press, rh, spech, ta, solrad))[0]
     i = j = 0
     while i < len(master_time) and j < len(timemet_currents):
         if master_time[i] == timemet_currents[j] or master_time[i] == 0:
