@@ -1090,13 +1090,15 @@ if __name__=='__main__':
 
     # The current and meteo arrays may not be of the same length
     master_len = len(timemet) + len(timemet_currents)
-    master_time = np.full(master_len, fill_value=datetime.time(0))
+    master_time = np.full(master_len, fill_value=None)
     master_arr = np.zeros((master_len, 9))
-    master_time[:len(timemet)] = timemet
+    print(timemet)
+    master_time[:len(timemet)] = timemet.T
+    print(master_time)
     master_arr[:len(timemet), :5] = np.dstack((press, rh, spech, ta, solrad))[0]
     i = j = 0
     while i < len(master_time) and j < len(timemet_currents):
-        if master_time[i] == timemet_currents[j] or type(master_time[i]) == datetime.time(0):
+        if master_time[i] == timemet_currents[j] or master_time[i] is None:
             master_arr[i, 5:] = np.array((cur_n_comp[j], cur_e_comp[j], tsea[j], depth[j]))
             master_time[i] = timemet_currents[j]
             j += 1
@@ -1109,7 +1111,6 @@ if __name__=='__main__':
                         "spech": master_arr[:, 2], "ta": master_arr[:, 3], "solrad": master_arr[:, 4], 
                         "cur_n_comp": master_arr[:, 5], "cur_e_comp": master_arr[:, 6], 
                         "tsea": master_arr[:, 7], "depth": master_arr[:, 8]})
-    remsDf.timemet.apply(datetime.time)
     print(remsDf)
     # remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
     #                         "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
@@ -1133,7 +1134,6 @@ if __name__=='__main__':
     eraDf = pd.DataFrame({"timemet": timemet, "u_10": u_10, "v_10": v_10, "tsea": tsea, "waveDir": waveDir, 
                             "ta": ta, "rh": rh, "spech": spech, "press": press, "solrad": solrad, "thermrad": thermrad,
                             "crr": crr, "swh": swh})
-    print(eraDf)
 
     sns.set_theme(style='darkgrid')
 
