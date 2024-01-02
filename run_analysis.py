@@ -1090,21 +1090,26 @@ if __name__=='__main__':
 
     # The current and meteo arrays may not be of the same length
     master_len = len(timemet) + len(timemet_currents)
-    master_arr = np.zeros((master_len, 10))
-    print(np.concatenate((timemet, press, rh, spech, ta, solrad), axis=0))
-    master_arr[:len(timemet)] = np.concatenate((timemet, press, rh, spech, ta, solrad), axis=0)
+    master_time = np.zeros(master_len)
+    master_arr = np.zeros((master_len, 9))
+    print(np.concatenate((press, rh, spech, ta, solrad), axis=0))
+    master_time[:len(timemet)] = timemet
+    master_arr[:len(timemet), :5] = np.concatenate((press, rh, spech, ta, solrad), axis=0)
     i = j = 0
-    while i < len(master_arr) and j < len(timemet_currents):
-        if master_arr[i, 0] == timemet_currents[j] or master_arr[i, 0] == 0:
-            master_arr[i, :] = np.array((cur_n_comp[j], cur_e_comp[j], tsea[j], depth[j]))
+    while i < len(master_time) and j < len(timemet_currents):
+        if master_time[i] == timemet_currents[j] or master_time[i] == 0:
+            master_arr[i, 5:] = np.array((cur_n_comp[j], cur_e_comp[j], tsea[j], depth[j]))
+            master_time[i] = timemet_currents[j]
             j += 1
         i += 1
-    master_arr = master_arr[master_arr[:, 0] != 0]
+    time_cutoff = master_time[:] != 0
+    master_time = master_time[time_cutoff]
+    master_arr = master_arr[time_cutoff]
 
-    remsDf = pd.DataFrame({"timemet": master_arr[:, 0], "press": master_arr[:, 1], "rh": master_arr[:, 2], 
-                        "spech": master_arr[:, 3], "ta": master_arr[:, 4], "solrad": master_arr[:, 5], 
-                        "cur_n_comp": master_arr[:, 6], "cur_e_comp": master_arr[:, 7], 
-                        "tsea": master_arr[:, 8], "depth": master_arr[:, 9]})
+    remsDf = pd.DataFrame({"timemet": master_time, "press": master_arr[:, 0], "rh": master_arr[:, 1], 
+                        "spech": master_arr[:, 2], "ta": master_arr[:, 3], "solrad": master_arr[:, 4], 
+                        "cur_n_comp": master_arr[:, 5], "cur_e_comp": master_arr[:, 6], 
+                        "tsea": master_arr[:, 7], "depth": master_arr[:, 8]})
     # remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
     #                         "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
