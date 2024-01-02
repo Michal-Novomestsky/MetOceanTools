@@ -1091,6 +1091,7 @@ if __name__=='__main__':
     # The current and meteo arrays may not be of the same length
     master_len = len(timemet) + len(timemet_currents)
     master_arr = np.zeros((master_len, 10))
+    print(timemet.T)
     master_arr[:len(timemet)] = np.concatenate((timemet.T, press.T, rh.T, spech.T, ta.T, solrad.T), axis=1)
     i = j = 0
     while i < len(master_arr) and j < len(timemet_currents):
