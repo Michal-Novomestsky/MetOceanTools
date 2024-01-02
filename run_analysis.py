@@ -1090,7 +1090,7 @@ if __name__=='__main__':
 
     # The current and meteo arrays may not be of the same length
     master_len = len(timemet) + len(timemet_currents)
-    master_time = np.zeros(master_len, dtype=np.datetime64)
+    master_time = np.full(master_len, fill_value=datetime.time(0))
     print(master_time)
     master_arr = np.zeros((master_len, 9))
     master_time[:len(timemet)] = timemet
