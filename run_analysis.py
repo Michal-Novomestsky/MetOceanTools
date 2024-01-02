@@ -1092,7 +1092,6 @@ if __name__=='__main__':
     master_len = len(timemet) + len(timemet_currents)
     master_time = np.zeros(master_len)
     master_arr = np.zeros((master_len, 9))
-    print(np.dstack((press, rh, spech, ta, solrad))[0])
     master_time[:len(timemet)] = timemet
     master_arr[:len(timemet), :5] = np.dstack((press, rh, spech, ta, solrad))[0]
     i = j = 0
@@ -1110,6 +1109,7 @@ if __name__=='__main__':
                         "spech": master_arr[:, 2], "ta": master_arr[:, 3], "solrad": master_arr[:, 4], 
                         "cur_n_comp": master_arr[:, 5], "cur_e_comp": master_arr[:, 6], 
                         "tsea": master_arr[:, 7], "depth": master_arr[:, 8]})
+    print(remsDf)
     # remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
     #                         "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
