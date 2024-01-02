@@ -1050,10 +1050,8 @@ def aggregate_dfs(dir: Path, keyword: str):
             pd.concat([df, df_to_cat])
             os.remove(file)
 
-    try:    
-        df.sort_values(by='time')
-    except KeyError:
-        df.sort_values(by='timemet')
+    val = 'time' if 'time' in list(df.columns) else 'timemet'
+    df.sort_values(by=val)
 
     df.to_csv(dir / f'{keyword}_aggregated.csv')
 
