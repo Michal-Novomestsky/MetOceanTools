@@ -313,11 +313,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     laser4 = 'Laser #4 Range (m)'
 
     if (era_only or len(remsDf) == 0) and not no_era:
-        try:
-            time = eraDf.timemet[0]
-        except KeyError:
-            print(eraDf)
-            print(fileName)
+        time = eraDf.timemet[0]
         era_and_rems = False
     elif len(remsDf) != 0:
         time = remsDf.timemet[0]
