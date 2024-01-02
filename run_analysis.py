@@ -1042,6 +1042,17 @@ def postprocess(outDf: pd.DataFrame, eraDf: pd.DataFrame, remsDf: pd.DataFrame, 
     else:
         plt.show()    
 
+def aggregate_dfs(dir: Path, keyword: str):
+    df = pd.DataFrame()
+    for file in dir.iterdir():
+        if keyword in file.stem and 'csv' in file.suffix:
+            df_to_cat = pd.read_csv(file)
+            pd.concat([df, df_to_cat])
+            os.remove(file)
+    
+    df.to_csv(dir / f'{keyword}_aggregated.csv')
+
+
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--read_dir', nargs='+', type=str, help='Path to the rawdata. Can be a list.')
@@ -1116,7 +1127,11 @@ if __name__=='__main__':
         remsDf.to_csv(os.path.join(writeDir, 'remsDf.csv'))
         outDf.to_csv(os.path.join(writeDir, 'outDf.csv'))
 
-        # postprocess(outDf, eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
+    # If multiple months have been analysed, combine them into a single csv
+    if len(args.read_dir) > 1:
+        aggregate_dfs(args.write_dir[0], keyword='eraDf')
+        aggregate_dfs(args.write_dir[0], keyword='remsDf')
+        aggregate_dfs(args.write_dir[0], keyword='outDf')
 
     t1 = time.perf_counter()
     
