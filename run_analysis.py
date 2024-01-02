@@ -1127,14 +1127,14 @@ if __name__=='__main__':
 
         outDf.sort_values(by='time', inplace=True) # Sorting outDf since it may be jumbled due to multiprocessing
 
-        eraDf.to_csv(os.path.join(writeDir, f'eraDf_{readDir.stem}.csv'))
-        remsDf.to_csv(os.path.join(writeDir, f'remsDf_{readDir.stem}.csv'))
         outDf.to_csv(os.path.join(writeDir, f'outDf_{readDir.stem}.csv'))
+
+    # REMS and ERA are fully read in, so they only need to be outputted once
+    eraDf.to_csv(os.path.join(writeDir, f'eraDf.csv'))
+    remsDf.to_csv(os.path.join(writeDir, f'remsDf.csv'))
 
     # If multiple months have been analysed, combine them into a single csv
     if len(args.read_dir) > 1:
-        aggregate_dfs(writeDir, keyword='eraDf')
-        aggregate_dfs(writeDir, keyword='remsDf')
         aggregate_dfs(writeDir, keyword='outDf')
 
     t1 = time.perf_counter()
