@@ -1050,7 +1050,6 @@ def aggregate_dfs(dir: Path, keyword: str):
             df = pd.concat([df, df_to_cat])
             os.remove(file)
 
-    print(df)
     val = 'time' if 'time' in list(df.columns) else 'timemet'
     df.sort_values(by=val, inplace=True)
 
