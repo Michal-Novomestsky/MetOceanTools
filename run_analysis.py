@@ -1049,14 +1049,19 @@ def aggregate_dfs(dir: Path, keyword: str):
             df_to_cat = pd.read_csv(file)
             pd.concat([df, df_to_cat])
             os.remove(file)
-    
+
+    try:    
+        df.sort_values(by='time')
+    except KeyError:
+        df.sort_values(by='timemet')
+
     df.to_csv(dir / f'{keyword}_aggregated.csv')
 
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--read_dir', nargs='+', type=str, help='Path to the rawdata. Can be a list.')
-    parser.add_argument('--write_dir', nargs='+', type=str, help='Path to output. Can be a list.')
+    parser.add_argument('--write_dir', type=str, help='Path to output.')
     parser.add_argument('--cpu_fraction', type=float, help='% Of CPUs to use. Can be within (0,1].', default=1)
     parser.add_argument('--run_supervised', action='store_true', help='Run one-by-one analysis', default=False)
     parser.add_argument('--era_only', action='store_true', help='If True, always use ERA5 and never use REMS for relevant parameters. If False, will use REMS when available and ERA5 otherwise.', default=False)
@@ -1109,9 +1114,9 @@ if __name__=='__main__':
 
     t0 = time.perf_counter()
     write_message(f"Starting Analysis Run", filename='analysis_log.txt', writemode='w')
+    writeDir = Path(args.write_dir)
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
-        writeDir = Path(args.write_dir[i])
 
         # Making folders
         os.mkdir(os.path.join(writeDir, 'Preprocess'))
@@ -1129,9 +1134,9 @@ if __name__=='__main__':
 
     # If multiple months have been analysed, combine them into a single csv
     if len(args.read_dir) > 1:
-        aggregate_dfs(args.write_dir[0], keyword='eraDf')
-        aggregate_dfs(args.write_dir[0], keyword='remsDf')
-        aggregate_dfs(args.write_dir[0], keyword='outDf')
+        aggregate_dfs(writeDir, keyword='eraDf')
+        aggregate_dfs(writeDir, keyword='remsDf')
+        aggregate_dfs(writeDir, keyword='outDf')
 
     t1 = time.perf_counter()
     
