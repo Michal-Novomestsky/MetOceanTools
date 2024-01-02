@@ -1100,10 +1100,10 @@ if __name__=='__main__':
         i += 1
     master_arr = master_arr[master_arr[:, 0] != 0]
 
-remsDf = pd.DataFrame({"timemet": master_arr[:, 0], "press": master_arr[:, 1], "rh": master_arr[:, 2], 
-                       "spech": master_arr[:, 3], "ta": master_arr[:, 4], "solrad": master_arr[:, 5], 
-                       "cur_n_comp": master_arr[:, 6], "cur_e_comp": master_arr[:, 7], 
-                       "tsea": master_arr[:, 8], "depth": master_arr[:, 9]})
+    remsDf = pd.DataFrame({"timemet": master_arr[:, 0], "press": master_arr[:, 1], "rh": master_arr[:, 2], 
+                        "spech": master_arr[:, 3], "ta": master_arr[:, 4], "solrad": master_arr[:, 5], 
+                        "cur_n_comp": master_arr[:, 6], "cur_e_comp": master_arr[:, 7], 
+                        "tsea": master_arr[:, 8], "depth": master_arr[:, 9]})
     # remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
     #                         "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
