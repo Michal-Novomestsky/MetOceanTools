@@ -1090,22 +1090,20 @@ if __name__=='__main__':
 
     # The current and meteo arrays may not be of the same length
     master_len = len(timemet) + len(timemet_currents)
-    master_time = np.full(master_len, fill_value=timemet[0], dtype=np.datetime64)
+    master_time = [None]*master_len
     master_arr = np.zeros((master_len, 9))
-    print(timemet)
-    master_time[:len(timemet)] = timemet
-    print(master_time)
+    for i, time_val in enumerate(timemet):
+        master_time[i] = time_val
     master_arr[:len(timemet), :5] = np.dstack((press, rh, spech, ta, solrad))[0]
-    i = j = 1
+    i = j = 0
     while i < len(master_time) and j < len(timemet_currents):
-        if master_time[i] == timemet_currents[j] or master_time[i] == timemet[0]:
+        if master_time[i] == timemet_currents[j] or master_time[i] == None:
             master_arr[i, 5:] = np.array((cur_n_comp[j], cur_e_comp[j], tsea[j], depth[j]))
             master_time[i] = timemet_currents[j]
             j += 1
         i += 1
-    time_cutoff = master_time[:] != 0
-    master_time = master_time[time_cutoff]
-    master_arr = master_arr[time_cutoff]
+    master_time = master_time[:i]
+    master_arr = master_arr[:i]
 
     remsDf = pd.DataFrame({"timemet": master_time, "press": master_arr[:, 0], "rh": master_arr[:, 1], 
                         "spech": master_arr[:, 2], "ta": master_arr[:, 3], "solrad": master_arr[:, 4], 
