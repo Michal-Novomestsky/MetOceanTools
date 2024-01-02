@@ -1133,6 +1133,7 @@ if __name__=='__main__':
     eraDf = pd.DataFrame({"timemet": timemet, "u_10": u_10, "v_10": v_10, "tsea": tsea, "waveDir": waveDir, 
                             "ta": ta, "rh": rh, "spech": spech, "press": press, "solrad": solrad, "thermrad": thermrad,
                             "crr": crr, "swh": swh})
+    print(eraDf)
 
     sns.set_theme(style='darkgrid')
 
