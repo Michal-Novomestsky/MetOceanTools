@@ -26,8 +26,13 @@ def read_era(nc_file: os.PathLike, output_file: os.PathLike):
     swh = np.array(metnc.variables['swh'][:])           # Significant wave height of wind waves + swell (m) (http://www.bom.gov.au/marine/knowledge-centre/reference/waves.shtml)
     metnc.close()
 
-    latTrue = -19.5856
-    lonTrue = 116.1367
+    # North Rankin Coords
+    # latTrue = -19.5856
+    # lonTrue = 116.1367
+
+    # Exmouth Coords
+    latTrue = -21.9323
+    lonTrue = 114.1279
 
     timemet = []
     u_10_met = []

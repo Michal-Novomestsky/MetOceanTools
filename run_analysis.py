@@ -1075,22 +1075,32 @@ if __name__=='__main__':
     np_load_modified = lambda *a,**k: np.load(*a, allow_pickle=True, **k)
 
     # Grabbing REMS stuff
-    for cyclone in ['quang']:
-        with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}.npz')) as metFile:
+    for month in ['Apr']:
+        with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{month}.npz')) as metFile:
             timemet = metFile['timemet.npy'] # YYYYMMDD and milliseconds past midnight
             press = metFile['press.npy'] # Barometric Pressure (hPa=mbar)
             rh = metFile['rh.npy'] # Relative Humidity (%)
             spech = metFile['spech.npy'] # Specific humidity (rh: ratio, p: Pa; T: Kelvin)
             ta = metFile['ta.npy'] # Air Temperature (C)
             solrad = metFile['solrad.npy'] # Downward Solar radiation (Wm^-2)
-        with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{cyclone}_currents.npz')) as metFile:
+        with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{month}_currents.npz')) as metFile:
             cur_n_comp = metFile['cur_n_comp.npy'] # Northward component of current velocity (m/s)
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
             tsea = metFile['tsea.npy'] # Water temperature (degC)
             depth = metFile['depth.npy'] # Approx. distance from surface (m), Babanin et al.
+        with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{month}_wind.npz')) as metFile:
+            U_west_anem_10min = metFile['U_west_anem_10min.npy'] # 10min avg windspeed at flare bridge height (m/s)
+            U_west_anem_1min = metFile['U_west_anem_1min.npy']
+            U_west_10m_10min = metFile['U_west_10m_10min.npy'] # 10min avg at 10m
+            U_west_10m_1min = metFile['U_west_10m_1min.npy']
+            U_dirn_west_1 = metFile['U_dirn_west_1.npy']
+            U_dirn_west_2 = metFile['U_dirn_west_2.npy']
 
     remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
-                            "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
+                            "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth,
+                            "U_west_10m_10min": U_west_10m_10min, "U_west_10m_1min": U_west_10m_1min,
+                            "U_west_anem_10min": U_west_anem_10min, "U_west_anem_1min": U_west_anem_1min,
+                            "U_dirn_west_1": U_dirn_west_1, "U_dirn_west_2": U_dirn_west_2})
 
     # Grabbing ERA5 data
     with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', args.era_filename)) as eraFile:
