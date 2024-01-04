@@ -1088,19 +1088,9 @@ if __name__=='__main__':
             cur_e_comp = metFile['cur_e_comp.npy'] # Eastward component of current velocity (m/s)
             tsea = metFile['tsea.npy'] # Water temperature (degC)
             depth = metFile['depth.npy'] # Approx. distance from surface (m), Babanin et al.
-        with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'REMS', f'meteo_{month}_wind.npz')) as metFile:
-            U_west_anem_10min = metFile['U_west_anem_10min.npy'] # 10min avg windspeed at flare bridge height (m/s)
-            U_west_anem_1min = metFile['U_west_anem_1min.npy']
-            U_west_10m_10min = metFile['U_west_10m_10min.npy'] # 10min avg at 10m
-            U_west_10m_1min = metFile['U_west_10m_1min.npy']
-            U_dirn_west_1 = metFile['U_dirn_west_1.npy']
-            U_dirn_west_2 = metFile['U_dirn_west_2.npy']
 
     remsDf = pd.DataFrame({"timemet": timemet, "press": press, "rh": rh, "spech": spech, "ta": ta, "solrad": solrad,
-                            "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth,
-                            "U_west_10m_10min": U_west_10m_10min, "U_west_10m_1min": U_west_10m_1min,
-                            "U_west_anem_10min": U_west_anem_10min, "U_west_anem_1min": U_west_anem_1min,
-                            "U_dirn_west_1": U_dirn_west_1, "U_dirn_west_2": U_dirn_west_2})
+                            "cur_n_comp": cur_n_comp, "cur_e_comp": cur_e_comp, "tsea": tsea, "depth": depth})
 
     # Grabbing ERA5 data
     with np_load_modified(os.path.join(os.getcwd(), 'Resources', 'ERA5', args.era_filename)) as eraFile:
