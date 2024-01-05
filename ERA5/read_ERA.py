@@ -27,12 +27,12 @@ def read_era(nc_file: os.PathLike, output_file: os.PathLike):
     metnc.close()
 
     # North Rankin Coords
-    # latTrue = -19.5856
-    # lonTrue = 116.1367
+    latTrue = -19.5856
+    lonTrue = 116.1367
 
     # Exmouth Coords
-    latTrue = -21.9323
-    lonTrue = 114.1279
+    # latTrue = -21.9323
+    # lonTrue = 114.1279
 
     timemet = []
     u_10_met = []
