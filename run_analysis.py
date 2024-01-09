@@ -470,7 +470,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             tau_coare_2.append(np.nan)
             H_coare_2.append(np.nan)
             C_d_coare_2.append(np.nan)
-            C_d_coare_2.append(np.nan)
+            C_h_coare_2.append(np.nan)
         else:
             tau_coare_2.append(coare_res[1])
             H_coare_2.append(coare_res[2])
