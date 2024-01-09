@@ -17,6 +17,7 @@ from Modules.DataCleaner import apply_window_wise
 from COARE.COARE3_6.coare36vnWarm_et import coare36vnWarm_et as coare
 
 # Defining constants
+DENSITY_WATER = 997 # Pure water density at ~25C
 KELVIN_TO_CELSIUS = 273.15
 ZU_1 = 14.8 # Height of anemometer #1 (MRU available)
 ZU_2 = 8.8 # Height of anemometer #2 (no MRU)
@@ -28,7 +29,7 @@ LAT = -19.5856 # 19.5856S (Babanin et al.)
 LON = 116.1367 # 116.1367E
 SS = 35 # https://salinity.oceansciences.org/overview.htm
 CPD = hum.cpd # Isobaric specific heat of dry air at constant pressure [J/(kg K)]
-TIME_INTERVAL = 20
+TIME_INTERVAL = 20 # Time to avg over in minutes
 MIN_COV_SIZE = 0.99 # Minimum % of points retained for valid covariance calculation
 MIN_SLICE_SIZE = 1000 # Minimum slice size prior to chopping out data
 WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
@@ -38,7 +39,6 @@ WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for
 # Default parameters
 LW_DN = 370
 ZI = 600
-RAINRATE = 0
 
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
@@ -72,6 +72,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_HCoare_1 = []
     collector_Cd_1 = []
     collector_Cd_coare_1 = []
+    collector_Ch_1 = []
+    collector_Ch_coare_1 = []
     collector_u_star_1 = []
     collector_U_anem_1 = []
     collector_u1 = []
@@ -87,6 +89,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_tauCoare_2 = []
     collector_HApprox_2 = []
     collector_HCoare_2 = []
+    collector_Ch_2 = []
+    collector_Ch_coare_2 = []
     collector_Cd_2 = []
     collector_Cd_coare_2 = []
     collector_u_star_2 = []
@@ -147,6 +151,10 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_laser2 += output[39]
                 collector_laser3 += output[40]
                 collector_laser4 += output[41]
+                collector_Ch_1 += output[42]
+                collector_Ch_coare_1 += output[43]
+                collector_Ch_2 += output[44]
+                collector_Ch_coare_2 += output[45]
 
     # Enabling multiprocessing
     else:
@@ -210,6 +218,10 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_laser2 += outputElem[39]
                     collector_laser3 += outputElem[40]
                     collector_laser4 += outputElem[41]
+                    collector_Ch_1 += outputElem[42]
+                    collector_Ch_coare_1 += outputElem[43]
+                    collector_Ch_2 += outputElem[44]
+                    collector_Ch_coare_2 += outputElem[45]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox_1": collector_tauApprox_1, "tauCoare_1": collector_tauCoare_1,
@@ -221,7 +233,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                             "tauApprox_2": collector_tauApprox_2, "tauCoare_2": collector_tauCoare_2, "Cd_2": collector_Cd_2, 
                             "U_anem_2": collector_U_anem_2, "HApprox_2": collector_HApprox_2, "HCoare_2": collector_HCoare_2, "u_star_2": collector_u_star_2,
                             "Cd_coare_1": collector_Cd_coare_1, "Cd_coare_2": collector_Cd_coare_2, "laser1": collector_laser1, "laser2": collector_laser2,
-                            "laser3": collector_laser3, "laser4": collector_laser4, "zu_1": collector_zu1, "zu_2": collector_zu2})
+                            "laser3": collector_laser3, "laser4": collector_laser4, "zu_1": collector_zu1, "zu_2": collector_zu2,
+                            "Ch_1": collector_Ch_1, "Ch_coare_1": collector_Ch_coare_1, "Ch_2": collector_Ch_2, "Ch_coare_2": collector_Ch_coare_2})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
@@ -267,6 +280,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     tau_coare_1 = []
     H_approx_1 = []
     H_coare_1 = []
+    C_h_1 = []
+    C_h_coare_1 = []
     C_d_1 = []
     C_d_coare_1 = []
     U_anem_1_mean = []
@@ -284,6 +299,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     tau_coare_2 = []
     H_approx_2 = []
     H_coare_2 = []
+    C_h_2 = []
+    C_h_coare_2 = []
     C_d_2 = []
     C_d_coare_2 = []
     U_anem_2_mean = []
@@ -332,6 +349,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             dataSliceTemp = dataSliceTemp.mean(numeric_only=True)
             if pd.notna(dataSliceTemp.loc['index']):
                 dataSlice = dataSliceTemp # Guarding against ERA5's hour resolution from resulting in NaNs when incrementing up by less than 1hr at a time
+                eraSlice = dataSlice
         # Using REMS data
         else:
             dataSlice = remsDf.loc[(time <= remsDf.timemet) & (remsDf.timemet <= time + datetime.timedelta(minutes=TIME_INTERVAL))]
@@ -348,7 +366,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             write_message(f'Too much cut out: {len(slice)}/{original_len}. {fileName} rejected.', filename='analysis_log.txt')
             continue
 
-        # Flipping direction in anem 2 (TODO REMOVE AFTER NEXT FULLSWEEP)
+        # Flipping direction in anem 2
         slice[u2] = -slice[u2]
         slice[v2] = -slice[v2]
 
@@ -362,6 +380,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         sw_dn = dataSlice.solrad
         if not era_and_rems: lw_dn = dataSlice.thermrad # Only available with ERA5
         spechum = dataSlice.spech
+        rainrate = eraSlice.crr
         e = hum.hum2ea_modified(p, spechum)
         rho = hum.rhov_modified(tair, p, sh=spechum)
 
@@ -371,16 +390,21 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         u_star_1 = np.sqrt(-get_covariance(U_anem_1_turb, w_turb_1))
         tau_approx_1.append(rho*(u_star_1**2))
-        H_approx_1.append(rho*CPD*get_covariance(w_turb_1, T_turb_1))
+        w_T_cov_1 = get_covariance(w_turb_1, T_turb_1)
+        H_approx_1.append(rho*CPD*w_T_cov_1)
+        temp_1_mean = np.mean(slice[t1])
 
         u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
         tau_approx_2.append(rho*(u_star_2**2))
-        H_approx_2.append(rho*CPD*get_covariance(w_turb_2, T_turb_2))
+        w_T_cov_2 = get_covariance(w_turb_2, T_turb_2)
+        H_approx_2.append(rho*CPD*w_T_cov_2)
+        temp_2_mean = np.mean(slice[t2])
 
         # Logging values
         u_star_1_list.append(u_star_1)
         U1_mean = np.mean(U_anem_1)
         C_d_1.append((u_star_1/U1_mean)**2)
+        C_h_1.append(w_T_cov_1/(U1_mean*(tsea - temp_1_mean)))
         U_anem_1_mean.append(U1_mean)
         u1_mean.append(np.mean(slice[u1]))
         u1_turb_mean.append(np.mean(get_turbulent(slice[u1])))
@@ -388,11 +412,12 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         v1_turb_mean.append(np.mean(get_turbulent(slice[v1])))
         w1_mean.append(np.mean(w_vel_1))
         w1_turb_mean.append(np.mean(w_turb_1))
-        t1_mean.append(np.mean(slice[t1]))
+        t1_mean.append(temp_1_mean)
 
         u_star_2_list.append(u_star_2)
         U2_mean = np.mean(U_anem_2)
         C_d_2.append((u_star_2/U2_mean)**2)
+        C_h_2.append(w_T_cov_2/(U2_mean*(tsea - temp_2_mean)))
         U_anem_2_mean.append(U2_mean)
         u2_mean.append(np.mean(slice[u2]))
         u2_turb_mean.append(np.mean(get_turbulent(slice[u2])))
@@ -400,7 +425,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         v2_turb_mean.append(np.mean(get_turbulent(slice[v2])))
         w2_mean.append(np.mean(w_vel_2))
         w2_turb_mean.append(np.mean(w_turb_2))
-        t2_mean.append(np.mean(slice[t2]))
+        t2_mean.append(temp_2_mean)
 
         rho_mean.append(np.mean(rho))
         is_temp1_fluctuating.append(slice.is_temp1_fluctuating.any())
@@ -424,29 +449,33 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # Getting COARE's predictions
         zu_1 = l1 - LASER_TO_ANEM_1
         zu1_mean.append(zu_1)
-        coare_res = get_coare_data(U1_mean, jd, zu_1, tair, rh, p, tsea, sw_dn, TS_DEPTH)
+        coare_res = get_coare_data(U1_mean, jd, zu_1, tair, rh, p, tsea, sw_dn, rainrate, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 1 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
             tau_coare_1.append(np.nan)
             H_coare_1.append(np.nan)
             C_d_coare_1.append(np.nan)
+            C_h_coare_1.append(np.nan)
         else:
             tau_coare_1.append(coare_res[1])
             H_coare_1.append(coare_res[2])
             C_d_coare_1.append(coare_res[12])
+            C_h_coare_1.append(coare_res[13])
 
         zu_2 = l1 - LASER_TO_ANEM_2
         zu2_mean.append(zu_2)
-        coare_res = get_coare_data(U2_mean, jd, zu_2, tair, rh, p, tsea, sw_dn, TS_DEPTH)
+        coare_res = get_coare_data(U2_mean, jd, zu_2, tair, rh, p, tsea, sw_dn, rainrate, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 2 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
             tau_coare_2.append(np.nan)
             H_coare_2.append(np.nan)
             C_d_coare_2.append(np.nan)
+            C_d_coare_2.append(np.nan)
         else:
             tau_coare_2.append(coare_res[1])
             H_coare_2.append(coare_res[2])
             C_d_coare_2.append(coare_res[12])
+            C_h_coare_2.append(coare_res[13])
 
         # Updating time
         time_list.append(time)
@@ -463,16 +492,20 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             u2_mean, u2_turb_mean, v2_mean, v2_turb_mean, w2_mean, w2_turb_mean, 
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large, u_star_1_list, C_d_coare_1, C_d_coare_2, zu1_mean,
-            zu2_mean, laser1_mean, laser2_mean, laser3_mean, laser4_mean)
+            zu2_mean, laser1_mean, laser2_mean, laser3_mean, laser4_mean, C_h_1, C_h_coare_1,
+            C_h_2, C_h_coare_2)
 
 def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, p: float, tsea: float, sw_dn: float, 
-                   ts_depth: float) -> np.ndarray:
+                   rainrate: float, ts_depth: float) -> np.ndarray:
     # TODO: zrf_u, etc. NEEDS TO BE SET TO ANEM HEIGHT INITIALLY, THEN WE CAN LIN INTERP TO 10m
+
+    # Converting kgm^2s^-1 to mmhr^-1
+    rainrate *= (60**2 * 10**3)/DENSITY_WATER
     try:
         blockPrint()
         coare_res = coare(Jd=jd, U=U_mean, Zu=zu, Tair=tair, Zt=ZT, RH=rh, Zq=ZQ, P=p, 
                             Tsea=tsea, SW_dn=sw_dn, LW_dn=LW_DN, Lat=LAT, Lon=LON, Zi=ZI, 
-                            Rainrate=RAINRATE, Ts_depth=ts_depth, Ss=SS, cp=None, sigH=None,
+                            Rainrate=rainrate, Ts_depth=ts_depth, Ss=SS, cp=None, sigH=None,
                             zrf_u=zu, zrf_t=zu, zrf_q=zu)
         enablePrint()
     except Exception as e:
