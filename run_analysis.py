@@ -705,9 +705,9 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
         else:
             plt.show()
 
-    # Very rudimentary "derivative"
-    eraDf.solrad = eraDf.solrad/3600
-    eraDf.thermrad = eraDf.thermrad/3600
+        # Very rudimentary "derivative"
+        eraDf.solrad /= 3600
+        eraDf.thermrad /= 3600
 
     sns.lineplot(data=remsDf, x='timemet', y='solrad', markers=True, label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
