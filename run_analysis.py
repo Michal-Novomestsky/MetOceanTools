@@ -615,7 +615,7 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     if len(remsDf) == 0:
         era_only = True
 
-    eraDf.press += 2.5 # Accounting for height difference TODO IS THIS NEEDED?
+    # eraDf.press += 2.5 # Accounting for height difference TODO IS THIS NEEDED?
 
     sns.lineplot(data=remsDf, x='timemet', y='press', label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='press', label='ERA5')
