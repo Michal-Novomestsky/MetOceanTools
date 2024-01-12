@@ -615,6 +615,8 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
     if len(remsDf) == 0:
         era_only = True
 
+    # remsDf.press += 2.5 # Accounting for height difference TODO IS THIS NEEDED?
+
     sns.lineplot(data=remsDf, x='timemet', y='press', label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='press', label='ERA5')
     if not era_only: plt.xlim([remsDf.timemet[0], remsDf.timemet[len(remsDf) - 1]])
@@ -703,9 +705,9 @@ def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike,
         else:
             plt.show()
 
-        # Very rudimentary "derivative"
-        eraDf.solrad = eraDf.solrad/3600
-        eraDf.thermrad = eraDf.thermrad/3600
+    # Very rudimentary "derivative"
+    eraDf.solrad = eraDf.solrad/3600
+    eraDf.thermrad = eraDf.thermrad/3600
 
     sns.lineplot(data=remsDf, x='timemet', y='solrad', markers=True, label='REMS')
     sns.lineplot(data=eraDf, x='timemet', y='solrad', markers=True, label='ERA5')
@@ -1154,14 +1156,13 @@ if __name__=='__main__':
     os.mkdir(os.path.join(writeDir, 'Preprocess', 'REMS vs ERA'))
     os.mkdir(os.path.join(writeDir, 'Postprocess'))
 
+    eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
     for i, _ in enumerate(args.read_dir):
         readDir = Path(args.read_dir[i])
 
-        eraDf, remsDf = preprocess(eraDf, remsDf, writeDir=writeDir, era_only=args.era_only)
         outDf = analysis_loop(readDir, eraDf, remsDf, supervised=args.run_supervised, cpuFraction=args.cpu_fraction, era_only=args.era_only, no_era=args.no_era)
 
         outDf.sort_values(by='time', inplace=True) # Sorting outDf since it may be jumbled due to multiprocessing
-
         outDf.to_csv(os.path.join(writeDir, f'outDf_{readDir.stem}.csv'))
 
     # REMS and ERA are fully read in, so they only need to be outputted once
