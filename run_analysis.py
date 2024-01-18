@@ -376,7 +376,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         tair = dataSlice.ta # NOTE COARE uses REMS temp (which is higher up)
         rh = dataSlice.rh
         p = dataSlice.press
-        tsea = dataSlice.tsea
+        # tsea = dataSlice.tsea
+        tsea = eraSlice.tsea
         sw_dn = dataSlice.solrad
         if not era_and_rems: lw_dn = dataSlice.thermrad # Only available with ERA5
         spechum = dataSlice.spech
@@ -447,8 +448,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         # Getting COARE's predictions
         zu_1 = l1 - LASER_TO_ANEM_1
         zu1_mean.append(zu_1)
-        # coare_res = get_coare_data(U1_mean, jd, zu_1, tair, rh, p, tsea, sw_dn, rainrate, TS_DEPTH)
-        coare_res = get_coare_data(U1_mean, jd, zu_1, np.mean(slice[t1]), rh, p, tsea, sw_dn, rainrate, TS_DEPTH)
+        coare_res = get_coare_data(U1_mean, jd, zu_1, tair, rh, p, tsea, sw_dn, rainrate, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 1 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
             tau_coare_1.append(np.nan)
@@ -463,8 +463,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         zu_2 = l1 - LASER_TO_ANEM_2
         zu2_mean.append(zu_2)
-        # coare_res = get_coare_data(U2_mean, jd, zu_2, tair, rh, p, tsea, sw_dn, rainrate, TS_DEPTH)
-        coare_res = get_coare_data(U2_mean, jd, zu_2, np.mean(slice[t2]), rh, p, tsea, sw_dn, rainrate, TS_DEPTH)
+        coare_res = get_coare_data(U2_mean, jd, zu_2, tair, rh, p, tsea, sw_dn, rainrate, TS_DEPTH)
         if coare_res is None:
             write_message(f"ANEM 2 ERROR IN {fileName}: SKIPPED FOR NOW", filename='analysis_log.txt')
             tau_coare_2.append(np.nan)
