@@ -39,7 +39,7 @@ def coare36vnWarm_et(Jd, U, Zu, Tair, Zt, RH, Zq, P, Tsea, SW_dn, LW_dn, Lat, Lo
 #               usage of lon in albedo_vector function and adjust 'E' or
 #               'W' string input
 #       Zi = inversion height (m) #TODO: Don't have. May be able to determine lapse rate inversion point by looking at temperature probes at different heights?
-#       Rainrate = rain rate (mm/hr) #TODO: Don't have. Currently just assuming no rain (BAD assumption in cyclone conditions)
+#       Rainrate = rain rate (mm/hr)
 #       Ts_depth = depth (m) of water temperature measurement, positive for below
 #                   surface
 #       Ss = sea surface salinity (PSU) #TODO: (Probably) Don't have. May be able to find in literature. Currently just using approximate value in the general North Rankin region from this map: https://salinity.oceansciences.org/overview.htm
