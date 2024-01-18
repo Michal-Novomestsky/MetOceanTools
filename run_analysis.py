@@ -376,8 +376,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         tair = dataSlice.ta # NOTE COARE uses REMS temp (which is higher up)
         rh = dataSlice.rh
         p = dataSlice.press
-        # tsea = dataSlice.tsea
-        tsea = eraSlice.tsea
+        tsea = dataSlice.tsea
         sw_dn = dataSlice.solrad
         if not era_and_rems: lw_dn = dataSlice.thermrad # Only available with ERA5
         spechum = dataSlice.spech
