@@ -390,12 +390,12 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         u_star_1 = np.sqrt(-get_covariance(U_anem_1_turb, w_turb_1))
         tau_approx_1.append(rho*(u_star_1**2))
-        w_T_cov_1 = get_covariance(w_turb_1, T_turb_1)
+        w_T_cov_1 = get_covariance(w_turb_1, T_turb_1) - 5/(rho*CPD)
         H_approx_1.append(rho*CPD*w_T_cov_1)
 
         u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
         tau_approx_2.append(rho*(u_star_2**2))
-        w_T_cov_2 = get_covariance(w_turb_2, T_turb_2)
+        w_T_cov_2 = get_covariance(w_turb_2, T_turb_2) - 5/(rho*CPD)
         H_approx_2.append(rho*CPD*w_T_cov_2)
 
         # Logging values
