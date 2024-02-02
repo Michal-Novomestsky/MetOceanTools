@@ -349,6 +349,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             dataSliceTemp = dataSliceTemp.mean(numeric_only=True)
             if pd.notna(dataSliceTemp.loc['index']):
                 dataSlice = dataSliceTemp # Guarding against ERA5's hour resolution from resulting in NaNs when incrementing up by less than 1hr at a time
+                dataSlice.press -= 2.5 # Pressure bias correction
                 eraSlice = dataSlice
         # Using REMS data
         else:
@@ -359,6 +360,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             eraSliceTemp = eraSliceTemp.mean(numeric_only=True)
             if pd.notna(eraSliceTemp.loc['index']):
                 eraSlice = eraSliceTemp # Guarding against ERA5's hour resolution from resulting in NaNs when incrementing up by less than 1hr at a time
+                eraSlice.press -= 2.5 # Pressure bias correction
 
         original_len = len(slice)
         slice = slice[~slice.is_temp1_range_large] # Removing erroneous points
