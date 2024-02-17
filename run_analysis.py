@@ -33,8 +33,8 @@ TIME_INTERVAL = 15 # Time to avg over in minutes
 MIN_COV_SIZE = 0.99 # Minimum % of points retained for valid covariance calculation
 MIN_SLICE_SIZE = 1000 # Minimum slice size prior to chopping out data
 WINDOW_WIDTH = 5 # Amount of datapoints to consider at a time when averaging for plots
-# ANEM1_TO_U10 = (10/ZU_1)**0.11 # Extrapolation scale factor
-# ANEM2_TO_U10 = (10/ZU_2)**0.11
+ANEM1_TO_U10 = (10/ZU_1)**0.11 # Extrapolation scale factor
+ANEM2_TO_U10 = (10/ZU_2)**0.11
 
 # Default parameters
 LW_DN = 370
@@ -68,6 +68,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
 
     collector_tauApprox_1 = []
     collector_tauCoare_1 = []
+    collector_UCoare_1 = []
     collector_HApprox_1 = []
     collector_HCoare_1 = []
     collector_Cd_1 = []
@@ -87,6 +88,7 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
 
     collector_tauApprox_2 = []
     collector_tauCoare_2 = []
+    collector_UCoare_2 = []
     collector_HApprox_2 = []
     collector_HCoare_2 = []
     collector_Ch_2 = []
@@ -155,6 +157,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_Ch_coare_1 += output[43]
                 collector_Ch_2 += output[44]
                 collector_Ch_coare_2 += output[45]
+                collector_UCoare_1 += output[46]
+                collector_UCoare_2 += output[47]
 
     # Enabling multiprocessing
     else:
@@ -222,6 +226,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_Ch_coare_1 += outputElem[43]
                     collector_Ch_2 += outputElem[44]
                     collector_Ch_coare_2 += outputElem[45]
+                    collector_UCoare_1 += outputElem[46]
+                    collector_UCoare_2 += outputElem[47]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox_1": collector_tauApprox_1, "tauCoare_1": collector_tauCoare_1,
@@ -234,7 +240,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                             "U_anem_2": collector_U_anem_2, "HApprox_2": collector_HApprox_2, "HCoare_2": collector_HCoare_2, "u_star_2": collector_u_star_2,
                             "Cd_coare_1": collector_Cd_coare_1, "Cd_coare_2": collector_Cd_coare_2, "laser1": collector_laser1, "laser2": collector_laser2,
                             "laser3": collector_laser3, "laser4": collector_laser4, "zu_1": collector_zu1, "zu_2": collector_zu2,
-                            "Ch_1": collector_Ch_1, "Ch_coare_1": collector_Ch_coare_1, "Ch_2": collector_Ch_2, "Ch_coare_2": collector_Ch_coare_2})
+                            "Ch_1": collector_Ch_1, "Ch_coare_1": collector_Ch_coare_1, "Ch_2": collector_Ch_2, "Ch_coare_2": collector_Ch_coare_2,
+                            'U_coare_1': collector_UCoare_1, 'U_coare_2': collector_UCoare_2})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
@@ -278,6 +285,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
     tau_approx_1 = []
     tau_coare_1 = []
+    U_coare_1 = []
     H_approx_1 = []
     H_coare_1 = []
     C_h_1 = []
@@ -297,6 +305,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
     tau_approx_2 = []
     tau_coare_2 = []
+    U_coare_2 = []
     H_approx_2 = []
     H_coare_2 = []
     C_h_2 = []
@@ -383,6 +392,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         rainrate = eraSlice.crr
         e = hum.hum2ea_modified(p, spechum)
         rho = hum.rhov_modified(tair, p, sh=spechum)
+        tempdiff = tsea - tair
 
         # Calculating EC data (anem 1 is motion corrected)
         U_anem_1, U_anem_1_turb, w_vel_1, w_turb_1, T_turb_1 = get_windspeed_data(slice, u1, v1, w1, t1, mru_correct=True)
@@ -390,19 +400,19 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         u_star_1 = np.sqrt(-get_covariance(U_anem_1_turb, w_turb_1))
         tau_approx_1.append(rho*(u_star_1**2))
-        w_T_cov_1 = get_covariance(w_turb_1, T_turb_1)# - 5/(rho*CPD) # -5 Wm^-2 correction
-        H_approx_1.append(rho*CPD*w_T_cov_1)
+        w_T_cov_1 = get_covariance(w_turb_1, T_turb_1)
+        H_approx_1.append(rho*CPD*w_T_cov_1*(0.375*tempdiff + -0.25)) # Linear deltaT correction
 
         u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
         tau_approx_2.append(rho*(u_star_2**2))
-        w_T_cov_2 = get_covariance(w_turb_2, T_turb_2)# - 5/(rho*CPD) # -5 Wm^-2 correction
+        w_T_cov_2 = get_covariance(w_turb_2, T_turb_2*(0.375*tempdiff + -0.25)) # Linear deltaT correction
         H_approx_2.append(rho*CPD*w_T_cov_2)
 
         # Logging values
         u_star_1_list.append(u_star_1)
         U1_mean = np.mean(U_anem_1)
         C_d_1.append((u_star_1/U1_mean)**2)
-        C_h_1.append(w_T_cov_1/(U1_mean*(tsea - tair)))
+        C_h_1.append(w_T_cov_1/(U1_mean*tempdiff))
         U_anem_1_mean.append(U1_mean)
         u1_mean.append(np.mean(slice[u1]))
         u1_turb_mean.append(np.mean(get_turbulent(slice[u1])))
@@ -415,7 +425,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         u_star_2_list.append(u_star_2)
         U2_mean = np.mean(U_anem_2)
         C_d_2.append((u_star_2/U2_mean)**2)
-        C_h_2.append(w_T_cov_2/(U2_mean*(tsea - tair)))
+        C_h_2.append(w_T_cov_2/(U2_mean*tempdiff))
         U_anem_2_mean.append(U2_mean)
         u2_mean.append(np.mean(slice[u2]))
         u2_turb_mean.append(np.mean(get_turbulent(slice[u2])))
@@ -454,11 +464,13 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             H_coare_1.append(np.nan)
             C_d_coare_1.append(np.nan)
             C_h_coare_1.append(np.nan)
+            U_coare_1.append(np.nan)
         else:
             tau_coare_1.append(coare_res[1])
             H_coare_1.append(coare_res[2])
             C_d_coare_1.append(coare_res[12])
             C_h_coare_1.append(coare_res[13])
+            U_coare_1.append(coare_res[32])
 
         zu_2 = l1 - LASER_TO_ANEM_2
         zu2_mean.append(zu_2)
@@ -469,11 +481,13 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             H_coare_2.append(np.nan)
             C_d_coare_2.append(np.nan)
             C_h_coare_2.append(np.nan)
+            U_coare_2.append(np.nan)
         else:
             tau_coare_2.append(coare_res[1])
             H_coare_2.append(coare_res[2])
             C_d_coare_2.append(coare_res[12])
             C_h_coare_2.append(coare_res[13])
+            U_coare_2.append(coare_res[32])
 
         # Updating time
         time_list.append(time)
@@ -491,7 +505,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large, u_star_1_list, C_d_coare_1, C_d_coare_2, zu1_mean,
             zu2_mean, laser1_mean, laser2_mean, laser3_mean, laser4_mean, C_h_1, C_h_coare_1,
-            C_h_2, C_h_coare_2)
+            C_h_2, C_h_coare_2, U_coare_1, U_coare_2)
 
 def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, p: float, tsea: float, sw_dn: float, 
                    rainrate: float, ts_depth: float) -> np.ndarray:
