@@ -405,8 +405,8 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
         tau_approx_2.append(rho*(u_star_2**2))
-        w_T_cov_2 = get_covariance(w_turb_2, T_turb_2*(0.375*tempdiff + -0.25)) # Linear deltaT correction
-        H_approx_2.append(rho*CPD*w_T_cov_2)
+        w_T_cov_2 = get_covariance(w_turb_2, T_turb_2)
+        H_approx_2.append(rho*CPD*w_T_cov_2*(0.375*tempdiff + -0.25)) # Linear deltaT correction
 
         # Logging values
         u_star_1_list.append(u_star_1)
