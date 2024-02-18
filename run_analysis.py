@@ -65,15 +65,18 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_laser2 = []
     collector_laser3 = []
     collector_laser4 = []
+    collector_tempdiff = []
 
     collector_tauApprox_1 = []
     collector_tauCoare_1 = []
     collector_UCoare_1 = []
     collector_HApprox_1 = []
+    collector_HCorr_1 = []
     collector_HCoare_1 = []
     collector_Cd_1 = []
     collector_Cd_coare_1 = []
     collector_Ch_1 = []
+    collector_Ch_corr_1 = []
     collector_Ch_coare_1 = []
     collector_u_star_1 = []
     collector_U_anem_1 = []
@@ -90,8 +93,10 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
     collector_tauCoare_2 = []
     collector_UCoare_2 = []
     collector_HApprox_2 = []
+    collector_HCorr_2 = []
     collector_HCoare_2 = []
     collector_Ch_2 = []
+    collector_Ch_corr_2 = []
     collector_Ch_coare_2 = []
     collector_Cd_2 = []
     collector_Cd_coare_2 = []
@@ -159,6 +164,11 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                 collector_Ch_coare_2 += output[45]
                 collector_UCoare_1 += output[46]
                 collector_UCoare_2 += output[47]
+                collector_HCorr_1 += output[48]
+                collector_HCorr_2 += output[49]
+                collector_tempdiff += output[50]
+                collector_Ch_corr_1 += output[51]
+                collector_Ch_corr_2 += output[52]
 
     # Enabling multiprocessing
     else:
@@ -228,6 +238,11 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_Ch_coare_2 += outputElem[45]
                     collector_UCoare_1 += outputElem[46]
                     collector_UCoare_2 += outputElem[47]
+                    collector_HCorr_1 += outputElem[48]
+                    collector_HCorr_2 += outputElem[49]
+                    collector_tempdiff += outputElem[50]
+                    collector_Ch_corr_1 += outputElem[51]
+                    collector_Ch_corr_2 += outputElem[52]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
     return pd.DataFrame({"time": collector_time, "tauApprox_1": collector_tauApprox_1, "tauCoare_1": collector_tauCoare_1,
@@ -241,7 +256,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                             "Cd_coare_1": collector_Cd_coare_1, "Cd_coare_2": collector_Cd_coare_2, "laser1": collector_laser1, "laser2": collector_laser2,
                             "laser3": collector_laser3, "laser4": collector_laser4, "zu_1": collector_zu1, "zu_2": collector_zu2,
                             "Ch_1": collector_Ch_1, "Ch_coare_1": collector_Ch_coare_1, "Ch_2": collector_Ch_2, "Ch_coare_2": collector_Ch_coare_2,
-                            'U_coare_1': collector_UCoare_1, 'U_coare_2': collector_UCoare_2})
+                            'U_coare_1': collector_UCoare_1, 'U_coare_2': collector_UCoare_2, 'HCorr_1': collector_HCorr_1, 'HCorr_2': collector_HCorr_2,
+                            'tempdiff': collector_tempdiff, 'Ch_corr_1': collector_Ch_corr_1, 'Ch_corr_2': collector_Ch_corr_2})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
@@ -282,13 +298,16 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     laser2_mean = []
     laser3_mean = []
     laser4_mean = []
+    temp_diff = []
 
     tau_approx_1 = []
     tau_coare_1 = []
     U_coare_1 = []
     H_approx_1 = []
+    H_corr_1 = []
     H_coare_1 = []
     C_h_1 = []
+    C_h_corr_1 = []
     C_h_coare_1 = []
     C_d_1 = []
     C_d_coare_1 = []
@@ -307,8 +326,10 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
     tau_coare_2 = []
     U_coare_2 = []
     H_approx_2 = []
+    H_corr_2 = []
     H_coare_2 = []
     C_h_2 = []
+    C_h_corr_2 = []
     C_h_coare_2 = []
     C_d_2 = []
     C_d_coare_2 = []
@@ -401,18 +422,26 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         u_star_1 = np.sqrt(-get_covariance(U_anem_1_turb, w_turb_1))
         tau_approx_1.append(rho*(u_star_1**2))
         w_T_cov_1 = get_covariance(w_turb_1, T_turb_1)
-        H_approx_1.append(rho*CPD*w_T_cov_1*(0.375*tempdiff + -0.25)) # Linear deltaT correction
+
+        h_1 = rho*CPD*w_T_cov_1
+        H_approx_1.append(h_1)
+        H_corr_1.append(h_1*(0.375*tempdiff + -0.25)) # Linear deltaT correction
 
         u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
         tau_approx_2.append(rho*(u_star_2**2))
         w_T_cov_2 = get_covariance(w_turb_2, T_turb_2)
-        H_approx_2.append(rho*CPD*w_T_cov_2*(0.375*tempdiff + -0.25)) # Linear deltaT correction
+
+        h_2 = rho*CPD*w_T_cov_2
+        H_approx_1.append(h_2)
+        H_corr_2.append(h_2*(0.375*tempdiff + -0.25)) # Linear deltaT correction
 
         # Logging values
         u_star_1_list.append(u_star_1)
         U1_mean = np.mean(U_anem_1)
         C_d_1.append((u_star_1/U1_mean)**2)
-        C_h_1.append(w_T_cov_1/(U1_mean*tempdiff))
+        ch_1 = w_T_cov_1/(U1_mean*tempdiff)
+        C_h_1.append(ch_1)
+        C_h_corr_1.append(ch_1*(0.375*tempdiff + -0.25)) # Linear deltaT correction
         U_anem_1_mean.append(U1_mean)
         u1_mean.append(np.mean(slice[u1]))
         u1_turb_mean.append(np.mean(get_turbulent(slice[u1])))
@@ -425,7 +454,9 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         u_star_2_list.append(u_star_2)
         U2_mean = np.mean(U_anem_2)
         C_d_2.append((u_star_2/U2_mean)**2)
-        C_h_2.append(w_T_cov_2/(U2_mean*tempdiff))
+        ch_2 = w_T_cov_2/(U2_mean*tempdiff)
+        C_h_2.append(ch_2)
+        C_h_corr_2.append(ch_2*(0.375*tempdiff + -0.25)) # Linear deltaT correction
         U_anem_2_mean.append(U2_mean)
         u2_mean.append(np.mean(slice[u2]))
         u2_turb_mean.append(np.mean(get_turbulent(slice[u2])))
@@ -434,6 +465,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         w2_mean.append(np.mean(w_vel_2))
         w2_turb_mean.append(np.mean(w_turb_2))
         t2_mean.append(np.mean(slice[t2]))
+        temp_diff.append(tempdiff)
 
         rho_mean.append(np.mean(rho))
         is_temp1_fluctuating.append(slice.is_temp1_fluctuating.any())
@@ -505,7 +537,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large, u_star_1_list, C_d_coare_1, C_d_coare_2, zu1_mean,
             zu2_mean, laser1_mean, laser2_mean, laser3_mean, laser4_mean, C_h_1, C_h_coare_1,
-            C_h_2, C_h_coare_2, U_coare_1, U_coare_2)
+            C_h_2, C_h_coare_2, U_coare_1, U_coare_2, H_corr_1, H_corr_2, temp_diff)
 
 def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, p: float, tsea: float, sw_dn: float, 
                    rainrate: float, ts_depth: float) -> np.ndarray:
