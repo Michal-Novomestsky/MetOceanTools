@@ -245,12 +245,6 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_Ch_corr_2 += outputElem[52]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
-    print(f'{len(collector_HCorr_1)=}')
-    print(f'{len(collector_HCorr_2)=}')
-    print(f'{len(collector_tempdiff)=}')
-    print(f'{len(collector_Ch_corr_1)=}')
-    print(f'{len(collector_Ch_corr_2)=}')
-    print(f'{len(collector_UCoare_1)=}')
     return pd.DataFrame({"time": collector_time, "tauApprox_1": collector_tauApprox_1, "tauCoare_1": collector_tauCoare_1,
                             "Cd_1": collector_Cd_1, "U_anem_1": collector_U_anem_1, "HApprox_1": collector_HApprox_1, "HCoare_1": collector_HCoare_1, 
                             "u1": collector_u1, "u1_turb": collector_u1_turb, "v1": collector_v1, "v1_turb": collector_v1_turb, "w1": collector_w1, "w1_turb": collector_w1_turb,
@@ -262,8 +256,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                             "Cd_coare_1": collector_Cd_coare_1, "Cd_coare_2": collector_Cd_coare_2, "laser1": collector_laser1, "laser2": collector_laser2,
                             "laser3": collector_laser3, "laser4": collector_laser4, "zu_1": collector_zu1, "zu_2": collector_zu2,
                             "Ch_1": collector_Ch_1, "Ch_coare_1": collector_Ch_coare_1, "Ch_2": collector_Ch_2, "Ch_coare_2": collector_Ch_coare_2,
-                            'U_coare_1': collector_UCoare_1, 'U_coare_2': collector_UCoare_2, 'HCorr_1': collector_HCorr_1, 'HCorr_2': collector_HCorr_2,
-                            'tempdiff': collector_tempdiff, 'Ch_corr_1': collector_Ch_corr_1, 'Ch_corr_2': collector_Ch_corr_2})
+                            'U_coare_1': collector_UCoare_1, 'U_coare_2': collector_UCoare_2})#, 'HCorr_1': collector_HCorr_1, 'HCorr_2': collector_HCorr_2,
+                            # 'tempdiff': collector_tempdiff, 'Ch_corr_1': collector_Ch_corr_1, 'Ch_corr_2': collector_Ch_corr_2})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
