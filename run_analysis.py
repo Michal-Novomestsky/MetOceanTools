@@ -245,6 +245,12 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_Ch_corr_2 += outputElem[52]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
+    print(f'{len(collector_HCorr_1)=}')
+    print(f'{len(collector_HCorr_2)=}')
+    print(f'{len(collector_tempdiff)=}')
+    print(f'{len(collector_Ch_corr_1)=}')
+    print(f'{len(collector_Ch_corr_2)=}')
+    print(f'{len(collector_UCoare_1)=}')
     return pd.DataFrame({"time": collector_time, "tauApprox_1": collector_tauApprox_1, "tauCoare_1": collector_tauCoare_1,
                             "Cd_1": collector_Cd_1, "U_anem_1": collector_U_anem_1, "HApprox_1": collector_HApprox_1, "HCoare_1": collector_HCoare_1, 
                             "u1": collector_u1, "u1_turb": collector_u1_turb, "v1": collector_v1, "v1_turb": collector_v1_turb, "w1": collector_w1, "w1_turb": collector_w1_turb,
