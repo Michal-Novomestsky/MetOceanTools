@@ -537,7 +537,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
             t2_mean, rho_mean, is_temp1_fluctuating, is_temp1_range_large,
             is_temp2_fluctuating, is_temp2_range_large, u_star_1_list, C_d_coare_1, C_d_coare_2, zu1_mean,
             zu2_mean, laser1_mean, laser2_mean, laser3_mean, laser4_mean, C_h_1, C_h_coare_1,
-            C_h_2, C_h_coare_2, U_coare_1, U_coare_2, H_corr_1, H_corr_2, temp_diff)
+            C_h_2, C_h_coare_2, U_coare_1, U_coare_2, H_corr_1, H_corr_2, temp_diff, C_h_corr_1, C_h_corr_2)
 
 def get_coare_data(U_mean: float, jd: float, zu: float, tair: float, rh: float, p: float, tsea: float, sw_dn: float, 
                    rainrate: float, ts_depth: float) -> np.ndarray:
