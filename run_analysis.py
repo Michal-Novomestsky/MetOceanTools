@@ -245,65 +245,6 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                     collector_Ch_corr_2 += outputElem[52]
 
     write_message("Analysis run done!", filename='analysis_log.txt')
-    collectors = [collector_time,
-    collector_rho,
-    collector_t1_fluct,
-    collector_t1_rng,
-    collector_t2_fluct,
-    collector_t2_rng,
-    collector_laser1,
-    collector_laser2,
-    collector_laser3,
-    collector_laser4,
-    collector_tempdiff,
-    collector_tauApprox_1,
-    collector_tauCoare_1,
-    collector_UCoare_1,
-    collector_HApprox_1,
-    collector_HCorr_1,
-    collector_HCoare_1,
-    collector_Cd_1,
-    collector_Cd_coare_1,
-    collector_Ch_1,
-    collector_Ch_corr_1,
-    collector_Ch_coare_1,
-    collector_u_star_1,
-    collector_U_anem_1,
-    collector_u1,
-    collector_u1_turb,
-    collector_v1,
-    collector_v1_turb,
-    collector_w1,
-    collector_w1_turb,
-    collector_t1,
-    collector_zu1,
-    collector_tauApprox_2,
-    collector_tauCoare_2,
-    collector_UCoare_2,
-    collector_HApprox_2,
-    collector_HCorr_2,
-    collector_HCoare_2,
-    collector_Ch_2,
-    collector_Ch_corr_2,
-    collector_Ch_coare_2,
-    collector_Cd_2,
-    collector_Cd_coare_2,
-    collector_u_star_2,
-    collector_U_anem_2,
-    collector_u2,
-    collector_u2_turb,
-    collector_v2,
-    collector_v2_turb,
-    collector_w2,
-    collector_w2_turb,
-    collector_t2,
-    collector_zu2]
-
-    base_len = len(collectors[0])
-    for i, collector in enumerate(collectors):
-        if len(collector) != base_len:
-            print(f'{i} {len(collector)=}')
-
     return pd.DataFrame({"time": collector_time, "tauApprox_1": collector_tauApprox_1, "tauCoare_1": collector_tauCoare_1,
                             "Cd_1": collector_Cd_1, "U_anem_1": collector_U_anem_1, "HApprox_1": collector_HApprox_1, "HCoare_1": collector_HCoare_1, 
                             "u1": collector_u1, "u1_turb": collector_u1_turb, "v1": collector_v1, "v1_turb": collector_v1_turb, "w1": collector_w1, "w1_turb": collector_w1_turb,
@@ -315,8 +256,8 @@ def analysis_loop(readDir: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, supe
                             "Cd_coare_1": collector_Cd_coare_1, "Cd_coare_2": collector_Cd_coare_2, "laser1": collector_laser1, "laser2": collector_laser2,
                             "laser3": collector_laser3, "laser4": collector_laser4, "zu_1": collector_zu1, "zu_2": collector_zu2,
                             "Ch_1": collector_Ch_1, "Ch_coare_1": collector_Ch_coare_1, "Ch_2": collector_Ch_2, "Ch_coare_2": collector_Ch_coare_2,
-                            'U_coare_1': collector_UCoare_1, 'U_coare_2': collector_UCoare_2})#, 'HCorr_1': collector_HCorr_1, 'HCorr_2': collector_HCorr_2,
-                            # 'tempdiff': collector_tempdiff, 'Ch_corr_1': collector_Ch_corr_1, 'Ch_corr_2': collector_Ch_corr_2})
+                            'U_coare_1': collector_UCoare_1, 'U_coare_2': collector_UCoare_2, 'HCorr_1': collector_HCorr_1, 'HCorr_2': collector_HCorr_2,
+                            'tempdiff': collector_tempdiff, 'Ch_corr_1': collector_Ch_corr_1, 'Ch_corr_2': collector_Ch_corr_2})
 
 def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, era_only=False, no_era=False) -> None:
     """
@@ -491,7 +432,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         w_T_cov_2 = get_covariance(w_turb_2, T_turb_2)
 
         h_2 = rho*CPD*w_T_cov_2
-        H_approx_1.append(h_2)
+        H_approx_2.append(h_2)
         H_corr_2.append(h_2*(0.375*tempdiff + -0.25)) # Linear deltaT correction
 
         # Logging values
