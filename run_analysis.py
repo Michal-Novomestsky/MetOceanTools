@@ -425,7 +425,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         h_1 = rho*CPD*w_T_cov_1
         H_approx_1.append(h_1)
-        H_corr_1.append(h_1*(0.375*tempdiff + -0.25)) # Linear deltaT correction
+        H_corr_1.append(h_1*get_h_correction(tempdiff)) # Linear deltaT correction
 
         u_star_2 = np.sqrt(-get_covariance(U_anem_2_turb, w_turb_2))
         tau_approx_2.append(rho*(u_star_2**2))
@@ -433,7 +433,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
 
         h_2 = rho*CPD*w_T_cov_2
         H_approx_2.append(h_2)
-        H_corr_2.append(h_2*(0.375*tempdiff + -0.25)) # Linear deltaT correction
+        H_corr_2.append(h_2*get_h_correction(tempdiff)) # Linear deltaT correction
 
         # Logging values
         u_star_1_list.append(u_star_1)
@@ -441,7 +441,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         C_d_1.append((u_star_1/U1_mean)**2)
         ch_1 = w_T_cov_1/(U1_mean*tempdiff)
         C_h_1.append(ch_1)
-        C_h_corr_1.append(ch_1*(0.375*tempdiff + -0.25)) # Linear deltaT correction
+        C_h_corr_1.append(ch_1*get_h_correction(tempdiff)) # Linear deltaT correction
         U_anem_1_mean.append(U1_mean)
         u1_mean.append(np.mean(slice[u1]))
         u1_turb_mean.append(np.mean(get_turbulent(slice[u1])))
@@ -456,7 +456,7 @@ def _analysis_iteration(file: Path, eraDf: pd.DataFrame, remsDf: pd.DataFrame, e
         C_d_2.append((u_star_2/U2_mean)**2)
         ch_2 = w_T_cov_2/(U2_mean*tempdiff)
         C_h_2.append(ch_2)
-        C_h_corr_2.append(ch_2*(0.375*tempdiff + -0.25)) # Linear deltaT correction
+        C_h_corr_2.append(ch_2*get_h_correction(tempdiff)) # Linear deltaT correction
         U_anem_2_mean.append(U2_mean)
         u2_mean.append(np.mean(slice[u2]))
         u2_turb_mean.append(np.mean(get_turbulent(slice[u2])))
@@ -639,6 +639,11 @@ def get_covariance(u: np.ndarray, v: np.ndarray) -> float:
         return np.nan
 
     return np.cov(u, v)[0][1]
+
+def get_h_correction(tempdiff: float):
+    if tempdiff >= 0:
+        return -1.45060956*np.exp(-0.69299725*tempdiff) + 0.9521819
+    return (-1.5/2)*tempdiff + -0.5
 
 def preprocess(eraDf: pd.DataFrame, remsDf: pd.DataFrame, writeDir: os.PathLike, era_only: bool, save_plots=True, time_lim=None) -> pd.DataFrame:
     '''
